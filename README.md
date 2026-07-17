@@ -185,6 +185,7 @@ Neue Reise = einfach eine weitere Zeile in die Tabelle einfügen.
 | nur eine Reise | `python flugpreise.py --reise Kenia` |
 | schneller Test (Browser sichtbar) | `python flugpreise.py --sichtbar --limit 4` |
 | Zeitplan ändern | `frequenz_stunden` / `verpasste_nachholen` in `config.xlsx` (Reiter „Einstellungen") anpassen, dann `register_task.ps1` erneut ausführen |
+| **Updates pausieren** (z. B. Präsentation, Reise gebucht) | PowerShell: `Disable-ScheduledTask -TaskName cron-urlaubspreise` – wieder einschalten mit `Enable-ScheduledTask -TaskName cron-urlaubspreise` (oder Aufgabenplanung → Rechtsklick auf den Task). **Solange pausiert, frieren Excel, HTML und App auf dem letzten Stand ein** – erkennbar am „Stand"-Zeitstempel in der App. |
 
 ## Repository & Einrichtung auf neuem Rechner
 
