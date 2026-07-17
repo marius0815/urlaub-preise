@@ -200,10 +200,14 @@ Einrichtung auf einem neuen Rechner:
 1. Repo klonen, dann `pip install playwright openpyxl` und `python -m playwright install chromium`.
 2. `config-pfad.beispiel.json` als `config-pfad.json` kopieren und die Pfade anpassen
    (Zielordner = wo config.xlsx, best-of.xlsx und die HTML-Ansichten liegen sollen).
-3. Eine `config.xlsx` im Zielordner anlegen (Reiter „Reisen" + „Einstellungen", s. oben) –
-   oder eine bestehende dorthin kopieren.
-4. Optional Veröffentlichung: GitHub CLI (`gh`) installieren und anmelden,
-   `github_pages_repo` in der `config-pfad.json` setzen.
+3. Die mitgelieferte **`config_beispiel.xlsx`** in den Zielordner kopieren, in
+   `config.xlsx` umbenennen und die Reisen/Einstellungen darin anpassen
+   (Spalten-Bedeutung s. oben; die Vorlage enthält Beispiele für beide Reisetypen).
+4. Optional Veröffentlichung: GitHub CLI (`gh`) installieren und anmelden, ein eigenes
+   **öffentliches** Repo anlegen und dessen Namen (`owner/name`) in der
+   `config-pfad.json` bei `github_pages_repo` eintragen. Einmalig in den
+   Repo-Einstellungen **GitHub Pages aktivieren** (Settings → Pages → Branch `main`,
+   Ordner `/`) – danach ist die App unter `https://<owner>.github.io/<name>/` erreichbar.
 5. `register_task.ps1` ausführen → richtet den stündlichen Task ein.
 
 Hinweis für Code-Änderungen: Vor einem `git push` immer erst `git pull` – der stündliche
