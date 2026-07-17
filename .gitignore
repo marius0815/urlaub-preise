@@ -1,0 +1,15 @@
+# Laufzeitdaten (werden von jedem Lauf neu geschrieben, gehoeren nicht ins Repo)
+lauf.log
+state.json
+historie.json
+best-of-data.json
+*.bak
+*.bak-*
+
+# Maschinenspezifische Pfad-Konfiguration (Vorlage: config-pfad.beispiel.json)
+config-pfad.json
+
+# Python / Tooling
+__pycache__/
+*.pyc
+.claude/

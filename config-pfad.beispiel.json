@@ -1,0 +1,9 @@
+{
+  "zielordner": "C:/Users/DEIN-NAME/OneDrive/Documents/Urlaub/Best-Of-Urlaub",
+  "config": "config.xlsx",
+  "best_of_datei": "best-of.xlsx",
+  "best_of_html": "best-of.html",
+  "best_of_app": "best-of-app.html",
+  "github_pages_repo": "",
+  "hinweis": "Als config-pfad.json neben flugpreise.py speichern. 'zielordner' = Ordner fuer alle Dateien (absolut oder relativ zum Projektordner); 'config' = Name der Konfigurationsdatei (config.xlsx mit Reitern 'Reisen' und 'Einstellungen'; .json als Altformat moeglich), 'best_of_datei' = Ausgabe-Excel, 'best_of_html' = statische Lese-Ansicht, 'best_of_app' = interaktive App-Ansicht, alle relativ zum Zielordner. 'github_pages_repo' = GitHub-Repo (owner/name), in das die App-Ansicht nach jedem Lauf als index.html veroeffentlicht wird (leer lassen = keine Veroeffentlichung; benoetigt angemeldete GitHub CLI 'gh')."
+}
