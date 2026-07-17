@@ -148,7 +148,7 @@ werden.
   Reihenfolge abgeflogen wird (und am Ende zurück zum Abflughafen). Hinter jedem Ziel
   kann in Klammern der **Mindestaufenthalt in Stunden** stehen, z. B.
   `SFO (72), HNL (48), BKK (96), NBO (72)` = San Francisco (min. 72 h) → Hawaii (48 h) →
-  Manila (96 h) → Kenia (72 h). Ohne Klammer gilt der Default aus Einstellungen →
+  Bangkok (96 h) → Nairobi (72 h). Ohne Klammer gilt der Default aus Einstellungen →
   `hopping_min_aufenthalt_h` (aktuell 48 h). **Alternativen je Station** werden per `/`
   angegeben, z. B. `SFO/LAX (72), HNL (48), BKK/HKT (96)` – jede Kombination
   wird als eigene Ketten-Variante bepreist (Etappen-Abfragen werden dabei wiederverwendet;
