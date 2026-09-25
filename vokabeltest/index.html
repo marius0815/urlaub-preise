@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f7d4f">
+<title>Vokabeltrainer Englisch</title>
+<style>
+  :root {
+    --gruen: #2f7d4f;
+    --gruen-hell: #e3f3e8;
+    --blau: #2563a8;
+    --blau-hell: #e5eef9;
+    --rot: #c0392b;
+    --rot-hell: #fbe9e7;
+    --gelb: #b7791f;
+    --gelb-hell: #fdf3dc;
+    --text: #1f2933;
+    --grau: #6b7785;
+    --linie: #d9dee4;
+    --hinter: #f5f7f4;
+    --karte: #ffffff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    color: var(--text);
+    background: var(--hinter);
+    line-height: 1.4;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 8px 0 4px; color: var(--gruen); }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .unterzeile { color: var(--grau); margin: 0 0 18px; }
+  .box {
+    background: var(--karte);
+    border: 1px solid var(--linie);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 18px;
+    cursor: pointer;
+    background: var(--blau-hell);
+    color: var(--blau);
+    font-weight: 600;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  button.haupt { background: var(--gruen); color: #fff; width: 100%; font-size: 1.1rem; padding: 15px; }
+  button.leise { background: transparent; color: var(--grau); padding: 8px 10px; font-weight: 500; }
+  button.klein { padding: 7px 12px; font-size: .9rem; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #f2b705; outline-offset: 2px; }
+
+  /* Auswahl */
+  .kapitel { border-top: 1px solid var(--linie); padding: 10px 0 4px; }
+  .kapitel:first-of-type { border-top: 0; padding-top: 0; }
+  .kapitel > label { font-weight: 700; }
+  .abschnitte { margin: 6px 0 0 4px; }
+  label.zeile {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 4px; cursor: pointer;
+  }
+  label.zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--gruen); }
+  .zeile .name { flex: 1; }
+  .zeile .anzahl { color: var(--grau); font-size: .85rem; white-space: nowrap; }
+  .balken { width: 70px; height: 8px; border-radius: 4px; background: var(--linie); overflow: hidden; flex: none; }
+  .balken > span { display: block; height: 100%; background: var(--gruen); }
+
+  .umschalter { display: flex; gap: 6px; flex-wrap: wrap; }
+  .umschalter button { flex: 1; min-width: 120px; background: #eef1f4; color: var(--text); font-weight: 500; }
+  .umschalter button[aria-pressed="true"] { background: var(--gruen); color: #fff; font-weight: 700; }
+  .optionen { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+
+  .faecher { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; text-align: center; }
+  .fach { background: #eef1f4; border-radius: 10px; padding: 8px 2px; }
+  .fach b { display: block; font-size: 1.2rem; }
+  .fach small { color: var(--grau); font-size: .75rem; }
+  .fach.f5 { background: var(--gruen-hell); }
+  .erklaerung { color: var(--grau); font-size: .85rem; margin: 10px 0 0; }
+
+  .fusszeile { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+
+  /* Abfrage */
+  .kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .fortschritt { flex: 1; height: 10px; background: var(--linie); border-radius: 5px; overflow: hidden; }
+  .fortschritt > span { display: block; height: 100%; background: var(--gruen); transition: width .3s; }
+  .zaehler { color: var(--grau); font-size: .9rem; white-space: nowrap; }
+  .karte { text-align: center; padding: 22px 16px; }
+  .richtung { color: var(--grau); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+  .frage { font-size: 1.7rem; font-weight: 700; margin: 10px 0 4px; word-break: break-word; }
+  .herkunft { color: var(--grau); font-size: .8rem; }
+  .fachmarke { display: inline-block; background: #eef1f4; border-radius: 8px; padding: 2px 8px; font-size: .75rem; color: var(--grau); margin-top: 8px; }
+  .laut { background: transparent; padding: 4px 8px; font-size: 1.3rem; vertical-align: middle; }
+  .eingabe { display: flex; gap: 8px; margin-top: 18px; }
+  .eingabe input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1.2rem;
+    padding: 12px 14px; border: 2px solid var(--linie); border-radius: 10px;
+  }
+  .eingabe input:disabled { background: #f3f4f6; color: var(--text); }
+  .nebenknoepfe { display: flex; justify-content: center; margin-top: 6px; }
+
+  .rueckmeldung { border-radius: var(--radius); padding: 14px 16px; margin-top: 14px; text-align: left; }
+  .rueckmeldung.richtig { background: var(--gruen-hell); }
+  .rueckmeldung.fast { background: var(--gelb-hell); }
+  .rueckmeldung.falsch { background: var(--rot-hell); }
+  .rueckmeldung .titel { font-weight: 700; font-size: 1.1rem; }
+  .richtig .titel { color: var(--gruen); }
+  .fast .titel { color: var(--gelb); }
+  .falsch .titel { color: var(--rot); }
+  .loesung { font-size: 1.2rem; font-weight: 700; margin: 6px 0; }
+  .zusatz { font-size: .95rem; margin-top: 6px; }
+  .zusatz .etikett { color: var(--grau); font-size: .8rem; display: block; }
+  .tipp { font-size: .95rem; margin-top: 6px; }
+  .knopfreihe { display: flex; gap: 8px; margin-top: 14px; }
+  .knopfreihe button { flex: 1; }
+  .knopfreihe button.weiter { background: var(--gruen); color: #fff; }
+
+  /* Ende */
+  .ergebnis { text-align: center; }
+  .ergebnis .gross { font-size: 3rem; margin: 4px 0; }
+  .ergebnis .zahl { font-size: 1.3rem; font-weight: 700; }
+  .fehlerliste { list-style: none; padding: 0; margin: 0; }
+  .fehlerliste li { padding: 8px 0; border-top: 1px solid var(--linie); display: flex; gap: 10px; }
+  .fehlerliste li:first-child { border-top: 0; }
+  .fehlerliste .en { font-weight: 700; flex: 1; }
+  .fehlerliste .de { flex: 1; color: var(--grau); }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Startseite -->
+  <section id="start">
+    <h1>Vokabeltrainer Englisch</h1>
+    <p class="unterzeile">Wähle aus, was du üben möchtest.</p>
+
+    <div class="box">
+      <h2>Kapitel</h2>
+      <div id="kapitelliste"></div>
+    </div>
+
+    <div class="box">
+      <h2>Richtung</h2>
+      <div class="umschalter" id="richtung">
+        <button type="button" data-wert="en-de">Englisch → Deutsch</button>
+        <button type="button" data-wert="de-en">Deutsch → Englisch</button>
+        <button type="button" data-wert="beide">Gemischt</button>
+      </div>
+      <div class="optionen">
+        <label class="zeile">
+          <span class="name">Wörter pro Runde</span>
+          <select id="anzahl">
+            <option>10</option><option>15</option><option>20</option><option>30</option>
+          </select>
+        </label>
+        <label class="zeile"><input type="checkbox" id="vorlesen"><span class="name">Englische Wörter vorlesen</span></label>
+        <label class="zeile"><input type="checkbox" id="nurPunkt"><span class="name">Nur Wörter mit Punkt (•) aus dem Buch</span></label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Dein Karteikasten</h2>
+      <div class="faecher" id="faecher"></div>
+      <p class="erklaerung">Richtig beantwortet rückt ein Wort ein Fach weiter und kommt seltener dran. Falsch beantwortet geht es zurück in Fach 1.</p>
+    </div>
+
+    <button type="button" class="haupt" id="los">Los geht's</button>
+
+    <div class="fusszeile">
+      <button type="button" class="leise klein" id="sichern">Fortschritt sichern</button>
+      <button type="button" class="leise klein" id="laden">Fortschritt laden</button>
+      <button type="button" class="leise klein" id="zuruecksetzen">Alles zurücksetzen</button>
+      <input type="file" id="datei" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <!-- Abfrage -->
+  <section id="abfrage" hidden>
+    <div class="kopf">
+      <button type="button" class="leise klein" id="beenden">✕ Beenden</button>
+      <div class="fortschritt"><span id="fortschrittsbalken"></span></div>
+      <span class="zaehler" id="zaehler"></span>
+    </div>
+
+    <div class="box karte">
+      <div class="richtung" id="richtungstext"></div>
+      <div class="frage"><span id="frage"></span><button type="button" class="laut" id="frageLaut" title="Vorlesen" hidden>🔊</button></div>
+      <div class="herkunft" id="herkunft"></div>
+      <div class="fachmarke" id="fachmarke"></div>
+
+      <form class="eingabe" id="formular" autocomplete="off">
+        <input id="antwort" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Deine Antwort">
+        <button type="submit" id="pruefen">Prüfen</button>
+      </form>
+      <div class="nebenknoepfe"><button type="button" class="leise klein" id="weissNicht">Weiß ich nicht</button></div>
+
+      <div class="rueckmeldung" id="rueckmeldung" hidden>
+        <div class="titel" id="rmTitel"></div>
+        <div class="loesung"><span id="rmLoesung"></span><button type="button" class="laut" id="loesungLaut" title="Vorlesen" hidden>🔊</button></div>
+        <div class="tipp" id="rmTipp" hidden></div>
+        <div class="zusatz" id="rmBeispiel" hidden><span class="etikett">Beispiel</span><span id="rmBeispielText"></span><button type="button" class="laut" id="beispielLaut" title="Vorlesen">🔊</button></div>
+        <div class="zusatz" id="rmHinweis" hidden><span class="etikett">Hinweis</span><span id="rmHinweisText"></span></div>
+        <div class="knopfreihe">
+          <button type="button" id="dochRichtig" hidden>Ich hatte doch recht</button>
+          <button type="button" class="weiter" id="weiter">Weiter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ende einer Runde -->
+  <section id="ende" hidden>
+    <div class="box ergebnis">
+      <div class="gross" id="endeBild"></div>
+      <div class="zahl" id="endeZahl"></div>
+      <p id="endeText"></p>
+    </div>
+    <div class="box" id="endeFehlerBox" hidden>
+      <h2>Diese Wörter üben wir nochmal</h2>
+      <ul class="fehlerliste" id="endeFehler"></ul>
+    </div>
+    <div class="knopfreihe">
+      <button type="button" id="nurFehler" hidden>Fehler nochmal üben</button>
+      <button type="button" class="weiter" id="zumStart">Zum Start</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+const VOKABELN = [{"id":"Pick-up A|We're from ...","k":"Pick-up A","a":"We're from Greenwich","en":"We're from ...","de":"Wir sind aus ...","bsp":"We're from Greenwich.","hw":"","s":"184","p":false},{"id":"Pick-up A|Here's your ball.","k":"Pick-up A","a":"We're from Greenwich","en":"Here's your ball.","de":"Hier ist dein Ball.","bsp":"Here's your ball, Sherlock.","hw":"","s":"184","p":false},{"id":"Pick-up A|Hello.","k":"Pick-up A","a":"We're from Greenwich","en":"Hello.","de":"Hallo.","bsp":"","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm ...","k":"Pick-up A","a":"We're from Greenwich","en":"I'm ...","de":"Ich heiße ...; Ich bin ...","bsp":"Hello, I'm Pia.","hw":"","s":"184","p":true},{"id":"Pick-up A|You're a nice dog.","k":"Pick-up A","a":"We're from Greenwich","en":"You're a nice dog.","de":"Du bist ein lieber Hund.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|What's your name?","k":"Pick-up A","a":"We're from Greenwich","en":"What's your name?","de":"Wie heißt du?; Wie heißen Sie?","bsp":"What's your name? – I'm Olivia.","hw":"","s":"184","p":true},{"id":"Pick-up A|Sorry, my dog is crazy.","k":"Pick-up A","a":"We're from Greenwich","en":"Sorry, my dog is crazy.","de":"Tut mir leid, mein Hund ist verrückt.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|and","k":"Pick-up A","a":"We're from Greenwich","en":"and","de":"und","bsp":"","hw":"Wenn man and nicht betont, spricht man es [ənd].","s":"184","p":true},{"id":"Pick-up A|My name is ...","k":"Pick-up A","a":"We're from Greenwich","en":"My name is ...","de":"Ich heiße ...","bsp":"What's your name? – My name is Luke.","hw":"","s":"184","p":true},{"id":"Pick-up A|Where are you from?","k":"Pick-up A","a":"We're from Greenwich","en":"Where are you from?","de":"Woher kommst du?; Woher kommt ihr?; Woher kommen Sie?","bsp":"Where are you from? – We're from Greenwich.","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm from ...","k":"Pick-up A","a":"We're from Greenwich","en":"I'm from ...","de":"Ich bin aus ...","bsp":"Where are you from? – I'm from Cologne.","hw":"","s":"184","p":false},{"id":"Pick-up A|in","k":"Pick-up A","a":"We're from Greenwich","en":"in","de":"in; im; rein; herein","bsp":"Cologne is in Germany.","hw":"","s":"184","p":true},{"id":"Pick-up A|Are you on holiday in ...?","k":"Pick-up A","a":"We're from Greenwich","en":"Are you on holiday in ...?","de":"Bist du im Urlaub in ...?; Sind Sie im Urlaub in ...?; Seid ihr im Urlaub in ...?","bsp":"Are you on holiday in London? – Yes, I'm here with my parents.","hw":"","s":"184","p":false},{"id":"Pick-up A|yes","k":"Pick-up A","a":"We're from Greenwich","en":"yes","de":"ja","bsp":"","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm here with my parents.","k":"Pick-up A","a":"We're from Greenwich","en":"I'm here with my parents.","de":"Ich bin mit meinen Eltern hier.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|How old are you?","k":"Pick-up A","a":"We're from Greenwich","en":"How old are you?","de":"Wie alt bist du?; Wie alt seid ihr?; Wie alt sind Sie?","bsp":"","hw":"Achte beim Sprechen auf die Verbindung zwischen den Wörtern.","s":"184","p":true},{"id":"Pick-up A|You too?","k":"Pick-up A","a":"We're from Greenwich","en":"You too?","de":"Du auch?; Sie auch?; Ihr auch?","bsp":"How old are you? – I'm ten. You too?","hw":"","s":"184","p":false},{"id":"Pick-up A|no","k":"Pick-up A","a":"We're from Greenwich","en":"no","de":"nein","bsp":"","hw":"no ↔ yes","s":"184","p":true},{"id":"Pick-up A|the","k":"Pick-up A","a":"We're from Greenwich","en":"the","de":"der; die (auch Pl.); das","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|boy","k":"Pick-up A","a":"We're from Greenwich","en":"boy","de":"Junge","bsp":"Luke is a boy from Greenwich.","hw":"","s":"184","p":true},{"id":"Pick-up A|girl","k":"Pick-up A","a":"We're from Greenwich","en":"girl","de":"Mädchen","bsp":"And Pia is a girl from Germany.","hw":"","s":"184","p":true},{"id":"Pick-up A|me too","k":"Pick-up A","a":"We're from Greenwich","en":"me too","de":"ich auch","bsp":"I'm eleven. – Me too.","hw":"","s":"184","p":false},{"id":"Pick-up A|friend","k":"Pick-up A","a":"We're from Greenwich","en":"friend","de":"Freund/-in","bsp":"Dave and Luke are friends.","hw":"","s":"184","p":true},{"id":"Pick-up A|he","k":"Pick-up A","a":"We're from Greenwich","en":"he","de":"er","bsp":"Dave is nice. He's my friend.","hw":"","s":"184","p":false},{"id":"Pick-up A|she","k":"Pick-up A","a":"We're from Greenwich","en":"she","de":"sie","bsp":"Pia is from Cologne. = She's from Cologne.","hw":"","s":"185","p":false},{"id":"Pick-up A|it","k":"Pick-up A","a":"We're from Greenwich","en":"it","de":"es; er; sie","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|they","k":"Pick-up A","a":"We're from Greenwich","en":"they","de":"sie (Pl.)","bsp":"Dave and Sherlock are my friends. = They are my friends.","hw":"","s":"185","p":false},{"id":"Pick-up A|new","k":"Pick-up A","a":"We're from Greenwich","en":"new","de":"neu","bsp":"I'm new in London.","hw":"","s":"185","p":false},{"id":"Pick-up A|Come in.","k":"Pick-up A","a":"We're from Greenwich","en":"Come in.","de":"Komm/Kommt rein.","bsp":"Come in, Luke.","hw":"","s":"185","p":true},{"id":"Pick-up A|to come","k":"Pick-up A","a":"We're from Greenwich","en":"to come","de":"kommen","bsp":"Can you come to the park today?","hw":"","s":"185","p":false},{"id":"Pick-up A|mum","k":"Pick-up A","a":"We're from Greenwich","en":"mum","de":"Mama; Mutti","bsp":"","hw":"Mum wird nur als Name groß geschrieben: Hi Mum! ABER: Where's your mum?","s":"185","p":false},{"id":"Pick-up A|who","k":"Pick-up A","a":"We're from Greenwich","en":"who","de":"wer; wem; wen","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|Mrs","k":"Pick-up A","a":"We're from Greenwich","en":"Mrs","de":"Frau (Anrede)","bsp":"","hw":"Achtung Aussprache.","s":"185","p":true},{"id":"Pick-up A|town","k":"Pick-up A","a":"We're from Greenwich","en":"town","de":"Stadt","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|in the north of","k":"Pick-up A","a":"We're from Greenwich","en":"in the north of","de":"im Norden von","bsp":"Hamburg is in the north of Germany.","hw":"","s":"185","p":false},{"id":"Pick-up A|student","k":"Pick-up A","a":"We're from Greenwich","en":"student","de":"Schüler/-in; Student/-in","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|class","k":"Pick-up A","a":"We're from Greenwich","en":"class","de":"Klasse; Schulklasse","bsp":"","hw":"class – student – school","s":"185","p":true},{"id":"Pick-up A|You're right.","k":"Pick-up A","a":"We're from Greenwich","en":"You're right.","de":"Du hast Recht.","bsp":"Yes, you're right. London is in England.","hw":"","s":"185","p":false},{"id":"Pick-up A|all","k":"Pick-up A","a":"We're from Greenwich","en":"all","de":"alle/-s; ganz","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|the same","k":"Pick-up A","a":"We're from Greenwich","en":"the same","de":"der-/die-/dasselbe; der/die/das gleiche","bsp":"Sam, Lisa, Sally and Emma are in my class. We're all in the same class.","hw":"","s":"185","p":false},{"id":"Pick-up A|his","k":"Pick-up A","a":"We're from Greenwich","en":"his","de":"sein/-e","bsp":"Luke is in the park with his dog Sherlock.","hw":"","s":"185","p":false},{"id":"Pick-up A|cat","k":"Pick-up A","a":"We're from Greenwich","en":"cat","de":"Katze","bsp":"","hw":"","s":"185","p":true},{"id":"Pick-up A|animal","k":"Pick-up A","a":"We're from Greenwich","en":"animal","de":"Tier","bsp":"Cats and dogs are animals.","hw":"","s":"185","p":true},{"id":"Pick-up A|to like","k":"Pick-up A","a":"We're from Greenwich","en":"to like","de":"mögen; gern haben","bsp":"I like horses.","hw":"","s":"185","p":true},{"id":"Pick-up A|I'm not scared of dogs.","k":"Pick-up A","a":"We're from Greenwich","en":"I'm not scared of dogs.","de":"Ich habe keine Angst vor Hunden.","bsp":"I'm not scared of dogs. And I'm not scared of rats.","hw":"","s":"185","p":false},{"id":"Pick-up A|not","k":"Pick-up A","a":"We're from Greenwich","en":"not","de":"nicht","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|but","k":"Pick-up A","a":"We're from Greenwich","en":"but","de":"aber","bsp":"I like cats, but I don't like dogs.","hw":"","s":"185","p":false},{"id":"Pick-up A|OK","k":"Pick-up A","a":"We're from Greenwich","en":"OK","de":"o.k.; in Ordnung","bsp":"","hw":"Achtung Schreibung.","s":"185","p":false},{"id":"Pick-up A|They don't eat mice.","k":"Pick-up A","a":"We're from Greenwich","en":"They don't eat mice.","de":"Sie essen keine Mäuse.","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|mouse, mice (pl)","k":"Pick-up A","a":"We're from Greenwich","en":"mouse, mice (pl)","de":"Maus/Mäuse","bsp":"","hw":"one mouse – two mice","s":"185","p":true},{"id":"Pick-up A|to hate","k":"Pick-up A","a":"We're from Greenwich","en":"to hate","de":"nicht mögen; hassen","bsp":"","hw":"to hate ↔ to love","s":"185","p":false},{"id":"Pick-up A|to love","k":"Pick-up A","a":"We're from Greenwich","en":"to love","de":"lieben; gern mögen","bsp":"","hw":"","s":"185","p":true},{"id":"Pick-up A|dog","k":"Pick-up A","a":"Animals","en":"dog","de":"Hund","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|rat","k":"Pick-up A","a":"Animals","en":"rat","de":"Ratte","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|bird","k":"Pick-up A","a":"Animals","en":"bird","de":"Vogel","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|swan","k":"Pick-up A","a":"Animals","en":"swan","de":"Schwan","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|bee","k":"Pick-up A","a":"Animals","en":"bee","de":"Biene","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|horse","k":"Pick-up A","a":"Animals","en":"horse","de":"Pferd","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|rabbit","k":"Pick-up A","a":"Animals","en":"rabbit","de":"Kaninchen; Hase","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|squirrel","k":"Pick-up A","a":"Animals","en":"squirrel","de":"Eichhörnchen","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|worm","k":"Pick-up A","a":"Animals","en":"worm","de":"Wurm","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I love ...","k":"Pick-up A","a":"Likes and dislikes","en":"I love ...","de":"Ich liebe ...; Ich mag total gern ...; Ich mache ... total gern.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I like ...","k":"Pick-up A","a":"Likes and dislikes","en":"I like ...","de":"Ich mag ...; Mir gefällt ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|... are OK.","k":"Pick-up A","a":"Likes and dislikes","en":"... are OK.","de":"... sind o.k.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I don't like ...","k":"Pick-up A","a":"Likes and dislikes","en":"I don't like ...","de":"Ich mag ... nicht.; Ich mag kein/keine ...; Mir gefällt ... nicht.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I'm scared of ...","k":"Pick-up A","a":"Likes and dislikes","en":"I'm scared of ...","de":"Ich habe Angst vor ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I hate ...","k":"Pick-up A","a":"Likes and dislikes","en":"I hate ...","de":"Ich mag ... nicht.; Ich hasse ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|That was close!","k":"Pick-up A","a":"We're from Greenwich","en":"That was close!","de":"Das war knapp!","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|Thank you.","k":"Pick-up A","a":"We're from Greenwich","en":"Thank you.","de":"Danke.","bsp":"Here's your ball. – Oh, thank you.","hw":"","s":"186","p":true},{"id":"Pick-up A|This is ...","k":"Pick-up A","a":"We're from Greenwich","en":"This is ...","de":"Das (hier) ist ...","bsp":"This is my friend Olivia. – Hi Olivia.","hw":"","s":"186","p":true},{"id":"Pick-up A|school","k":"Pick-up A","a":"We're from Greenwich","en":"school","de":"Schule","bsp":"Pia is a girl from school. – No, Pia is a girl from Germany.","hw":"","s":"186","p":true},{"id":"Pick-up A|big","k":"Pick-up A","a":"We're from Greenwich","en":"big","de":"groß","bsp":"Greenwich Park is big.","hw":"","s":"186","p":true},{"id":"Pick-up A|great","k":"Pick-up A","a":"We're from Greenwich","en":"great","de":"großartig; toll; super","bsp":"I love it. It's great!","hw":"","s":"186","p":false},{"id":"Pick-up A|for","k":"Pick-up A","a":"We're from Greenwich","en":"for","de":"zum; für","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|cycling","k":"Pick-up A","a":"We're from Greenwich","en":"cycling","de":"Radfahren","bsp":"Greenwich Park is great for cycling.","hw":"","s":"186","p":false},{"id":"Pick-up A|sport","k":"Pick-up A","a":"We're from Greenwich","en":"sport","de":"Sport; Sportart","bsp":"What's your favourite sport, Pia?","hw":"","s":"186","p":true},{"id":"Pick-up A|football","k":"Pick-up A","a":"We're from Greenwich","en":"football","de":"Fußball","bsp":"My favourite sport is football.","hw":"","s":"186","p":true},{"id":"Pick-up A|boating lake","k":"Pick-up A","a":"We're from Greenwich","en":"boating lake","de":"See zum Rudern","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|Let's go!","k":"Pick-up A","a":"We're from Greenwich","en":"Let's go!","de":"Lass/Lasst uns hingehen!; Los, gehen wir hin!","bsp":"A boating lake? Great, let's go!","hw":"","s":"187","p":true},{"id":"Pick-up A|It's fun.","k":"Pick-up A","a":"We're from Greenwich","en":"It's fun.","de":"Es macht Spaß.","bsp":"I like cycling. It's fun.","hw":"","s":"187","p":false},{"id":"Pick-up A|hobby, hobbies (pl)","k":"Pick-up A","a":"We're from Greenwich","en":"hobby, hobbies (pl)","de":"Hobby","bsp":"My hobby is cycling. – My hobbies are football and skateboarding.","hw":"","s":"187","p":true},{"id":"Pick-up A|place","k":"Pick-up A","a":"We're from Greenwich","en":"place","de":"Ort; Stelle; Platz","bsp":"Greenwich park is a nice place in Greenwich.","hw":"","s":"187","p":false},{"id":"Pick-up A|skateboarding","k":"Pick-up A","a":"We're from Greenwich","en":"skateboarding","de":"Skateboardfahren","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|volleyball","k":"Pick-up A","a":"We're from Greenwich","en":"volleyball","de":"Volleyball","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|(inline) skating","k":"Pick-up A","a":"We're from Greenwich","en":"(inline) skating","de":"Inlineskatefahren","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|My favourite ... is ...","k":"Pick-up A","a":"We're from Greenwich","en":"My favourite ... is ...","de":"Mein Lieblings... ist ...","bsp":"My favourite sport is volleyball.","hw":"","s":"187","p":false},{"id":"Pick-up A|Let's ...","k":"Pick-up A","a":"Fun and action","en":"Let's ...","de":"Lass(t) uns ...","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|... is great.","k":"Pick-up A","a":"Fun and action","en":"... is great.","de":"... ist toll / ... ist super.","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|... is fun.","k":"Pick-up A","a":"Fun and action","en":"... is fun.","de":"Es macht Spaß ... / ... macht Spaß.","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|colour","k":"Pick-up A","a":"We're from Greenwich","en":"colour","de":"Farbe","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|puzzle","k":"Pick-up A","a":"We're from Greenwich","en":"puzzle","de":"Rätsel; Puzzle","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|What's your favourite ...?","k":"Pick-up A","a":"We're from Greenwich","en":"What's your favourite ...?","de":"Was ist dein/-e Lieblings...?","bsp":"What's your favourite colour? – My favourite colour is orange.","hw":"","s":"187","p":true},{"id":"Pick-up A|black","k":"Pick-up A","a":"Colours","en":"black","de":"schwarz","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|blue","k":"Pick-up A","a":"Colours","en":"blue","de":"blau","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|brown","k":"Pick-up A","a":"Colours","en":"brown","de":"braun","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|green","k":"Pick-up A","a":"Colours","en":"green","de":"grün","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|grey","k":"Pick-up A","a":"Colours","en":"grey","de":"grau","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|orange","k":"Pick-up A","a":"Colours","en":"orange","de":"orange","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|pink","k":"Pick-up A","a":"Colours","en":"pink","de":"pink; rosa","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|purple","k":"Pick-up A","a":"Colours","en":"purple","de":"lila; violett","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|red","k":"Pick-up A","a":"Colours","en":"red","de":"rot","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|white","k":"Pick-up A","a":"Colours","en":"white","de":"weiß","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|yellow","k":"Pick-up A","a":"Colours","en":"yellow","de":"gelb","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|one","k":"Pick-up A","a":"Numbers 1–12","en":"one","de":"eins","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|two","k":"Pick-up A","a":"Numbers 1–12","en":"two","de":"zwei","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|three","k":"Pick-up A","a":"Numbers 1–12","en":"three","de":"drei","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|four","k":"Pick-up A","a":"Numbers 1–12","en":"four","de":"vier","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|five","k":"Pick-up A","a":"Numbers 1–12","en":"five","de":"fünf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|six","k":"Pick-up A","a":"Numbers 1–12","en":"six","de":"sechs","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|seven","k":"Pick-up A","a":"Numbers 1–12","en":"seven","de":"sieben","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|eight","k":"Pick-up A","a":"Numbers 1–12","en":"eight","de":"acht","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|nine","k":"Pick-up A","a":"Numbers 1–12","en":"nine","de":"neun","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|ten","k":"Pick-up A","a":"Numbers 1–12","en":"ten","de":"zehn","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|eleven","k":"Pick-up A","a":"Numbers 1–12","en":"eleven","de":"elf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|twelve","k":"Pick-up A","a":"Numbers 1–12","en":"twelve","de":"zwölf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|kite","k":"Pick-up A","a":"We're from Greenwich","en":"kite","de":"Drachen","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|bike","k":"Pick-up A","a":"We're from Greenwich","en":"bike","de":"Fahrrad","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|boat","k":"Pick-up A","a":"We're from Greenwich","en":"boat","de":"Boot","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|bag","k":"Pick-up A","a":"We're from Greenwich","en":"bag","de":"Tasche; Tüte","bsp":"What's in your bag?","hw":"","s":"188","p":true},{"id":"Pick-up A|there is/are","k":"Pick-up A","a":"We're from Greenwich","en":"there is/are","de":"es gibt","bsp":"There is one kite in the picture. There are nine boats on the lake.","hw":"","s":"188","p":true},{"id":"Pick-up A|number","k":"Pick-up A","a":"We're from Greenwich","en":"number","de":"Zahl; Nummer","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|quiz","k":"Pick-up A","a":"We're from Greenwich","en":"quiz","de":"Quiz; Rätsel","bsp":"Here's a quiz for you. – Great. That's fun!","hw":"","s":"188","p":false},{"id":"Pick-up A|Please.","k":"Pick-up A","a":"We're from Greenwich","en":"Please.","de":"Bitte.","bsp":"Please listen. Thank you.","hw":"","s":"188","p":true},{"id":"Pick-up A|phone number","k":"Pick-up A","a":"We're from Greenwich","en":"phone number","de":"Telefon-; Handynummer","bsp":"What's your phone number? – It's 0123-45678.","hw":"","s":"188","p":false},{"id":"Pick-up A|What colour is ...?","k":"Pick-up A","a":"We're from Greenwich","en":"What colour is ...?","de":"Welche Farbe hat ...?","bsp":"What colour is boat number 2?","hw":"","s":"188","p":false},{"id":"Pick-up A|first name","k":"Pick-up A","a":"We're from Greenwich","en":"first name","de":"Vorname","bsp":"I'm Luke Elliot. My first name is Luke.","hw":"","s":"188","p":false},{"id":"Pick-up A|surname","k":"Pick-up A","a":"We're from Greenwich","en":"surname","de":"Nachname","bsp":"And my surname is Elliot.","hw":"","s":"188","p":false},{"id":"Pick-up A|double","k":"Pick-up A","a":"We're from Greenwich","en":"double","de":"Doppel-; zweimal","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|to rap","k":"Pick-up A","a":"We're from Greenwich","en":"to rap","de":"rappen","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|like me","k":"Pick-up A","a":"We're from Greenwich","en":"like me","de":"wie ich","bsp":"","hw":"","s":"188","p":false},{"id":"Unit 1|at home","k":"Unit 1","a":"Check-in","en":"at home","de":"zu Hause","bsp":"Luke is at home.","hw":"","s":"189","p":true},{"id":"Unit 1|to live","k":"Unit 1","a":"Check-in","en":"to live","de":"wohnen; leben","bsp":"We live in Greenwich.","hw":"","s":"189","p":true},{"id":"Unit 1|flat","k":"Unit 1","a":"Check-in","en":"flat","de":"Wohnung","bsp":"Pia lives in Cologne. Her flat is in Cologne.","hw":"","s":"189","p":false},{"id":"Unit 1|in the street","k":"Unit 1","a":"Check-in","en":"in the street","de":"auf der Straße","bsp":"Luke and Sherlock are in the street.","hw":"","s":"189","p":false},{"id":"Unit 1|family","k":"Unit 1","a":"Check-in","en":"family","de":"Familie","bsp":"Pia and her parents are a family.","hw":"","s":"189","p":true},{"id":"Unit 1|house","k":"Unit 1","a":"Check-in","en":"house","de":"Haus","bsp":"We live in a house, not in a flat.","hw":"","s":"189","p":true},{"id":"Unit 1|door","k":"Unit 1","a":"Check-in","en":"door","de":"Tür","bsp":"That's his house – with the green door.","hw":"","s":"189","p":true},{"id":"Unit 1|bath","k":"Unit 1","a":"Check-in","en":"bath","de":"Bad; Badewanne","bsp":"","hw":"","s":"189","p":false},{"id":"Unit 1|TV","k":"Unit 1","a":"Check-in","en":"TV","de":"Fernsehen; Fernseher","bsp":"","hw":"","s":"189","p":true},{"id":"Unit 1|shower","k":"Unit 1","a":"Check-in","en":"shower","de":"Dusche","bsp":"Sherlock loves the bath and the shower too!","hw":"","s":"189","p":true},{"id":"Unit 1|chair","k":"Unit 1","a":"Check-in","en":"chair","de":"Stuhl; Sessel","bsp":"","hw":"","s":"189","p":true},{"id":"Unit 1|cupboard","k":"Unit 1","a":"Check-in","en":"cupboard","de":"Küchenschrank; Schrank","bsp":"","hw":"Achtung Aussprache: Das „p“ wird nicht gesprochen.","s":"189","p":true},{"id":"Unit 1|toilet","k":"Unit 1","a":"Check-in","en":"toilet","de":"Toilette","bsp":"Where's the toilet, please?","hw":"","s":"190","p":true},{"id":"Unit 1|bed","k":"Unit 1","a":"Check-in","en":"bed","de":"Bett","bsp":"","hw":"","s":"190","p":true},{"id":"Unit 1|clock","k":"Unit 1","a":"Check-in","en":"clock","de":"Uhr","bsp":"There is a clock in the bedroom.","hw":"","s":"190","p":false},{"id":"Unit 1|wardrobe","k":"Unit 1","a":"Check-in","en":"wardrobe","de":"Kleiderschrank","bsp":"Look! A mouse! – Where? – In the wardrobe!","hw":"","s":"190","p":true},{"id":"Unit 1|cooker","k":"Unit 1","a":"Check-in","en":"cooker","de":"Herd","bsp":"The cooker is in the kitchen.","hw":"","s":"190","p":false},{"id":"Unit 1|table","k":"Unit 1","a":"Check-in","en":"table","de":"Tisch","bsp":"The table is in the living room.","hw":"","s":"190","p":true},{"id":"Unit 1|living room","k":"Unit 1","a":"Rooms at home","en":"living room","de":"Wohnzimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|kitchen","k":"Unit 1","a":"Rooms at home","en":"kitchen","de":"Küche","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|bedroom","k":"Unit 1","a":"Rooms at home","en":"bedroom","de":"Schlafzimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|bathroom","k":"Unit 1","a":"Rooms at home","en":"bathroom","de":"Badezimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|good","k":"Unit 1","a":"Check-in","en":"good","de":"gut","bsp":"Luke and Sherlock are good friends.","hw":"","s":"190","p":true},{"id":"Unit 1|biscuit","k":"Unit 1","a":"Check-in","en":"biscuit","de":"Keks","bsp":"Here's a biscuit for you, Sherlock. – Woof!","hw":"","s":"190","p":false},{"id":"Unit 1|under","k":"Unit 1","a":"Check-in","en":"under","de":"unter","bsp":"Sherlock! Your ball is under the table.","hw":"","s":"190","p":true},{"id":"Unit 1|sister","k":"Unit 1","a":"Station 1: This is my family","en":"sister","de":"Schwester","bsp":"Is Holly your sister, Luke? – No, Holly is a girl from school.","hw":"","s":"190","p":true},{"id":"Unit 1|little","k":"Unit 1","a":"Station 1: This is my family","en":"little","de":"klein","bsp":"Irina is my big sister. And Jamie is my little brother.","hw":"little sister ↔ big sister","s":"190","p":true},{"id":"Unit 1|brother","k":"Unit 1","a":"Station 1: This is my family","en":"brother","de":"Bruder","bsp":"","hw":"brother ↔ sister","s":"190","p":true},{"id":"Unit 1|father","k":"Unit 1","a":"Station 1: This is my family","en":"father","de":"Vater","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|English","k":"Unit 1","a":"Station 1: This is my family","en":"English","de":"englisch; Englisch; aus England; Engländer/-in","bsp":"My father is English. I'm English too.","hw":"","s":"191","p":true},{"id":"Unit 1|mother","k":"Unit 1","a":"Station 1: This is my family","en":"mother","de":"Mutter","bsp":"Your mother and your father are your parents.","hw":"","s":"191","p":true},{"id":"Unit 1|cousin","k":"Unit 1","a":"Station 1: This is my family","en":"cousin","de":"Cousin/Cousine","bsp":"","hw":"Achtung Aussprache.","s":"191","p":false},{"id":"Unit 1|... is an only child","k":"Unit 1","a":"Station 1: This is my family","en":"... is an only child","de":"... ist ein Einzelkind","bsp":"My mother is an only child. I'm an only child too.","hw":"","s":"191","p":false},{"id":"Unit 1|like","k":"Unit 1","a":"Station 1: This is my family","en":"like","de":"wie","bsp":"I'm an only child, like my mum.","hw":"","s":"191","p":false},{"id":"Unit 1|dad","k":"Unit 1","a":"Station 1: This is my family","en":"dad","de":"Papa; Vati","bsp":"","hw":"Mum und Dad werden nur als Name groß geschrieben: Hi Dad! ABER: My dad is cool.","s":"191","p":false},{"id":"Unit 1|always","k":"Unit 1","a":"Station 1: This is my family","en":"always","de":"immer; ständig","bsp":"Let's go to the boating lake. That's always fun!","hw":"","s":"191","p":false},{"id":"Unit 1|easy","k":"Unit 1","a":"Station 1: This is my family","en":"easy","de":"einfach; leicht","bsp":"English is easy for me! I'm English.","hw":"","s":"191","p":false},{"id":"Unit 1|our","k":"Unit 1","a":"Station 1: This is my family","en":"our","de":"unser/-e","bsp":"We live here. This is our house.","hw":"","s":"191","p":false},{"id":"Unit 1|uncle","k":"Unit 1","a":"Station 1: This is my family","en":"uncle","de":"Onkel","bsp":"","hw":"Alle Familienbezeichnungen werden als Name groß geschrieben, z. B.: Uncle Jack, Grandma Carol.","s":"191","p":false},{"id":"Unit 1|aunt","k":"Unit 1","a":"Station 1: This is my family","en":"aunt","de":"Tante","bsp":"","hw":"aunt ↔ uncle","s":"191","p":false},{"id":"Unit 1|grandad","k":"Unit 1","a":"Station 1: This is my family","en":"grandad","de":"Opa; Opi","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|grandma","k":"Unit 1","a":"Station 1: This is my family","en":"grandma","de":"Oma; Omi","bsp":"","hw":"Achtung Aussprache: Das „d“ wird nicht gesprochen.","s":"191","p":true},{"id":"Unit 1|Tell me about ...","k":"Unit 1","a":"Station 1: This is my family","en":"Tell me about ...","de":"Erzähle/Erzählt mir von ...","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|guinea pig","k":"Unit 1","a":"Station 1: This is my family","en":"guinea pig","de":"Meerschweinchen","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|quiet","k":"Unit 1","a":"Station 1: This is my family","en":"quiet","de":"still; ruhig; leise","bsp":"Mice and rabbits are quiet animals.","hw":"","s":"191","p":true},{"id":"Unit 1|small","k":"Unit 1","a":"Station 1: This is my family","en":"small","de":"klein","bsp":"","hw":"small ↔ big","s":"191","p":true},{"id":"Unit 1|child, children (pl)","k":"Unit 1","a":"Station 1: This is my family","en":"child, children (pl)","de":"Kind","bsp":"","hw":"one child – two children","s":"191","p":true},{"id":"Unit 1|boring","k":"Unit 1","a":"Station 1: This is my family","en":"boring","de":"langweilig","bsp":"","hw":"That's boring! ↔ That's fun!","s":"191","p":false},{"id":"Unit 1|lucky number","k":"Unit 1","a":"Station 1: This is my family","en":"lucky number","de":"Glückszahl","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|problem","k":"Unit 1","a":"Station 2: What's the problem?","en":"problem","de":"Problem; Schwierigkeit","bsp":"Cats in the house? That's a big problem for Tony!","hw":"","s":"191","p":false},{"id":"Unit 1|part","k":"Unit 1","a":"Station 2: What's the problem?","en":"part","de":"Teil; Stadtteil","bsp":"Greenwich is a part of London.","hw":"","s":"191","p":false},{"id":"Unit 1|end","k":"Unit 1","a":"Station 2: What's the problem?","en":"end","de":"Ende; Schluss","bsp":"We live at the end of a very long road.","hw":"","s":"191","p":false},{"id":"Unit 1|long","k":"Unit 1","a":"Station 2: What's the problem?","en":"long","de":"lang","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|road","k":"Unit 1","a":"Station 2: What's the problem?","en":"road","de":"Straße","bsp":"I live in King's Road.","hw":"","s":"191","p":false},{"id":"Unit 1|garden","k":"Unit 1","a":"Station 2: What's the problem?","en":"garden","de":"Garten","bsp":"Luke and his family live in a house with a garden.","hw":"","s":"191","p":false},{"id":"Unit 1|in front of","k":"Unit 1","a":"Station 2: What's the problem?","en":"in front of","de":"vor","bsp":"There is a small garden in front of the house.","hw":"","s":"192","p":true},{"id":"Unit 1|behind","k":"Unit 1","a":"Station 2: What's the problem?","en":"behind","de":"hinter","bsp":"","hw":"behind ↔ in front of","s":"192","p":true},{"id":"Unit 1|only","k":"Unit 1","a":"Station 2: What's the problem?","en":"only","de":"erst; bloß; nur","bsp":"My brother is only two.","hw":"","s":"192","p":false},{"id":"Unit 1|Mr","k":"Unit 1","a":"Station 2: What's the problem?","en":"Mr","de":"Herr (Anrede)","bsp":"Mr Elliot is Luke's father.","hw":"","s":"192","p":true},{"id":"Unit 1|now","k":"Unit 1","a":"Station 2: What's the problem?","en":"now","de":"jetzt; nun","bsp":"Your friends are here, Luke. – Great! Now we can go to the park.","hw":"","s":"192","p":false},{"id":"Unit 1|there's (= there is)","k":"Unit 1","a":"Station 2: What's the problem?","en":"there's (= there is)","de":"es gibt","bsp":"There's one bedroom in the flat. There are three bedrooms in the house.","hw":"","s":"192","p":false},{"id":"Unit 1|car","k":"Unit 1","a":"Station 2: What's the problem?","en":"car","de":"Auto","bsp":"","hw":"","s":"192","p":true},{"id":"Unit 1|everywhere","k":"Unit 1","a":"Station 2: What's the problem?","en":"everywhere","de":"überall","bsp":"The park is great for rabbits. They're everywhere.","hw":"","s":"192","p":false},{"id":"Unit 1|again","k":"Unit 1","a":"Station 2: What's the problem?","en":"again","de":"wieder; noch einmal; noch mal","bsp":"Read the text. Then read it again and answer the questions.","hw":"","s":"192","p":false},{"id":"Unit 1|Look!","k":"Unit 1","a":"Station 2: What's the problem?","en":"Look!","de":"Schau/Schaut mal!","bsp":"Look! There's a mouse in the kitchen.","hw":"","s":"192","p":false},{"id":"Unit 1|floor","k":"Unit 1","a":"Station 2: What's the problem?","en":"floor","de":"Fußboden","bsp":"Your things are everywhere on the floor!","hw":"","s":"192","p":true},{"id":"Unit 1|next to","k":"Unit 1","a":"Station 2: What's the problem?","en":"next to","de":"neben","bsp":"I love this picture! That's Lou next to me.","hw":"","s":"192","p":true},{"id":"Unit 1|thing","k":"Unit 1","a":"Station 2: What's the problem?","en":"thing","de":"Ding; Sache","bsp":"Talk about the things in the picture.","hw":"","s":"192","p":false},{"id":"Unit 1|to listen (to)","k":"Unit 1","a":"Station 2: What's the problem?","en":"to listen (to)","de":"zuhören; anhören","bsp":"","hw":"Achtung Aussprache: Das „t“ wird nicht gesprochen.","s":"192","p":false},{"id":"Unit 1|idea","k":"Unit 1","a":"Station 2: What's the problem?","en":"idea","de":"Idee; Einfall","bsp":"Let's go to the park with Sherlock. – Great idea!","hw":"","s":"192","p":false},{"id":"Unit 1|loft","k":"Unit 1","a":"Station 2: What's the problem?","en":"loft","de":"Dachboden","bsp":"My old school things are in the loft.","hw":"","s":"192","p":false},{"id":"Unit 1|own","k":"Unit 1","a":"Station 2: What's the problem?","en":"own","de":"eigene/-r/-s","bsp":"Wow, your own room!","hw":"","s":"192","p":false},{"id":"Unit 1|toy","k":"Unit 1","a":"Station 2: What's the problem?","en":"toy","de":"Spielzeug","bsp":"Children like toys.","hw":"","s":"192","p":true},{"id":"Unit 1|very","k":"Unit 1","a":"Station 2: What's the problem?","en":"very","de":"sehr","bsp":"Your house is very nice. My new friends are very nice.","hw":"","s":"192","p":false},{"id":"Unit 1|happy","k":"Unit 1","a":"Station 2: What's the problem?","en":"happy","de":"glücklich; froh; fröhlich","bsp":"Luke is very happy.","hw":"","s":"192","p":true},{"id":"Unit 1|fantasy","k":"Unit 1","a":"Station 2: What's the problem?","en":"fantasy","de":"Fantasie; Traum-","bsp":"Is this a picture of your house? – No, it's a fantasy house.","hw":"","s":"192","p":false},{"id":"Unit 1|to play","k":"Unit 1","a":"Station 2: What's the problem?","en":"to play","de":"spielen","bsp":"Let's play football. – No, let's play with my new toy.","hw":"","s":"192","p":true},{"id":"Unit 1|cheese","k":"Unit 1","a":"Station 2: What's the problem?","en":"cheese","de":"Käse","bsp":"Mice love cheese.","hw":"","s":"192","p":true},{"id":"Unit 1|fridge","k":"Unit 1","a":"Station 2: What's the problem?","en":"fridge","de":"Kühlschrank","bsp":"There's only a small fridge in our kitchen.","hw":"","s":"192","p":false},{"id":"Unit 1|their","k":"Unit 1","a":"Station 2: What's the problem?","en":"their","de":"ihr/-e (Pl.)","bsp":"Their dog Sherlock is crazy.","hw":"they're (= they are): They're a nice family.","s":"192","p":false},{"id":"Unit 1|can","k":"Unit 1","a":"Station 2: What's the problem?","en":"can","de":"können; dürfen","bsp":"","hw":"","s":"192","p":false},{"id":"Unit 1|when","k":"Unit 1","a":"Station 2: What's the problem?","en":"when","de":"wenn; wann; als","bsp":"Where's Jamie? Please tell me when you see him.","hw":"","s":"192","p":false},{"id":"Unit 1|to see","k":"Unit 1","a":"Station 2: What's the problem?","en":"to see","de":"sehen","bsp":"What can you see in the picture?","hw":"","s":"192","p":true},{"id":"Unit 1|Thanks.","k":"Unit 1","a":"Station 2: What's the problem?","en":"Thanks.","de":"Danke.","bsp":"Thanks. – Thank you.","hw":"","s":"192","p":false},{"id":"Unit 1|home","k":"Unit 1","a":"Station 2: What's the problem?","en":"home","de":"Zuhause; Heim","bsp":"My home is here in Greenwich with my parents.","hw":"","s":"192","p":true},{"id":"Unit 1|to want (to)","k":"Unit 1","a":"Station 2: What's the problem?","en":"to want (to)","de":"wollen; mögen","bsp":"I want to play a game.","hw":"","s":"193","p":false},{"id":"Unit 1|music","k":"Unit 1","a":"Station 2: What's the problem?","en":"music","de":"Musik","bsp":"","hw":"Achtung Aussprache.","s":"193","p":true},{"id":"Unit 1|near","k":"Unit 1","a":"Station 2: What's the problem?","en":"near","de":"nahe; in der Nähe von","bsp":"Our house is near my school.","hw":"","s":"193","p":false},{"id":"Unit 1|busy","k":"Unit 1","a":"Station 2: What's the problem?","en":"busy","de":"belebt; beschäftigt","bsp":"Let's go to Luke's house. – Not now. I'm busy. Sorry!","hw":"","s":"193","p":false},{"id":"Unit 1|centre","k":"Unit 1","a":"Station 2: What's the problem?","en":"centre","de":"Zentrum; Center","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|Don't worry!","k":"Unit 1","a":"Station 2: What's the problem?","en":"Don't worry!","de":"Keine Sorge!","bsp":"It's OK. Don't worry!","hw":"","s":"193","p":false},{"id":"Unit 1|or","k":"Unit 1","a":"Station 2: What's the problem?","en":"or","de":"oder","bsp":"How old are you? Ten or eleven?","hw":"","s":"193","p":false},{"id":"Unit 1|address","k":"Unit 1","a":"Station 2: What's the problem?","en":"address","de":"Adresse","bsp":"","hw":"Achtung Aussprache und Schreibung.","s":"193","p":false},{"id":"Unit 1|thirteen","k":"Unit 1","a":"Numbers 13–100","en":"thirteen","de":"dreizehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fourteen","k":"Unit 1","a":"Numbers 13–100","en":"fourteen","de":"vierzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fifteen","k":"Unit 1","a":"Numbers 13–100","en":"fifteen","de":"fünfzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|sixteen","k":"Unit 1","a":"Numbers 13–100","en":"sixteen","de":"sechzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|seventeen","k":"Unit 1","a":"Numbers 13–100","en":"seventeen","de":"siebzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|eighteen","k":"Unit 1","a":"Numbers 13–100","en":"eighteen","de":"achtzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|nineteen","k":"Unit 1","a":"Numbers 13–100","en":"nineteen","de":"neunzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|twenty","k":"Unit 1","a":"Numbers 13–100","en":"twenty","de":"zwanzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|twenty-one","k":"Unit 1","a":"Numbers 13–100","en":"twenty-one","de":"einundzwanzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|thirty","k":"Unit 1","a":"Numbers 13–100","en":"thirty","de":"dreißig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|forty","k":"Unit 1","a":"Numbers 13–100","en":"forty","de":"vierzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fifty","k":"Unit 1","a":"Numbers 13–100","en":"fifty","de":"fünfzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|sixty","k":"Unit 1","a":"Numbers 13–100","en":"sixty","de":"sechzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|seventy","k":"Unit 1","a":"Numbers 13–100","en":"seventy","de":"siebzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|eighty","k":"Unit 1","a":"Numbers 13–100","en":"eighty","de":"achtzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|ninety","k":"Unit 1","a":"Numbers 13–100","en":"ninety","de":"neunzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|a/one hundred","k":"Unit 1","a":"Numbers 13–100","en":"a/one hundred","de":"hundert/einhundert","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|wall","k":"Unit 1","a":"Station 2: What's the problem?","en":"wall","de":"Wand; Mauer","bsp":"","hw":"","s":"194","p":true},{"id":"Unit 1|newspaper","k":"Unit 1","a":"Station 2: What's the problem?","en":"newspaper","de":"Zeitung","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|people (pl)","k":"Unit 1","a":"Station 2: What's the problem?","en":"people (pl)","de":"Leute; Menschen","bsp":"People like dogs and cats, but not rats!","hw":"","s":"194","p":false},{"id":"Unit 1|I","k":"Unit 1","a":"Pronouns","en":"I","de":"ich","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|you","k":"Unit 1","a":"Pronouns","en":"you","de":"du","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|we","k":"Unit 1","a":"Pronouns","en":"we","de":"wir","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|you (Pl.)","k":"Unit 1","a":"Pronouns","en":"you (Pl.)","de":"Ihr/Sie","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|my","k":"Unit 1","a":"Pronouns","en":"my","de":"mein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|your","k":"Unit 1","a":"Pronouns","en":"your","de":"dein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|her","k":"Unit 1","a":"Pronouns","en":"her","de":"ihr/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|its","k":"Unit 1","a":"Pronouns","en":"its","de":"sein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|your (Pl.)","k":"Unit 1","a":"Pronouns","en":"your (Pl.)","de":"euer/eure","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|so","k":"Unit 1","a":"Station 2: What's the problem?","en":"so","de":"so; also","bsp":"I like rabbits. They're so quiet.","hw":"","s":"194","p":false},{"id":"Unit 1|clothes (pl)","k":"Unit 1","a":"Station 2: What's the problem?","en":"clothes (pl)","de":"Kleider; Kleidung","bsp":"Olivia's clothes are nice.","hw":"Das englische Wort clothes steht immer im Plural.","s":"194","p":false},{"id":"Unit 1|lots (of)","k":"Unit 1","a":"Station 2: What's the problem?","en":"lots (of)","de":"viel/-e; jede Menge","bsp":"There are lots of rabbits in the park. They're everywhere.","hw":"","s":"194","p":false},{"id":"Unit 1|with me","k":"Unit 1","a":"Station 2: What's the problem?","en":"with me","de":"mit mir; bei mir","bsp":"","hw":"","s":"194","p":true},{"id":"Unit 1|from ... to","k":"Unit 1","a":"Station 2: What's the problem?","en":"from ... to","de":"von ... bis","bsp":"Say the numbers from 13 to 20.","hw":"","s":"194","p":false},{"id":"Unit 1|pet","k":"Unit 1","a":"Station 2: What's the problem?","en":"pet","de":"Haustier","bsp":"Sherlock is Luke's pet.","hw":"","s":"194","p":true},{"id":"Unit 1|model","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"model","de":"Modell; Tonmodell; Model","bsp":"Olivia can make models. You too?","hw":"","s":"194","p":false},{"id":"Unit 1|Who ... for?","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"Who ... for?","de":"Für wen ...?","bsp":"A new bedroom! Who is it for: Luke or Jamie?","hw":"","s":"194","p":false},{"id":"Unit 1|to explore","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"to explore","de":"auf Entdeckungsreise gehen; sich umschauen; erkunden; erforschen","bsp":"A new park? Great! Let's go and explore!","hw":"","s":"194","p":false},{"id":"Unit 1|best","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"best","de":"beste/-r/-s","bsp":"Olivia is Holly's best friend.","hw":"","s":"194","p":false},{"id":"Unit 1|maybe","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"maybe","de":"vielleicht","bsp":"Ding-dong! Who's that? – Maybe it's Olivia.","hw":"","s":"194","p":false},{"id":"Unit 1|after","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"after","de":"nach (zeitlich)","bsp":"Let's go to the park after school.","hw":"","s":"194","p":false},{"id":"Unit 1|visit","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"visit","de":"Besuch","bsp":"After Olivia's visit, Holly can only find one guinea pig.","hw":"","s":"194","p":false},{"id":"Unit 1|outside","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"outside","de":"nach draußen; draußen; außerhalb (von)","bsp":"Where's Sherlock? – He's outside in the garden.","hw":"","s":"194","p":false},{"id":"Unit 1|awful","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"awful","de":"schrecklich; furchtbar","bsp":"A mouse in the house? Oh no! This is awful!","hw":"","s":"194","p":false},{"id":"Unit 1|sentence","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"sentence","de":"Satz","bsp":"There are two or more words in a sentence.","hw":"","s":"195","p":false},{"id":"Unit 1|picture","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"picture","de":"Bild; Foto","bsp":"My dog is in the picture.","hw":"","s":"195","p":true},{"id":"Unit 1|right","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"right","de":"richtig; korrekt","bsp":"Is Luke eleven? – Yes, that's right.","hw":"","s":"195","p":true},{"id":"Unit 1|ending","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"ending","de":"Ende; Schluss (einer Geschichte)","bsp":"I like the ending of the story.","hw":"","s":"195","p":false},{"id":"Unit 1|around the house","k":"Unit 1","a":"Action UK! Around the house","en":"around the house","de":"rund ums Haus; ums Haus herum","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|What about ...?","k":"Unit 1","a":"Action UK! Around the house","en":"What about ...?","de":"Was ist mit ...?; Wie wär's mit ...?","bsp":"I like football. What about you? You too?","hw":"","s":"195","p":false},{"id":"Unit 1|hair straightener","k":"Unit 1","a":"Action UK! Around the house","en":"hair straightener","de":"Haarglätter","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|magazine","k":"Unit 1","a":"Action UK! Around the house","en":"magazine","de":"Zeitschrift","bsp":"","hw":"magazine – newspaper","s":"195","p":false},{"id":"Unit 1|book","k":"Unit 1","a":"Action UK! Around the house","en":"book","de":"Buch","bsp":"","hw":"","s":"195","p":true},{"id":"Unit 1|radio","k":"Unit 1","a":"Action UK! Around the house","en":"radio","de":"Radio","bsp":"","hw":"Achtung Aussprache.","s":"195","p":false},{"id":"Unit 1|fast","k":"Unit 1","a":"Action UK! Around the house","en":"fast","de":"schnell","bsp":"Not so fast, Olivia! Skating isn't easy.","hw":"","s":"195","p":false},{"id":"Unit 1|interesting","k":"Unit 1","a":"Action UK! Around the house","en":"interesting","de":"interessant","bsp":"This book is very interesting.","hw":"","s":"195","p":false},{"id":"Unit 1|exciting","k":"Unit 1","a":"Action UK! Around the house","en":"exciting","de":"spannend; aufregend","bsp":"I love exciting stories.","hw":"","s":"195","p":false},{"id":"Unit 1|computer","k":"Unit 1","a":"Types of media","en":"computer","de":"Computer","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|film","k":"Unit 1","a":"Types of media","en":"film","de":"Film","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|poster","k":"Unit 1","a":"Types of media","en":"poster","de":"Poster","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|smartphone","k":"Unit 1","a":"Types of media","en":"smartphone","de":"Smartphone","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|tablet","k":"Unit 1","a":"Types of media","en":"tablet","de":"Tablet","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|to","k":"Unit 1","a":"Check-out","en":"to","de":"zu; nach; auf; in; an","bsp":"Let's go to the boating lake. Let's go to London.","hw":"Wenn man to nicht betont, spricht man es [tə].","s":"195","p":false}];
+
+const SPEICHER = "vokabeltest.v1";
+// Tage bis zur nächsten Abfrage je Fach (Index = Fach 1..5)
+const FACH_TAGE = [0, 0, 1, 3, 7, 14];
+
+// ---------- Speicher ----------
+
+function leererStand() {
+  return {
+    karten: {},
+    einstellungen: { auswahl: [], richtung: "en-de", anzahl: 15, vorlesen: true, nurPunkt: false },
+  };
+}
+
+function ladeStand() {
+  try {
+    const roh = JSON.parse(localStorage.getItem(SPEICHER));
+    if (roh && roh.karten && roh.einstellungen) {
+      return { karten: roh.karten, einstellungen: { ...leererStand().einstellungen, ...roh.einstellungen } };
+    }
+  } catch (e) { /* kaputter Stand -> neu anfangen */ }
+  return leererStand();
+}
+
+let stand = ladeStand();
+
+function speichere() {
+  try { localStorage.setItem(SPEICHER, JSON.stringify(stand)); } catch (e) { /* z. B. privater Modus */ }
+}
+
+function heute() {
+  const d = new Date();
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+}
+
+// ---------- Hilfen ----------
+
+const $ = id => document.getElementById(id);
+
+function mische(liste) {
+  const a = liste.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function abschnittKey(v) { return v.k + "|" + v.a; }
+
+function kapitelListe() {
+  const kapitel = [];
+  for (const v of VOKABELN) {
+    let k = kapitel.find(x => x.name === v.k);
+    if (!k) kapitel.push(k = { name: v.k, abschnitte: [] });
+    let a = k.abschnitte.find(x => x.name === v.a);
+    if (!a) k.abschnitte.push(a = { name: v.a, key: abschnittKey(v), vokabeln: [] });
+    a.vokabeln.push(v);
+  }
+  return kapitel;
+}
+
+// ---------- Antwort prüfen ----------
+
+function norm(s, grossKlein) {
+  s = s.normalize("NFC")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/…/g, " ")
+    .replace(/\.{2,}/g, " ")
+    .replace(/\./g, "")
+    .replace(/[=!?,;:"„“”]/g, " ")
+    .replace(/-+(?=\s|$)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return grossKlein ? s : s.toLowerCase();
+}
+
+function falte(s) {
+  return norm(s).replace(/'/g, "").replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+}
+
+// „Freund/-in“ -> Freund, Freundin; „Komm/Kommt“ -> Komm, Kommt; „der-/die-/dasselbe“ -> derselbe …
+function wortFormen(wort) {
+  if (!wort.includes("/")) return [wort];
+  const teile = wort.split("/");
+  const formen = new Set([wort]);
+  if (teile.slice(1).every(t => t.startsWith("-"))) {
+    formen.add(teile[0]);
+    teile.slice(1).forEach(t => formen.add(teile[0] + t.slice(1)));
+  } else if (teile.slice(0, -1).every(t => t.endsWith("-"))) {
+    const letztes = teile[teile.length - 1];
+    const stamm = letztes.slice(3);
+    formen.add(letztes);
+    teile.slice(0, -1).forEach(t => formen.add(t.slice(0, -1) + stamm));
+  } else {
+    teile.forEach(t => formen.add(t));
+  }
+  return [...formen];
+}
+
+function kombiniere(text) {
+  let ergebnisse = [""];
+  for (const wort of text.split(" ").filter(Boolean)) {
+    const formen = wortFormen(wort);
+    const neu = [];
+    for (const anfang of ergebnisse) for (const f of formen) neu.push(anfang ? anfang + " " + f : f);
+    ergebnisse = neu.slice(0, 64);
+  }
+  return ergebnisse;
+}
+
+const variantenCache = new Map();
+
+// Alle Schreibweisen, die für ein Feld als richtig gelten
+function varianten(feld) {
+  if (variantenCache.has(feld)) return variantenCache.get(feld);
+  const aus = new Set();
+  const mitPlural = /\(pl\)/i.test(feld);
+  for (const alt of feld.split(";")) {
+    for (let a of alt.split(" / ")) {
+      a = a.trim();
+      if (!a) continue;
+      const formen = new Set([a, a.replace(/\([^)]*\)/g, " "), a.replace(/[()]/g, "")]);
+      for (const f of formen) {
+        const stuecke = mitPlural ? [f, ...f.split(",")] : [f];
+        for (const s of stuecke) for (const k of kombiniere(s.replace(/\s+/g, " ").trim())) if (k) aus.add(k);
+      }
+    }
+  }
+  const liste = [...aus];
+  variantenCache.set(feld, liste);
+  return liste;
+}
+
+function abstand(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  const z = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let vorher = z[0];
+    z[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = z[j];
+      z[j] = Math.min(z[j] + 1, z[j - 1] + 1, vorher + (a[i - 1] === b[j - 1] ? 0 : 1));
+      vorher = tmp;
+    }
+  }
+  return z[b.length];
+}
+
+// Deutsche Bedeutung -> alle englischen Einträge damit (für „klein“ = small und little)
+const nachDeutsch = new Map();
+for (const v of VOKABELN) {
+  for (const d of varianten(v.de)) {
+    const n = norm(d);
+    if (!nachDeutsch.has(n)) nachDeutsch.set(n, new Set());
+    nachDeutsch.get(n).add(v);
+  }
+}
+
+function pruefeAntwort(karte, eingabe) {
+  const v = karte.v;
+  const zielFeld = karte.richtung === "en-de" ? v.de : v.en;
+  const loesung = zielFeld;
+  const a = norm(eingabe);
+  if (!a) return { status: "falsch", loesung };
+
+  const ziele = varianten(zielFeld);
+  const zieleNorm = ziele.map(z => norm(z));
+
+  if (zieleNorm.includes(a)) {
+    let tipp = "";
+    const exakt = norm(eingabe, true);
+    const passt = karte.richtung === "en-de"
+      ? ziele.some(z => norm(z, true) === exakt)
+      : ziele.some(z => norm(z, true).slice(1) === exakt.slice(1));
+    if (!passt) tipp = "Achte auf die Groß- und Kleinschreibung.";
+    return { status: "richtig", loesung, tipp };
+  }
+
+  if (karte.richtung === "de-en") {
+    const ohneTo = zieleNorm.filter(z => z.startsWith("to ")).map(z => z.slice(3));
+    if (ohneTo.includes(a)) {
+      return { status: "richtig", loesung, tipp: "Bei Verben gehört das „to“ dazu: " + v.en };
+    }
+  }
+
+  const f = falte(eingabe);
+  if (ziele.some(z => falte(z) === f)) {
+    return { status: "richtig", loesung, tipp: "Achte auf die Schreibweise: " + loesung };
+  }
+
+  if (karte.richtung === "de-en") {
+    const andere = new Set();
+    for (const d of varianten(v.de)) for (const w of nachDeutsch.get(norm(d)) || []) if (w !== v) andere.add(w);
+    for (const w of andere) {
+      if (varianten(w.en).some(z => norm(z) === a)) {
+        return { status: "richtig", loesung, tipp: "Auch richtig! Hier im Buch gemeint ist aber: " + v.en };
+      }
+    }
+  }
+
+  const grenze = a.length >= 8 ? 2 : a.length >= 4 ? 1 : 0;
+  if (grenze && zieleNorm.some(z => abstand(a, z) <= grenze)) {
+    return { status: "fast", loesung };
+  }
+  return { status: "falsch", loesung };
+}
+
+// ---------- Vorlesen ----------
+
+let englischeStimme = null;
+function waehleStimme() {
+  if (!("speechSynthesis" in window)) return;
+  const stimmen = speechSynthesis.getVoices();
+  englischeStimme = stimmen.find(s => s.lang === "en-GB") || stimmen.find(s => s.lang.startsWith("en")) || null;
+}
+if ("speechSynthesis" in window) {
+  waehleStimme();
+  speechSynthesis.onvoiceschanged = waehleStimme;
+}
+
+function sprich(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+  const sauber = text.replace(/\([^)]*\)/g, " ").replace(/\.\.\.|…/g, " ").replace(/\s+/g, " ").trim();
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(sauber);
+  u.lang = "en-GB";
+  if (englischeStimme) u.voice = englischeStimme;
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+// ---------- Karteikasten ----------
+
+function kartenKey(v, richtung) { return v.id + "|" + richtung; }
+
+function fachVon(key) {
+  const k = stand.karten[key];
+  return k ? k.fach : 0;
+}
+
+function ausgewaehlteVokabeln() {
+  const e = stand.einstellungen;
+  return VOKABELN.filter(v => e.auswahl.includes(abschnittKey(v)) && (!e.nurPunkt || v.p));
+}
+
+function richtungen() {
+  const r = stand.einstellungen.richtung;
+  return r === "beide" ? ["en-de", "de-en"] : [r];
+}
+
+function alleKarten() {
+  const karten = [];
+  for (const v of ausgewaehlteVokabeln()) {
+    for (const r of richtungen()) karten.push({ v, richtung: r, key: kartenKey(v, r) });
+  }
+  return karten;
+}
+
+function istFaellig(karte) {
+  const k = stand.karten[karte.key];
+  return !k || k.faellig <= heute();
+}
+
+function baueRunde(karten, anzahl) {
+  const sortiert = mische(karten).sort((a, b) => fachVon(a.key) - fachVon(b.key));
+  // bei „Gemischt“ ein Wort nur einmal pro Runde
+  const gesehen = new Set();
+  const runde = [];
+  for (const k of sortiert) {
+    if (gesehen.has(k.v.id)) continue;
+    gesehen.add(k.v.id);
+    runde.push(k);
+    if (runde.length >= anzahl) break;
+  }
+  return mische(runde);
+}
+
+// ---------- Startseite ----------
+
+const KAPITEL = kapitelListe();
+
+function zeichneStart() {
+  const e = stand.einstellungen;
+  const liste = $("kapitelliste");
+  liste.innerHTML = "";
+  for (const k of KAPITEL) {
+    const block = document.createElement("div");
+    block.className = "kapitel";
+    const alle = k.abschnitte.every(a => e.auswahl.includes(a.key));
+    const einige = k.abschnitte.some(a => e.auswahl.includes(a.key));
+    const kopf = document.createElement("label");
+    kopf.className = "zeile";
+    kopf.innerHTML = `<input type="checkbox"><span class="name"></span><span class="anzahl"></span>`;
+    const kb = kopf.querySelector("input");
+    kb.checked = alle;
+    kb.indeterminate = einige && !alle;
+    kopf.querySelector(".name").textContent = k.name;
+    kopf.querySelector(".anzahl").textContent = k.abschnitte.reduce((n, a) => n + a.vokabeln.length, 0) + " Wörter";
+    kb.addEventListener("change", () => {
+      for (const a of k.abschnitte) setzeAuswahl(a.key, kb.checked);
+      zeichneStart();
+    });
+    block.appendChild(kopf);
+
+    const unter = document.createElement("div");
+    unter.className = "abschnitte";
+    for (const a of k.abschnitte) {
+      const z = document.createElement("label");
+      z.className = "zeile";
+      z.innerHTML = `<input type="checkbox"><span class="name"></span><span class="balken" title="Anteil in Fach 3 bis 5"><span></span></span><span class="anzahl"></span>`;
+      const cb = z.querySelector("input");
+      cb.checked = e.auswahl.includes(a.key);
+      cb.addEventListener("change", () => { setzeAuswahl(a.key, cb.checked); zeichneStart(); });
+      z.querySelector(".name").textContent = a.name;
+      z.querySelector(".anzahl").textContent = a.vokabeln.length;
+      z.querySelector(".balken > span").style.width = Math.round(gelerntAnteil(a.vokabeln) * 100) + "%";
+      unter.appendChild(z);
+    }
+    block.appendChild(unter);
+    liste.appendChild(block);
+  }
+
+  for (const b of $("richtung").querySelectorAll("button")) {
+    b.setAttribute("aria-pressed", String(b.dataset.wert === e.richtung));
+  }
+  $("anzahl").value = String(e.anzahl);
+  $("vorlesen").checked = e.vorlesen;
+  $("nurPunkt").checked = e.nurPunkt;
+
+  const karten = alleKarten();
+  const zaehler = [0, 0, 0, 0, 0, 0];
+  for (const k of karten) zaehler[fachVon(k.key)]++;
+  $("faecher").innerHTML = zaehler.map((n, i) =>
+    `<div class="fach f${i}"><b>${n}</b><small>${i === 0 ? "neu" : "Fach " + i}</small></div>`).join("");
+
+  const faellig = karten.filter(istFaellig).length;
+  const los = $("los");
+  if (!karten.length) {
+    los.textContent = "Wähle mindestens einen Abschnitt";
+    los.disabled = true;
+  } else if (faellig) {
+    los.textContent = `Los geht's (${Math.min(faellig, e.anzahl)} Wörter)`;
+    los.disabled = false;
+  } else {
+    los.textContent = "Heute ist nichts fällig – trotzdem üben";
+    los.disabled = false;
+  }
+}
+
+function gelerntAnteil(vokabeln) {
+  let gelernt = 0, gesamt = 0;
+  for (const v of vokabeln) for (const r of richtungen()) {
+    gesamt++;
+    if (fachVon(kartenKey(v, r)) >= 3) gelernt++;
+  }
+  return gesamt ? gelernt / gesamt : 0;
+}
+
+function setzeAuswahl(key, an) {
+  const a = stand.einstellungen.auswahl.filter(x => x !== key);
+  if (an) a.push(key);
+  stand.einstellungen.auswahl = a;
+  speichere();
+}
+
+$("richtung").addEventListener("click", ev => {
+  const b = ev.target.closest("button");
+  if (!b) return;
+  stand.einstellungen.richtung = b.dataset.wert;
+  speichere();
+  zeichneStart();
+});
+$("anzahl").addEventListener("change", ev => { stand.einstellungen.anzahl = Number(ev.target.value); speichere(); zeichneStart(); });
+$("vorlesen").addEventListener("change", ev => { stand.einstellungen.vorlesen = ev.target.checked; speichere(); });
+$("nurPunkt").addEventListener("change", ev => { stand.einstellungen.nurPunkt = ev.target.checked; speichere(); zeichneStart(); });
+
+$("los").addEventListener("click", () => {
+  const karten = alleKarten();
+  const faellig = karten.filter(istFaellig);
+  starteRunde(baueRunde(faellig.length ? faellig : karten, stand.einstellungen.anzahl));
+});
+
+// ---------- Abfrage ----------
+
+let runde = null;
+
+function zeige(bereich) {
+  for (const id of ["start", "abfrage", "ende"]) $(id).hidden = id !== bereich;
+  window.scrollTo(0, 0);
+}
+
+function starteRunde(karten) {
+  if (!karten.length) return;
+  runde = {
+    schlange: karten.slice(),
+    gesamt: karten.length,
+    fertig: 0,
+    ersterVersuch: new Map(),  // key -> true/false
+    aktuell: null,
+    ergebnis: null,
+  };
+  zeige("abfrage");
+  naechsteKarte();
+}
+
+function naechsteKarte() {
+  if (!runde.schlange.length) return zeigeEnde();
+  const karte = runde.schlange.shift();
+  runde.aktuell = karte;
+  runde.ergebnis = null;
+  const v = karte.v;
+  const enDe = karte.richtung === "en-de";
+
+  $("richtungstext").textContent = enDe ? "Englisch → Deutsch" : "Deutsch → Englisch";
+  $("frage").textContent = enDe ? v.en : v.de;
+  $("frageLaut").hidden = !enDe;
+  $("herkunft").textContent = `${v.k} · ${v.a} · S. ${v.s}`;
+  const fach = fachVon(karte.key);
+  $("fachmarke").textContent = runde.ersterVersuch.has(karte.key) ? "Wiederholung" : fach ? "Fach " + fach : "neues Wort";
+
+  const feld = $("antwort");
+  feld.value = "";
+  feld.disabled = false;
+  feld.placeholder = enDe ? "auf Deutsch" : "auf Englisch";
+  $("pruefen").disabled = false;
+  $("weissNicht").hidden = false;
+  $("rueckmeldung").hidden = true;
+  zeichneFortschritt();
+  feld.focus();
+  if (enDe && stand.einstellungen.vorlesen) sprich(v.en);
+}
+
+function zeichneFortschritt() {
+  $("fortschrittsbalken").style.width = Math.round(runde.fertig / runde.gesamt * 100) + "%";
+  $("zaehler").textContent = `${runde.fertig} / ${runde.gesamt}`;
+}
+
+function werteAus(eingabe) {
+  if (runde.ergebnis) return;
+  const karte = runde.aktuell;
+  const e = pruefeAntwort(karte, eingabe);
+  runde.ergebnis = e;
+  $("antwort").disabled = true;
+  $("pruefen").disabled = true;
+  $("weissNicht").hidden = true;
+  zeigeRueckmeldung();
+  if (karte.richtung === "de-en" && stand.einstellungen.vorlesen) sprich(karte.v.en);
+}
+
+const LOB = ["Richtig!", "Super!", "Klasse!", "Genau!", "Stark!", "Perfekt!"];
+
+function zeigeRueckmeldung() {
+  const e = runde.ergebnis;
+  const v = runde.aktuell.v;
+  const rm = $("rueckmeldung");
+  rm.className = "rueckmeldung " + e.status;
+  $("rmTitel").textContent = e.status === "richtig" ? LOB[Math.floor(Math.random() * LOB.length)]
+    : e.status === "fast" ? "Fast! Schau dir die Schreibweise an:" : "Leider nicht. Richtig ist:";
+  $("rmLoesung").textContent = e.loesung;
+  $("loesungLaut").hidden = runde.aktuell.richtung !== "de-en";
+  $("rmTipp").hidden = !e.tipp;
+  $("rmTipp").textContent = e.tipp || "";
+  $("rmBeispiel").hidden = !v.bsp;
+  $("rmBeispielText").textContent = v.bsp;
+  $("rmHinweis").hidden = !v.hw;
+  $("rmHinweisText").textContent = v.hw;
+  $("dochRichtig").hidden = e.status === "richtig" || !norm($("antwort").value);
+  rm.hidden = false;
+  $("weiter").focus();
+}
+
+function buche() {
+  const karte = runde.aktuell;
+  const richtig = runde.ergebnis.status === "richtig";
+  if (!runde.ersterVersuch.has(karte.key)) {
+    runde.ersterVersuch.set(karte.key, richtig);
+    const alt = stand.karten[karte.key] || { fach: 0, richtig: 0, falsch: 0 };
+    // neue Wörter, die auf Anhieb sitzen, rücken gleich in Fach 2
+    const fach = richtig ? Math.min(5, Math.max(alt.fach, 1) + 1) : 1;
+    stand.karten[karte.key] = {
+      fach,
+      faellig: heute() + FACH_TAGE[fach],
+      richtig: alt.richtig + (richtig ? 1 : 0),
+      falsch: alt.falsch + (richtig ? 0 : 1),
+    };
+    speichere();
+  }
+  if (richtig) {
+    runde.fertig++;
+  } else {
+    // falsch beantwortete Wörter kommen in dieser Runde noch einmal
+    runde.schlange.splice(Math.min(3, runde.schlange.length), 0, karte);
+  }
+}
+
+$("formular").addEventListener("submit", ev => { ev.preventDefault(); werteAus($("antwort").value); });
+$("weissNicht").addEventListener("click", () => werteAus(""));
+$("weiter").addEventListener("click", () => { buche(); naechsteKarte(); });
+$("dochRichtig").addEventListener("click", () => {
+  runde.ergebnis = { ...runde.ergebnis, status: "richtig", tipp: "" };
+  zeigeRueckmeldung();
+});
+$("frageLaut").addEventListener("click", () => sprich(runde.aktuell.v.en));
+$("loesungLaut").addEventListener("click", () => sprich(runde.aktuell.v.en));
+$("beispielLaut").addEventListener("click", () => sprich(runde.aktuell.v.bsp));
+$("beenden").addEventListener("click", () => {
+  if (runde.fertig === 0 || confirm("Runde beenden? Was du schon beantwortet hast, bleibt gespeichert.")) {
+    zeigeEnde();
+  }
+});
+
+// ---------- Ende ----------
+
+function zeigeEnde() {
+  const versuche = [...runde.ersterVersuch.values()];
+  const richtig = versuche.filter(Boolean).length;
+  const gesamt = versuche.length;
+  const quote = gesamt ? richtig / gesamt : 0;
+  $("endeBild").textContent = !gesamt ? "👋" : quote === 1 ? "🏆" : quote >= 0.8 ? "🎉" : quote >= 0.5 ? "👍" : "💪";
+  $("endeZahl").textContent = gesamt ? `${richtig} von ${gesamt} beim ersten Versuch richtig` : "Keine Wörter beantwortet";
+  $("endeText").textContent = !gesamt ? "" : quote === 1 ? "Alles gewusst – großartig!"
+    : quote >= 0.8 ? "Sehr gut gemacht!" : quote >= 0.5 ? "Gut! Die restlichen Wörter kommen bald wieder dran."
+    : "Dranbleiben – mit jeder Runde bleibt mehr hängen.";
+
+  const falsche = [];
+  for (const [key, ok] of runde.ersterVersuch) {
+    if (!ok) falsche.push(alleKartenNachKey(key));
+  }
+  runde.falsche = falsche.filter(Boolean);
+  const ul = $("endeFehler");
+  ul.innerHTML = "";
+  for (const k of runde.falsche) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="en"></span><span class="de"></span>`;
+    li.querySelector(".en").textContent = k.v.en;
+    li.querySelector(".de").textContent = k.v.de;
+    ul.appendChild(li);
+  }
+  $("endeFehlerBox").hidden = !runde.falsche.length;
+  $("nurFehler").hidden = !runde.falsche.length;
+  zeige("ende");
+  $("zumStart").focus();
+}
+
+function alleKartenNachKey(key) {
+  const trenner = key.lastIndexOf("|");
+  const id = key.slice(0, trenner);
+  const richtung = key.slice(trenner + 1);
+  const v = VOKABELN.find(x => x.id === id);
+  return v ? { v, richtung, key } : null;
+}
+
+$("nurFehler").addEventListener("click", () => starteRunde(mische(runde.falsche)));
+$("zumStart").addEventListener("click", () => { zeichneStart(); zeige("start"); });
+
+// ---------- Fortschritt sichern / laden ----------
+
+$("sichern").addEventListener("click", () => {
+  const d = new Date();
+  const datum = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const inhalt = JSON.stringify({ app: "vokabeltest", version: 1, gesichert: datum, stand }, null, 1);
+  const url = URL.createObjectURL(new Blob([inhalt], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vokabeltest-fortschritt-${datum}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("laden").addEventListener("click", () => $("datei").click());
+$("datei").addEventListener("change", async ev => {
+  const datei = ev.target.files[0];
+  ev.target.value = "";
+  if (!datei) return;
+  try {
+    const d = JSON.parse(await datei.text());
+    if (d.app !== "vokabeltest" || !d.stand || !d.stand.karten) throw new Error();
+    if (!confirm(`Fortschritt vom ${d.gesichert || "?"} laden? Der jetzige Stand wird ersetzt.`)) return;
+    stand = { karten: d.stand.karten, einstellungen: { ...leererStand().einstellungen, ...d.stand.einstellungen } };
+    speichere();
+    zeichneStart();
+  } catch (e) {
+    alert("Diese Datei ist keine Fortschritts-Sicherung vom Vokabeltrainer.");
+  }
+});
+
+$("zuruecksetzen").addEventListener("click", () => {
+  if (!confirm("Wirklich den ganzen Fortschritt löschen? Alle Wörter fangen wieder bei „neu“ an.")) return;
+  stand = { ...leererStand(), einstellungen: stand.einstellungen };
+  speichere();
+  zeichneStart();
+});
+
+// ---------- Start ----------
+
+if (!stand.einstellungen.auswahl.length && KAPITEL.length) {
+  stand.einstellungen.auswahl = KAPITEL[0].abschnitte.map(a => a.key);
+}
+zeichneStart();
+</script>
+</body>
+</html>
