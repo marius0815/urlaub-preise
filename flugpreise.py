@@ -25,6 +25,7 @@ import argparse
 import base64
 import datetime as dt
 import json
+import os
 import re
 import sys
 import time
@@ -148,6 +149,7 @@ def lade_config(pfad):
             "log_datei": str(einst.get("log_datei", "lauf.log")).strip(),
         },
         "hopping_min_aufenthalt_h": hopping_default_h,
+        "max_laufzeit_min": int(einst.get("max_laufzeit_min", SOFT_DEADLINE_STANDARD_MIN)),
         "konstellationen": konstellationen,
     }
 
@@ -167,7 +169,8 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 # Soft-Deadline pro Reise: bricht kontrolliert ab, BEVOR die Windows-Aufgabe
 # den Lauf nach 30 Min hart killt. So werden Teilergebnis, Marker-Ersetzung und State
 # noch sauber geschrieben (statt mitten im Lauf verloren zu gehen).
-SOFT_DEADLINE_S = 24 * 60
+SOFT_DEADLINE_STANDARD_MIN = 24   # in der config.xlsx ueberschreibbar:
+                                  # Einstellungen -> max_laufzeit_min
 
 
 def append_log(log_path, line):
@@ -308,11 +311,31 @@ def search_url_kette(legs):
     return "https://www.google.com/travel/flights/search?tfs=" + build_tfs_legs(legs, 3)
 
 
+_DATUM = re.compile(r"(\d{1,4})[.\-/](\d{1,2})[.\-/](\d{2,4})")
+
+
+def _parse_datum(m):
+    a, b, c = m.groups()
+    if len(a) == 4:                      # ISO: JJJJ-MM-TT
+        jahr, monat, tag = int(a), int(b), int(c)
+    else:                                # TT.MM.JJJJ
+        tag, monat, jahr = int(a), int(b), int(c)
+        if jahr < 100:
+            jahr += 2000
+    return dt.date(jahr, monat, tag)
+
+
 def parse_zeitraum(s: str):
-    """'08.08.2026-28.08.2026' -> (date, date)."""
-    a, b = s.split("-")
-    f = lambda x: dt.datetime.strptime(x.strip(), "%d.%m.%Y").date()
-    return f(a), f(b)
+    """'08.08.2026-28.08.2026' -> (date, date). Toleriert '.', '-' und '/' als Trenner
+    innerhalb eines Datums sowie ISO-Schreibweise ('2026-08-08 bis 2026-08-28'), damit
+    Tippfehler wie '18-10.2026' den Lauf nicht abbrechen."""
+    treffer = list(_DATUM.finditer(str(s or "")))
+    if len(treffer) != 2:
+        raise ValueError(f"Zeitraum '{s}' nicht lesbar - erwartet z. B. '18.10.2026-31.10.2026'")
+    start, ende = (_parse_datum(m) for m in treffer)
+    if ende < start:
+        start, ende = ende, start
+    return start, ende
 
 
 def datums_proben(zeitraum, naechte, schritt_tage=4):
@@ -587,6 +610,9 @@ def main():
                    f"(in Excel geoeffnet?) - Lauf uebersprungen.")
         return
     abflug = cfg["abflug"]
+    # Laufzeit-Begrenzung je Reise: bricht kontrolliert ab, BEVOR die Windows-Aufgabe
+    # den Lauf hart killt - Teilergebnis und Resume-Offset werden noch gesichert.
+    soft_deadline_s = cfg.get("max_laufzeit_min", SOFT_DEADLINE_STANDARD_MIN) * 60
     schwelle_default = None
     n_best = cfg["ausgaben"]["best_of_excel"].get("n", 3)
     log_path = BASE / cfg["ausgaben"].get("log_datei", "lauf.log")
@@ -685,6 +711,28 @@ def main():
             # Flache, deterministische Liste aller Abfragen.
             # return: (Abflug x Ziel x Datumsprobe); hopping: (Startdatum x Abflug).
             # Resume: bei nicht --reise ab gespeichertem Offset weitermachen.
+            # Fehlerhafte oder abgelaufene Zeitraum-Angaben duerfen NICHT den ganzen Lauf
+            # abbrechen: betroffene Reise wird sauber protokolliert und uebersprungen.
+            def ueberspringen(zeile):
+                # Reise nicht abfragbar: protokollieren und im State abhaken, damit der
+                # naechste Lauf zur naechsten Reise weitergeht statt hier haengen zu bleiben.
+                ersetze_lauf_marker(log_path, marker_pos, f"{zeit()} | {name} | {zeile}")
+                if not args.reise and heute is not None:
+                    resume.pop(name, None)
+                    state_path.write_text(json.dumps({
+                        "datum": heute, "letzter_index": naechster,
+                        "fehlversuche": fehlversuche, "resume": resume
+                    }), encoding="utf-8")
+
+            try:
+                _, fenster_ende = parse_zeitraum(k["zeitraum"])
+            except ValueError as e:
+                ueberspringen(f"Status: KONFIG_FEHLER | {e}")
+                continue
+            if fenster_ende < dt.date.today():
+                ueberspringen(f"Status: ZEITRAUM_VERGANGEN | Reisefenster "
+                    f"{k['zeitraum']} liegt in der Vergangenheit - Zeitraum in der Config anpassen.")
+                continue
             if k["typ"] == "hopping":
                 combos = [(abf, probe) for probe in hopping_proben(k, args.schritt_tage)
                           for abf in abflug]
@@ -693,6 +741,14 @@ def main():
                 proben = datums_proben(k["zeitraum"], naechte, args.schritt_tage)
                 combos = [(orig, dest, dep, ret)
                           for orig in abflug for dest in ziele for dep, ret in proben]
+            if not combos:
+                if k["typ"] == "hopping":
+                    grund = "keine Startdaten im Reisefenster - Zeitraum/Naechte pruefen"
+                else:
+                    grund = (f"Naechte {k.get('naechte')} passen nicht in das Reisefenster "
+                             f"{k['zeitraum']} - Zeitraum verlaengern oder Naechte verringern")
+                ueberspringen(f"Status: KONFIG_FEHLER | {grund}")
+                continue
             start = resume.get(name, 0) if (heute is not None) else 0
             if start >= len(combos):
                 start = 0  # Sicherheitsnetz (z. B. Config verkleinert)
@@ -702,7 +758,7 @@ def main():
             leg_cache = {}  # Hopping: (von, nach, datum) -> Angebote; Ketten teilen sich Etappen-Abfragen
             try:
                 for combo in combos[start:]:
-                    if time.time() - t0 > SOFT_DEADLINE_S:
+                    if time.time() - t0 > soft_deadline_s:
                         abgebrochen = True
                         break
                     if args.limit and gesamt_abfragen >= args.limit:
@@ -782,7 +838,7 @@ def main():
                 # Soft-Deadline gegriffen: Teilergebnis gesichert, der Rest wird im
                 # naechsten Lauf ab 'neuer_offset' fortgesetzt (echtes Resume).
                 status = "TEILWEISE"
-                hinweis = (f"Soft-Zeitlimit {SOFT_DEADLINE_S // 60} Min erreicht - "
+                hinweis = (f"Soft-Zeitlimit {soft_deadline_s // 60} Min erreicht - "
                            f"Abfrage {neuer_offset}/{len(combos)} erreicht, Rest wird fortgesetzt")
             # Nur loggen, wenn die Reise tatsaechlich abgefragt wurde.
             # Nicht behandelte (z. B. wegen --limit uebersprungene) erzeugen KEINE Zeile.
@@ -1367,31 +1423,38 @@ def veroeffentliche_html(pfad, repo):
         body = {"message": "Stand " + dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "content": inhalt}
         # CREATE_NO_WINDOW: sonst blitzt bei jedem Lauf kurz ein Konsolenfenster auf
         kein_fenster = subprocess.CREATE_NO_WINDOW
+        # Mit dem Konto des Repo-Besitzers veroeffentlichen, unabhaengig davon, welches
+        # gh-Konto gerade aktiv ist (fremdes Konto ohne Schreibrecht -> GitHub meldet 404).
+        env = None
+        t = subprocess.run(["gh", "auth", "token", "--user", repo.split("/")[0]],
+                           capture_output=True, text=True, timeout=30, creationflags=kein_fenster)
+        if t.returncode == 0 and t.stdout.strip():
+            env = {**os.environ, "GH_TOKEN": t.stdout.strip()}
         r = subprocess.run(["gh", "api", f"repos/{repo}/contents/index.html", "-q", ".sha"],
-                           capture_output=True, text=True, timeout=60, creationflags=kein_fenster)
+                           capture_output=True, text=True, timeout=60, creationflags=kein_fenster, env=env)
         if r.returncode == 0 and r.stdout.strip():
             body["sha"] = r.stdout.strip()
         vorher = subprocess.run(["gh", "api", f"repos/{repo}/pages/builds/latest", "-q", ".status"],
-                                capture_output=True, text=True, timeout=60, creationflags=kein_fenster)
+                                capture_output=True, text=True, timeout=60, creationflags=kein_fenster, env=env)
         r = subprocess.run(["gh", "api", "-X", "PUT", f"repos/{repo}/contents/index.html", "--input", "-"],
                            input=json.dumps(body), capture_output=True, text=True, timeout=120,
-                           creationflags=kein_fenster)
+                           creationflags=kein_fenster, env=env)
         if r.returncode != 0 and '"sha"' in r.stderr:
             # sha-Abfrage war fehlgeschlagen/leer (transient): einmal frisch holen und wiederholen
             s2 = subprocess.run(["gh", "api", f"repos/{repo}/contents/index.html", "-q", ".sha"],
-                                capture_output=True, text=True, timeout=60, creationflags=kein_fenster)
+                                capture_output=True, text=True, timeout=60, creationflags=kein_fenster, env=env)
             if s2.returncode == 0 and s2.stdout.strip():
                 body["sha"] = s2.stdout.strip()
                 r = subprocess.run(["gh", "api", "-X", "PUT", f"repos/{repo}/contents/index.html", "--input", "-"],
                                    input=json.dumps(body), capture_output=True, text=True, timeout=120,
-                                   creationflags=kein_fenster)
+                                   creationflags=kein_fenster, env=env)
         if r.returncode != 0:
             print(f"[!] Veroeffentlichung fehlgeschlagen: {r.stderr.strip()[:200]}")
         elif vorher.returncode == 0 and vorher.stdout.strip() == "errored":
             # Voriger Pages-Build war kaputt (GitHub-Infrastruktur): zusaetzlich zum
             # automatischen Build des neuen Commits explizit einen Neuaufbau anstossen.
             subprocess.run(["gh", "api", "-X", "POST", f"repos/{repo}/pages/builds"],
-                           capture_output=True, text=True, timeout=60, creationflags=kein_fenster)
+                           capture_output=True, text=True, timeout=60, creationflags=kein_fenster, env=env)
             print("Hinweis: voriger Pages-Build fehlgeschlagen - Neuaufbau angestossen.")
     except Exception as e:
         print(f"[!] Veroeffentlichung fehlgeschlagen: {str(e)[:200]}")

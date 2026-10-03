@@ -201,7 +201,7 @@ Einrichtung auf einem neuen Rechner:
 1. Repo klonen, dann `pip install playwright openpyxl` und `python -m playwright install chromium`.
 2. `config-pfad.beispiel.json` als `config-pfad.json` kopieren und die Pfade anpassen
    (Zielordner = wo config.xlsx, best-of.xlsx und die HTML-Ansichten liegen sollen).
-3. Die mitgelieferte **`config_beispiel.xlsx`** in den Zielordner kopieren, in
+3. Die mitgelieferte **`config_template.xlsx`** in den Zielordner kopieren, in
    `config.xlsx` umbenennen und die Reisen/Einstellungen darin anpassen
    (Spalten-Bedeutung s. oben; die Vorlage enthält Beispiele für beide Reisetypen).
 4. Optional Veröffentlichung: GitHub CLI (`gh`) installieren und anmelden, ein eigenes
