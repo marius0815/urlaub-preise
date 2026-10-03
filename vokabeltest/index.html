@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f7d4f">
+<title>Paula's Vocabulary Trainer</title>
+<style>
+  :root {
+    --gruen: #2f7d4f;
+    --gruen-hell: #e3f3e8;
+    --blau: #2563a8;
+    --blau-hell: #e5eef9;
+    --rot: #c0392b;
+    --rot-hell: #fbe9e7;
+    --gelb: #b7791f;
+    --gelb-hell: #fdf3dc;
+    --text: #1f2933;
+    --grau: #6b7785;
+    --linie: #d9dee4;
+    --hinter: #f5f7f4;
+    --karte: #ffffff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    color: var(--text);
+    background: var(--hinter);
+    line-height: 1.4;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 8px 0 4px; color: var(--gruen); }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .unterzeile { color: var(--grau); margin: 0; }
+  .titelkopf { display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; }
+  .titelkopf .foto {
+    width: 92px; height: 92px; flex: none; object-fit: cover;
+    border-radius: 22px; border: 3px solid #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .15); transform: rotate(-3deg);
+  }
+  .titelkopf h1 { margin-top: 0; }
+  .box {
+    background: var(--karte);
+    border: 1px solid var(--linie);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 18px;
+    cursor: pointer;
+    background: var(--blau-hell);
+    color: var(--blau);
+    font-weight: 600;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  button.haupt { background: var(--gruen); color: #fff; width: 100%; font-size: 1.1rem; padding: 15px; }
+  button.leise { background: transparent; color: var(--grau); padding: 8px 10px; font-weight: 500; }
+  button.klein { padding: 7px 12px; font-size: .9rem; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #f2b705; outline-offset: 2px; }
+
+  /* Auswahl */
+  .kapitel { border-top: 1px solid var(--linie); padding: 10px 0 4px; }
+  .kapitel:first-of-type { border-top: 0; padding-top: 0; }
+  .kapitel > label { font-weight: 700; }
+  .abschnitte { margin: 6px 0 0 4px; }
+  label.zeile {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 4px; cursor: pointer;
+  }
+  label.zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--gruen); }
+  .zeile .name { flex: 1; }
+  .zeile .anzahl { color: var(--grau); font-size: .85rem; white-space: nowrap; }
+  .balken { width: 70px; height: 8px; border-radius: 4px; background: var(--linie); overflow: hidden; flex: none; }
+  .balken > span { display: block; height: 100%; background: var(--gruen); }
+
+  .umschalter { display: flex; gap: 6px; flex-wrap: wrap; }
+  .umschalter button { flex: 1; min-width: 120px; background: #eef1f4; color: var(--text); font-weight: 500; }
+  .umschalter button[aria-pressed="true"] { background: var(--gruen); color: #fff; font-weight: 700; }
+  .optionen { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+
+  .faecher { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; text-align: center; }
+  .fach { background: #eef1f4; border-radius: 10px; padding: 8px 2px; }
+  .fach b { display: block; font-size: 1.2rem; }
+  .fach small { color: var(--grau); font-size: .75rem; }
+  .fach.f5 { background: var(--gruen-hell); }
+  .erklaerung { color: var(--grau); font-size: .85rem; margin: 10px 0 0; }
+
+  .fusszeile { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+
+  /* Abfrage */
+  .kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .fortschritt { flex: 1; height: 10px; background: var(--linie); border-radius: 5px; overflow: hidden; }
+  .fortschritt > span { display: block; height: 100%; background: var(--gruen); transition: width .3s; }
+  .zaehler { color: var(--grau); font-size: .9rem; white-space: nowrap; }
+  .karte { text-align: center; padding: 22px 16px; }
+  .richtung { color: var(--grau); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+  .frage { font-size: 1.7rem; font-weight: 700; margin: 10px 0 4px; word-break: break-word; }
+  .herkunft { color: var(--grau); font-size: .8rem; }
+  .fachmarke { display: inline-block; background: #eef1f4; border-radius: 8px; padding: 2px 8px; font-size: .75rem; color: var(--grau); margin-top: 8px; }
+  .laut { background: transparent; padding: 4px 8px; font-size: 1.3rem; vertical-align: middle; }
+  .eingabe { display: flex; gap: 8px; margin-top: 18px; }
+  .eingabe input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1.2rem;
+    padding: 12px 14px; border: 2px solid var(--linie); border-radius: 10px;
+  }
+  .eingabe input:disabled { background: #f3f4f6; color: var(--text); }
+  .nebenknoepfe { display: flex; justify-content: center; margin-top: 6px; }
+
+  .rueckmeldung { border-radius: var(--radius); padding: 14px 16px; margin-top: 14px; text-align: left; }
+  .rueckmeldung.richtig { background: var(--gruen-hell); }
+  .rueckmeldung.fast { background: var(--gelb-hell); }
+  .rueckmeldung.falsch { background: var(--rot-hell); }
+  .rueckmeldung .titel { font-weight: 700; font-size: 1.1rem; }
+  .richtig .titel { color: var(--gruen); }
+  .fast .titel { color: var(--gelb); }
+  .falsch .titel { color: var(--rot); }
+  .loesung { font-size: 1.2rem; font-weight: 700; margin: 6px 0; }
+  .zusatz { font-size: .95rem; margin-top: 6px; }
+  .zusatz .etikett { color: var(--grau); font-size: .8rem; display: block; }
+  .tipp { font-size: .95rem; margin-top: 6px; }
+  .knopfreihe { display: flex; gap: 8px; margin-top: 14px; }
+  .knopfreihe button { flex: 1; }
+  .knopfreihe button.weiter { background: var(--gruen); color: #fff; }
+
+  /* Ende */
+  .ergebnis { text-align: center; }
+  .ergebnis .gross { font-size: 3rem; margin: 4px 0; }
+  .ergebnis .zahl { font-size: 1.3rem; font-weight: 700; }
+  .fehlerliste { list-style: none; padding: 0; margin: 0; }
+  .fehlerliste li { padding: 8px 0; border-top: 1px solid var(--linie); display: flex; gap: 10px; }
+  .fehlerliste li:first-child { border-top: 0; }
+  .fehlerliste .en { font-weight: 700; flex: 1; }
+  .fehlerliste .de { flex: 1; color: var(--grau); }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Startseite -->
+  <section id="start">
+    <header class="titelkopf">
+      <img class="foto" src="data:image/jpeg;base64,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" alt="Paula">
+      <div>
+        <h1>Paula's Vocabulary Trainer</h1>
+        <p class="unterzeile">Wähle aus, was du üben möchtest.</p>
+      </div>
+    </header>
+
+    <div class="box">
+      <h2>Kapitel</h2>
+      <div id="kapitelliste"></div>
+    </div>
+
+    <div class="box">
+      <h2>Richtung</h2>
+      <div class="umschalter" id="richtung">
+        <button type="button" data-wert="en-de">Englisch → Deutsch</button>
+        <button type="button" data-wert="de-en">Deutsch → Englisch</button>
+        <button type="button" data-wert="beide">Gemischt</button>
+      </div>
+      <div class="optionen">
+        <label class="zeile">
+          <span class="name">Wörter pro Runde</span>
+          <select id="anzahl">
+            <option>10</option><option>15</option><option>20</option><option>30</option>
+          </select>
+        </label>
+        <label class="zeile"><input type="checkbox" id="vorlesen"><span class="name">Englische Wörter vorlesen</span></label>
+        <label class="zeile"><input type="checkbox" id="nurPunkt"><span class="name">Nur Wörter mit Punkt (•) aus dem Buch</span></label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Dein Karteikasten</h2>
+      <div class="faecher" id="faecher"></div>
+      <p class="erklaerung">Richtig beantwortet rückt ein Wort ein Fach weiter und kommt seltener dran. Falsch beantwortet geht es zurück in Fach 1.</p>
+    </div>
+
+    <button type="button" class="haupt" id="los">Los geht's</button>
+
+    <div class="fusszeile">
+      <button type="button" class="leise klein" id="sichern">Fortschritt sichern</button>
+      <button type="button" class="leise klein" id="laden">Fortschritt laden</button>
+      <button type="button" class="leise klein" id="zuruecksetzen">Alles zurücksetzen</button>
+      <input type="file" id="datei" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <!-- Abfrage -->
+  <section id="abfrage" hidden>
+    <div class="kopf">
+      <button type="button" class="leise klein" id="beenden">✕ Beenden</button>
+      <div class="fortschritt"><span id="fortschrittsbalken"></span></div>
+      <span class="zaehler" id="zaehler"></span>
+    </div>
+
+    <div class="box karte">
+      <div class="richtung" id="richtungstext"></div>
+      <div class="frage"><span id="frage"></span><button type="button" class="laut" id="frageLaut" title="Vorlesen" hidden>🔊</button></div>
+      <div class="herkunft" id="herkunft"></div>
+      <div class="fachmarke" id="fachmarke"></div>
+
+      <form class="eingabe" id="formular" autocomplete="off">
+        <input id="antwort" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Deine Antwort">
+        <button type="submit" id="pruefen">Prüfen</button>
+      </form>
+      <div class="nebenknoepfe"><button type="button" class="leise klein" id="weissNicht">Weiß ich nicht</button></div>
+
+      <div class="rueckmeldung" id="rueckmeldung" hidden>
+        <div class="titel" id="rmTitel"></div>
+        <div class="loesung"><span id="rmLoesung"></span><button type="button" class="laut" id="loesungLaut" title="Vorlesen" hidden>🔊</button></div>
+        <div class="tipp" id="rmTipp" hidden></div>
+        <div class="zusatz" id="rmBeispiel" hidden><span class="etikett">Beispiel</span><span id="rmBeispielText"></span><button type="button" class="laut" id="beispielLaut" title="Vorlesen">🔊</button></div>
+        <div class="zusatz" id="rmHinweis" hidden><span class="etikett">Hinweis</span><span id="rmHinweisText"></span></div>
+        <div class="knopfreihe">
+          <button type="button" id="dochRichtig" hidden>Ich hatte doch recht</button>
+          <button type="button" class="weiter" id="weiter">Weiter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ende einer Runde -->
+  <section id="ende" hidden>
+    <div class="box ergebnis">
+      <div class="gross" id="endeBild"></div>
+      <div class="zahl" id="endeZahl"></div>
+      <p id="endeText"></p>
+    </div>
+    <div class="box" id="endeFehlerBox" hidden>
+      <h2>Diese Wörter üben wir nochmal</h2>
+      <ul class="fehlerliste" id="endeFehler"></ul>
+    </div>
+    <div class="knopfreihe">
+      <button type="button" id="nurFehler" hidden>Fehler nochmal üben</button>
+      <button type="button" class="weiter" id="zumStart">Zum Start</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+const VOKABELN = [{"id":"Pick-up A|We're from ...","k":"Pick-up A","a":"We're from Greenwich","en":"We're from ...","de":"Wir sind aus ...","bsp":"We're from Greenwich.","hw":"","s":"184","p":false},{"id":"Pick-up A|Here's your ball.","k":"Pick-up A","a":"We're from Greenwich","en":"Here's your ball.","de":"Hier ist dein Ball.","bsp":"Here's your ball, Sherlock.","hw":"","s":"184","p":false},{"id":"Pick-up A|Hello.","k":"Pick-up A","a":"We're from Greenwich","en":"Hello.","de":"Hallo.","bsp":"","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm ...","k":"Pick-up A","a":"We're from Greenwich","en":"I'm ...","de":"Ich heiße ...; Ich bin ...","bsp":"Hello, I'm Pia.","hw":"","s":"184","p":true},{"id":"Pick-up A|You're a nice dog.","k":"Pick-up A","a":"We're from Greenwich","en":"You're a nice dog.","de":"Du bist ein lieber Hund.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|What's your name?","k":"Pick-up A","a":"We're from Greenwich","en":"What's your name?","de":"Wie heißt du?; Wie heißen Sie?","bsp":"What's your name? – I'm Olivia.","hw":"","s":"184","p":true},{"id":"Pick-up A|Sorry, my dog is crazy.","k":"Pick-up A","a":"We're from Greenwich","en":"Sorry, my dog is crazy.","de":"Tut mir leid, mein Hund ist verrückt.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|and","k":"Pick-up A","a":"We're from Greenwich","en":"and","de":"und","bsp":"","hw":"Wenn man and nicht betont, spricht man es [ənd].","s":"184","p":true},{"id":"Pick-up A|My name is ...","k":"Pick-up A","a":"We're from Greenwich","en":"My name is ...","de":"Ich heiße ...","bsp":"What's your name? – My name is Luke.","hw":"","s":"184","p":true},{"id":"Pick-up A|Where are you from?","k":"Pick-up A","a":"We're from Greenwich","en":"Where are you from?","de":"Woher kommst du?; Woher kommt ihr?; Woher kommen Sie?","bsp":"Where are you from? – We're from Greenwich.","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm from ...","k":"Pick-up A","a":"We're from Greenwich","en":"I'm from ...","de":"Ich bin aus ...","bsp":"Where are you from? – I'm from Cologne.","hw":"","s":"184","p":false},{"id":"Pick-up A|in","k":"Pick-up A","a":"We're from Greenwich","en":"in","de":"in; im; rein; herein","bsp":"Cologne is in Germany.","hw":"","s":"184","p":true},{"id":"Pick-up A|Are you on holiday in ...?","k":"Pick-up A","a":"We're from Greenwich","en":"Are you on holiday in ...?","de":"Bist du im Urlaub in ...?; Sind Sie im Urlaub in ...?; Seid ihr im Urlaub in ...?","bsp":"Are you on holiday in London? – Yes, I'm here with my parents.","hw":"","s":"184","p":false},{"id":"Pick-up A|yes","k":"Pick-up A","a":"We're from Greenwich","en":"yes","de":"ja","bsp":"","hw":"","s":"184","p":true},{"id":"Pick-up A|I'm here with my parents.","k":"Pick-up A","a":"We're from Greenwich","en":"I'm here with my parents.","de":"Ich bin mit meinen Eltern hier.","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|How old are you?","k":"Pick-up A","a":"We're from Greenwich","en":"How old are you?","de":"Wie alt bist du?; Wie alt seid ihr?; Wie alt sind Sie?","bsp":"","hw":"Achte beim Sprechen auf die Verbindung zwischen den Wörtern.","s":"184","p":true},{"id":"Pick-up A|You too?","k":"Pick-up A","a":"We're from Greenwich","en":"You too?","de":"Du auch?; Sie auch?; Ihr auch?","bsp":"How old are you? – I'm ten. You too?","hw":"","s":"184","p":false},{"id":"Pick-up A|no","k":"Pick-up A","a":"We're from Greenwich","en":"no","de":"nein","bsp":"","hw":"no ↔ yes","s":"184","p":true},{"id":"Pick-up A|the","k":"Pick-up A","a":"We're from Greenwich","en":"the","de":"der; die (auch Pl.); das","bsp":"","hw":"","s":"184","p":false},{"id":"Pick-up A|boy","k":"Pick-up A","a":"We're from Greenwich","en":"boy","de":"Junge","bsp":"Luke is a boy from Greenwich.","hw":"","s":"184","p":true},{"id":"Pick-up A|girl","k":"Pick-up A","a":"We're from Greenwich","en":"girl","de":"Mädchen","bsp":"And Pia is a girl from Germany.","hw":"","s":"184","p":true},{"id":"Pick-up A|me too","k":"Pick-up A","a":"We're from Greenwich","en":"me too","de":"ich auch","bsp":"I'm eleven. – Me too.","hw":"","s":"184","p":false},{"id":"Pick-up A|friend","k":"Pick-up A","a":"We're from Greenwich","en":"friend","de":"Freund/-in","bsp":"Dave and Luke are friends.","hw":"","s":"184","p":true},{"id":"Pick-up A|he","k":"Pick-up A","a":"We're from Greenwich","en":"he","de":"er","bsp":"Dave is nice. He's my friend.","hw":"","s":"184","p":false},{"id":"Pick-up A|she","k":"Pick-up A","a":"We're from Greenwich","en":"she","de":"sie","bsp":"Pia is from Cologne. = She's from Cologne.","hw":"","s":"185","p":false},{"id":"Pick-up A|it","k":"Pick-up A","a":"We're from Greenwich","en":"it","de":"es; er; sie","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|they","k":"Pick-up A","a":"We're from Greenwich","en":"they","de":"sie (Pl.)","bsp":"Dave and Sherlock are my friends. = They are my friends.","hw":"","s":"185","p":false},{"id":"Pick-up A|new","k":"Pick-up A","a":"We're from Greenwich","en":"new","de":"neu","bsp":"I'm new in London.","hw":"","s":"185","p":false},{"id":"Pick-up A|Come in.","k":"Pick-up A","a":"We're from Greenwich","en":"Come in.","de":"Komm/Kommt rein.","bsp":"Come in, Luke.","hw":"","s":"185","p":true},{"id":"Pick-up A|to come","k":"Pick-up A","a":"We're from Greenwich","en":"to come","de":"kommen","bsp":"Can you come to the park today?","hw":"","s":"185","p":false},{"id":"Pick-up A|mum","k":"Pick-up A","a":"We're from Greenwich","en":"mum","de":"Mama; Mutti","bsp":"","hw":"Mum wird nur als Name groß geschrieben: Hi Mum! ABER: Where's your mum?","s":"185","p":false},{"id":"Pick-up A|who","k":"Pick-up A","a":"We're from Greenwich","en":"who","de":"wer; wem; wen","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|Mrs","k":"Pick-up A","a":"We're from Greenwich","en":"Mrs","de":"Frau (Anrede)","bsp":"","hw":"Achtung Aussprache.","s":"185","p":true},{"id":"Pick-up A|town","k":"Pick-up A","a":"We're from Greenwich","en":"town","de":"Stadt","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|in the north of","k":"Pick-up A","a":"We're from Greenwich","en":"in the north of","de":"im Norden von","bsp":"Hamburg is in the north of Germany.","hw":"","s":"185","p":false},{"id":"Pick-up A|student","k":"Pick-up A","a":"We're from Greenwich","en":"student","de":"Schüler/-in; Student/-in","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|class","k":"Pick-up A","a":"We're from Greenwich","en":"class","de":"Klasse; Schulklasse","bsp":"","hw":"class – student – school","s":"185","p":true},{"id":"Pick-up A|You're right.","k":"Pick-up A","a":"We're from Greenwich","en":"You're right.","de":"Du hast Recht.","bsp":"Yes, you're right. London is in England.","hw":"","s":"185","p":false},{"id":"Pick-up A|all","k":"Pick-up A","a":"We're from Greenwich","en":"all","de":"alle/-s; ganz","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|the same","k":"Pick-up A","a":"We're from Greenwich","en":"the same","de":"der-/die-/dasselbe; der/die/das gleiche","bsp":"Sam, Lisa, Sally and Emma are in my class. We're all in the same class.","hw":"","s":"185","p":false},{"id":"Pick-up A|his","k":"Pick-up A","a":"We're from Greenwich","en":"his","de":"sein/-e","bsp":"Luke is in the park with his dog Sherlock.","hw":"","s":"185","p":false},{"id":"Pick-up A|cat","k":"Pick-up A","a":"We're from Greenwich","en":"cat","de":"Katze","bsp":"","hw":"","s":"185","p":true},{"id":"Pick-up A|animal","k":"Pick-up A","a":"We're from Greenwich","en":"animal","de":"Tier","bsp":"Cats and dogs are animals.","hw":"","s":"185","p":true},{"id":"Pick-up A|to like","k":"Pick-up A","a":"We're from Greenwich","en":"to like","de":"mögen; gern haben","bsp":"I like horses.","hw":"","s":"185","p":true},{"id":"Pick-up A|I'm not scared of dogs.","k":"Pick-up A","a":"We're from Greenwich","en":"I'm not scared of dogs.","de":"Ich habe keine Angst vor Hunden.","bsp":"I'm not scared of dogs. And I'm not scared of rats.","hw":"","s":"185","p":false},{"id":"Pick-up A|not","k":"Pick-up A","a":"We're from Greenwich","en":"not","de":"nicht","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|but","k":"Pick-up A","a":"We're from Greenwich","en":"but","de":"aber","bsp":"I like cats, but I don't like dogs.","hw":"","s":"185","p":false},{"id":"Pick-up A|OK","k":"Pick-up A","a":"We're from Greenwich","en":"OK","de":"o.k.; in Ordnung","bsp":"","hw":"Achtung Schreibung.","s":"185","p":false},{"id":"Pick-up A|They don't eat mice.","k":"Pick-up A","a":"We're from Greenwich","en":"They don't eat mice.","de":"Sie essen keine Mäuse.","bsp":"","hw":"","s":"185","p":false},{"id":"Pick-up A|mouse, mice (pl)","k":"Pick-up A","a":"We're from Greenwich","en":"mouse, mice (pl)","de":"Maus/Mäuse","bsp":"","hw":"one mouse – two mice","s":"185","p":true},{"id":"Pick-up A|to hate","k":"Pick-up A","a":"We're from Greenwich","en":"to hate","de":"nicht mögen; hassen","bsp":"","hw":"to hate ↔ to love","s":"185","p":false},{"id":"Pick-up A|to love","k":"Pick-up A","a":"We're from Greenwich","en":"to love","de":"lieben; gern mögen","bsp":"","hw":"","s":"185","p":true},{"id":"Pick-up A|dog","k":"Pick-up A","a":"Animals","en":"dog","de":"Hund","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|rat","k":"Pick-up A","a":"Animals","en":"rat","de":"Ratte","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|bird","k":"Pick-up A","a":"Animals","en":"bird","de":"Vogel","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|swan","k":"Pick-up A","a":"Animals","en":"swan","de":"Schwan","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|bee","k":"Pick-up A","a":"Animals","en":"bee","de":"Biene","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|horse","k":"Pick-up A","a":"Animals","en":"horse","de":"Pferd","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|rabbit","k":"Pick-up A","a":"Animals","en":"rabbit","de":"Kaninchen; Hase","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|squirrel","k":"Pick-up A","a":"Animals","en":"squirrel","de":"Eichhörnchen","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|worm","k":"Pick-up A","a":"Animals","en":"worm","de":"Wurm","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I love ...","k":"Pick-up A","a":"Likes and dislikes","en":"I love ...","de":"Ich liebe ...; Ich mag total gern ...; Ich mache ... total gern.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I like ...","k":"Pick-up A","a":"Likes and dislikes","en":"I like ...","de":"Ich mag ...; Mir gefällt ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|... are OK.","k":"Pick-up A","a":"Likes and dislikes","en":"... are OK.","de":"... sind o.k.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I don't like ...","k":"Pick-up A","a":"Likes and dislikes","en":"I don't like ...","de":"Ich mag ... nicht.; Ich mag kein/keine ...; Mir gefällt ... nicht.","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I'm scared of ...","k":"Pick-up A","a":"Likes and dislikes","en":"I'm scared of ...","de":"Ich habe Angst vor ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|I hate ...","k":"Pick-up A","a":"Likes and dislikes","en":"I hate ...","de":"Ich mag ... nicht.; Ich hasse ...","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|That was close!","k":"Pick-up A","a":"We're from Greenwich","en":"That was close!","de":"Das war knapp!","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|Thank you.","k":"Pick-up A","a":"We're from Greenwich","en":"Thank you.","de":"Danke.","bsp":"Here's your ball. – Oh, thank you.","hw":"","s":"186","p":true},{"id":"Pick-up A|This is ...","k":"Pick-up A","a":"We're from Greenwich","en":"This is ...","de":"Das (hier) ist ...","bsp":"This is my friend Olivia. – Hi Olivia.","hw":"","s":"186","p":true},{"id":"Pick-up A|school","k":"Pick-up A","a":"We're from Greenwich","en":"school","de":"Schule","bsp":"Pia is a girl from school. – No, Pia is a girl from Germany.","hw":"","s":"186","p":true},{"id":"Pick-up A|big","k":"Pick-up A","a":"We're from Greenwich","en":"big","de":"groß","bsp":"Greenwich Park is big.","hw":"","s":"186","p":true},{"id":"Pick-up A|great","k":"Pick-up A","a":"We're from Greenwich","en":"great","de":"großartig; toll; super","bsp":"I love it. It's great!","hw":"","s":"186","p":false},{"id":"Pick-up A|for","k":"Pick-up A","a":"We're from Greenwich","en":"for","de":"zum; für","bsp":"","hw":"","s":"186","p":false},{"id":"Pick-up A|cycling","k":"Pick-up A","a":"We're from Greenwich","en":"cycling","de":"Radfahren","bsp":"Greenwich Park is great for cycling.","hw":"","s":"186","p":false},{"id":"Pick-up A|sport","k":"Pick-up A","a":"We're from Greenwich","en":"sport","de":"Sport; Sportart","bsp":"What's your favourite sport, Pia?","hw":"","s":"186","p":true},{"id":"Pick-up A|football","k":"Pick-up A","a":"We're from Greenwich","en":"football","de":"Fußball","bsp":"My favourite sport is football.","hw":"","s":"186","p":true},{"id":"Pick-up A|boating lake","k":"Pick-up A","a":"We're from Greenwich","en":"boating lake","de":"See zum Rudern","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|Let's go!","k":"Pick-up A","a":"We're from Greenwich","en":"Let's go!","de":"Lass/Lasst uns hingehen!; Los, gehen wir hin!","bsp":"A boating lake? Great, let's go!","hw":"","s":"187","p":true},{"id":"Pick-up A|It's fun.","k":"Pick-up A","a":"We're from Greenwich","en":"It's fun.","de":"Es macht Spaß.","bsp":"I like cycling. It's fun.","hw":"","s":"187","p":false},{"id":"Pick-up A|hobby, hobbies (pl)","k":"Pick-up A","a":"We're from Greenwich","en":"hobby, hobbies (pl)","de":"Hobby","bsp":"My hobby is cycling. – My hobbies are football and skateboarding.","hw":"","s":"187","p":true},{"id":"Pick-up A|place","k":"Pick-up A","a":"We're from Greenwich","en":"place","de":"Ort; Stelle; Platz","bsp":"Greenwich park is a nice place in Greenwich.","hw":"","s":"187","p":false},{"id":"Pick-up A|skateboarding","k":"Pick-up A","a":"We're from Greenwich","en":"skateboarding","de":"Skateboardfahren","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|volleyball","k":"Pick-up A","a":"We're from Greenwich","en":"volleyball","de":"Volleyball","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|(inline) skating","k":"Pick-up A","a":"We're from Greenwich","en":"(inline) skating","de":"Inlineskatefahren","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|My favourite ... is ...","k":"Pick-up A","a":"We're from Greenwich","en":"My favourite ... is ...","de":"Mein Lieblings... ist ...","bsp":"My favourite sport is volleyball.","hw":"","s":"187","p":false},{"id":"Pick-up A|Let's ...","k":"Pick-up A","a":"Fun and action","en":"Let's ...","de":"Lass(t) uns ...","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|... is great.","k":"Pick-up A","a":"Fun and action","en":"... is great.","de":"... ist toll / ... ist super.","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|... is fun.","k":"Pick-up A","a":"Fun and action","en":"... is fun.","de":"Es macht Spaß ... / ... macht Spaß.","bsp":"","hw":"","s":"187","p":false},{"id":"Pick-up A|colour","k":"Pick-up A","a":"We're from Greenwich","en":"colour","de":"Farbe","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|puzzle","k":"Pick-up A","a":"We're from Greenwich","en":"puzzle","de":"Rätsel; Puzzle","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|What's your favourite ...?","k":"Pick-up A","a":"We're from Greenwich","en":"What's your favourite ...?","de":"Was ist dein/-e Lieblings...?","bsp":"What's your favourite colour? – My favourite colour is orange.","hw":"","s":"187","p":true},{"id":"Pick-up A|black","k":"Pick-up A","a":"Colours","en":"black","de":"schwarz","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|blue","k":"Pick-up A","a":"Colours","en":"blue","de":"blau","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|brown","k":"Pick-up A","a":"Colours","en":"brown","de":"braun","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|green","k":"Pick-up A","a":"Colours","en":"green","de":"grün","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|grey","k":"Pick-up A","a":"Colours","en":"grey","de":"grau","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|orange","k":"Pick-up A","a":"Colours","en":"orange","de":"orange","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|pink","k":"Pick-up A","a":"Colours","en":"pink","de":"pink; rosa","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|purple","k":"Pick-up A","a":"Colours","en":"purple","de":"lila; violett","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|red","k":"Pick-up A","a":"Colours","en":"red","de":"rot","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|white","k":"Pick-up A","a":"Colours","en":"white","de":"weiß","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|yellow","k":"Pick-up A","a":"Colours","en":"yellow","de":"gelb","bsp":"","hw":"","s":"187","p":true},{"id":"Pick-up A|one","k":"Pick-up A","a":"Numbers 1–12","en":"one","de":"eins","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|two","k":"Pick-up A","a":"Numbers 1–12","en":"two","de":"zwei","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|three","k":"Pick-up A","a":"Numbers 1–12","en":"three","de":"drei","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|four","k":"Pick-up A","a":"Numbers 1–12","en":"four","de":"vier","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|five","k":"Pick-up A","a":"Numbers 1–12","en":"five","de":"fünf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|six","k":"Pick-up A","a":"Numbers 1–12","en":"six","de":"sechs","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|seven","k":"Pick-up A","a":"Numbers 1–12","en":"seven","de":"sieben","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|eight","k":"Pick-up A","a":"Numbers 1–12","en":"eight","de":"acht","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|nine","k":"Pick-up A","a":"Numbers 1–12","en":"nine","de":"neun","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|ten","k":"Pick-up A","a":"Numbers 1–12","en":"ten","de":"zehn","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|eleven","k":"Pick-up A","a":"Numbers 1–12","en":"eleven","de":"elf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|twelve","k":"Pick-up A","a":"Numbers 1–12","en":"twelve","de":"zwölf","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|kite","k":"Pick-up A","a":"We're from Greenwich","en":"kite","de":"Drachen","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|bike","k":"Pick-up A","a":"We're from Greenwich","en":"bike","de":"Fahrrad","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|boat","k":"Pick-up A","a":"We're from Greenwich","en":"boat","de":"Boot","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|bag","k":"Pick-up A","a":"We're from Greenwich","en":"bag","de":"Tasche; Tüte","bsp":"What's in your bag?","hw":"","s":"188","p":true},{"id":"Pick-up A|there is/are","k":"Pick-up A","a":"We're from Greenwich","en":"there is/are","de":"es gibt","bsp":"There is one kite in the picture. There are nine boats on the lake.","hw":"","s":"188","p":true},{"id":"Pick-up A|number","k":"Pick-up A","a":"We're from Greenwich","en":"number","de":"Zahl; Nummer","bsp":"","hw":"","s":"188","p":true},{"id":"Pick-up A|quiz","k":"Pick-up A","a":"We're from Greenwich","en":"quiz","de":"Quiz; Rätsel","bsp":"Here's a quiz for you. – Great. That's fun!","hw":"","s":"188","p":false},{"id":"Pick-up A|Please.","k":"Pick-up A","a":"We're from Greenwich","en":"Please.","de":"Bitte.","bsp":"Please listen. Thank you.","hw":"","s":"188","p":true},{"id":"Pick-up A|phone number","k":"Pick-up A","a":"We're from Greenwich","en":"phone number","de":"Telefon-; Handynummer","bsp":"What's your phone number? – It's 0123-45678.","hw":"","s":"188","p":false},{"id":"Pick-up A|What colour is ...?","k":"Pick-up A","a":"We're from Greenwich","en":"What colour is ...?","de":"Welche Farbe hat ...?","bsp":"What colour is boat number 2?","hw":"","s":"188","p":false},{"id":"Pick-up A|first name","k":"Pick-up A","a":"We're from Greenwich","en":"first name","de":"Vorname","bsp":"I'm Luke Elliot. My first name is Luke.","hw":"","s":"188","p":false},{"id":"Pick-up A|surname","k":"Pick-up A","a":"We're from Greenwich","en":"surname","de":"Nachname","bsp":"And my surname is Elliot.","hw":"","s":"188","p":false},{"id":"Pick-up A|double","k":"Pick-up A","a":"We're from Greenwich","en":"double","de":"Doppel-; zweimal","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|to rap","k":"Pick-up A","a":"We're from Greenwich","en":"to rap","de":"rappen","bsp":"","hw":"","s":"188","p":false},{"id":"Pick-up A|like me","k":"Pick-up A","a":"We're from Greenwich","en":"like me","de":"wie ich","bsp":"","hw":"","s":"188","p":false},{"id":"Unit 1|at home","k":"Unit 1","a":"Check-in","en":"at home","de":"zu Hause","bsp":"Luke is at home.","hw":"","s":"189","p":true},{"id":"Unit 1|to live","k":"Unit 1","a":"Check-in","en":"to live","de":"wohnen; leben","bsp":"We live in Greenwich.","hw":"","s":"189","p":true},{"id":"Unit 1|flat","k":"Unit 1","a":"Check-in","en":"flat","de":"Wohnung","bsp":"Pia lives in Cologne. Her flat is in Cologne.","hw":"","s":"189","p":false},{"id":"Unit 1|in the street","k":"Unit 1","a":"Check-in","en":"in the street","de":"auf der Straße","bsp":"Luke and Sherlock are in the street.","hw":"","s":"189","p":false},{"id":"Unit 1|family","k":"Unit 1","a":"Check-in","en":"family","de":"Familie","bsp":"Pia and her parents are a family.","hw":"","s":"189","p":true},{"id":"Unit 1|house","k":"Unit 1","a":"Check-in","en":"house","de":"Haus","bsp":"We live in a house, not in a flat.","hw":"","s":"189","p":true},{"id":"Unit 1|door","k":"Unit 1","a":"Check-in","en":"door","de":"Tür","bsp":"That's his house – with the green door.","hw":"","s":"189","p":true},{"id":"Unit 1|bath","k":"Unit 1","a":"Check-in","en":"bath","de":"Bad; Badewanne","bsp":"","hw":"","s":"189","p":false},{"id":"Unit 1|TV","k":"Unit 1","a":"Check-in","en":"TV","de":"Fernsehen; Fernseher","bsp":"","hw":"","s":"189","p":true},{"id":"Unit 1|shower","k":"Unit 1","a":"Check-in","en":"shower","de":"Dusche","bsp":"Sherlock loves the bath and the shower too!","hw":"","s":"189","p":true},{"id":"Unit 1|chair","k":"Unit 1","a":"Check-in","en":"chair","de":"Stuhl; Sessel","bsp":"","hw":"","s":"189","p":true},{"id":"Unit 1|cupboard","k":"Unit 1","a":"Check-in","en":"cupboard","de":"Küchenschrank; Schrank","bsp":"","hw":"Achtung Aussprache: Das „p“ wird nicht gesprochen.","s":"189","p":true},{"id":"Unit 1|toilet","k":"Unit 1","a":"Check-in","en":"toilet","de":"Toilette","bsp":"Where's the toilet, please?","hw":"","s":"190","p":true},{"id":"Unit 1|bed","k":"Unit 1","a":"Check-in","en":"bed","de":"Bett","bsp":"","hw":"","s":"190","p":true},{"id":"Unit 1|clock","k":"Unit 1","a":"Check-in","en":"clock","de":"Uhr","bsp":"There is a clock in the bedroom.","hw":"","s":"190","p":false},{"id":"Unit 1|wardrobe","k":"Unit 1","a":"Check-in","en":"wardrobe","de":"Kleiderschrank","bsp":"Look! A mouse! – Where? – In the wardrobe!","hw":"","s":"190","p":true},{"id":"Unit 1|cooker","k":"Unit 1","a":"Check-in","en":"cooker","de":"Herd","bsp":"The cooker is in the kitchen.","hw":"","s":"190","p":false},{"id":"Unit 1|table","k":"Unit 1","a":"Check-in","en":"table","de":"Tisch","bsp":"The table is in the living room.","hw":"","s":"190","p":true},{"id":"Unit 1|living room","k":"Unit 1","a":"Rooms at home","en":"living room","de":"Wohnzimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|kitchen","k":"Unit 1","a":"Rooms at home","en":"kitchen","de":"Küche","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|bedroom","k":"Unit 1","a":"Rooms at home","en":"bedroom","de":"Schlafzimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|bathroom","k":"Unit 1","a":"Rooms at home","en":"bathroom","de":"Badezimmer","bsp":"","hw":"","s":"190","p":false},{"id":"Unit 1|good","k":"Unit 1","a":"Check-in","en":"good","de":"gut","bsp":"Luke and Sherlock are good friends.","hw":"","s":"190","p":true},{"id":"Unit 1|biscuit","k":"Unit 1","a":"Check-in","en":"biscuit","de":"Keks","bsp":"Here's a biscuit for you, Sherlock. – Woof!","hw":"","s":"190","p":false},{"id":"Unit 1|under","k":"Unit 1","a":"Check-in","en":"under","de":"unter","bsp":"Sherlock! Your ball is under the table.","hw":"","s":"190","p":true},{"id":"Unit 1|sister","k":"Unit 1","a":"Station 1: This is my family","en":"sister","de":"Schwester","bsp":"Is Holly your sister, Luke? – No, Holly is a girl from school.","hw":"","s":"190","p":true},{"id":"Unit 1|little","k":"Unit 1","a":"Station 1: This is my family","en":"little","de":"klein","bsp":"Irina is my big sister. And Jamie is my little brother.","hw":"little sister ↔ big sister","s":"190","p":true},{"id":"Unit 1|brother","k":"Unit 1","a":"Station 1: This is my family","en":"brother","de":"Bruder","bsp":"","hw":"brother ↔ sister","s":"190","p":true},{"id":"Unit 1|father","k":"Unit 1","a":"Station 1: This is my family","en":"father","de":"Vater","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|English","k":"Unit 1","a":"Station 1: This is my family","en":"English","de":"englisch; Englisch; aus England; Engländer/-in","bsp":"My father is English. I'm English too.","hw":"","s":"191","p":true},{"id":"Unit 1|mother","k":"Unit 1","a":"Station 1: This is my family","en":"mother","de":"Mutter","bsp":"Your mother and your father are your parents.","hw":"","s":"191","p":true},{"id":"Unit 1|cousin","k":"Unit 1","a":"Station 1: This is my family","en":"cousin","de":"Cousin/Cousine","bsp":"","hw":"Achtung Aussprache.","s":"191","p":false},{"id":"Unit 1|... is an only child","k":"Unit 1","a":"Station 1: This is my family","en":"... is an only child","de":"... ist ein Einzelkind","bsp":"My mother is an only child. I'm an only child too.","hw":"","s":"191","p":false},{"id":"Unit 1|like","k":"Unit 1","a":"Station 1: This is my family","en":"like","de":"wie","bsp":"I'm an only child, like my mum.","hw":"","s":"191","p":false},{"id":"Unit 1|dad","k":"Unit 1","a":"Station 1: This is my family","en":"dad","de":"Papa; Vati","bsp":"","hw":"Mum und Dad werden nur als Name groß geschrieben: Hi Dad! ABER: My dad is cool.","s":"191","p":false},{"id":"Unit 1|always","k":"Unit 1","a":"Station 1: This is my family","en":"always","de":"immer; ständig","bsp":"Let's go to the boating lake. That's always fun!","hw":"","s":"191","p":false},{"id":"Unit 1|easy","k":"Unit 1","a":"Station 1: This is my family","en":"easy","de":"einfach; leicht","bsp":"English is easy for me! I'm English.","hw":"","s":"191","p":false},{"id":"Unit 1|our","k":"Unit 1","a":"Station 1: This is my family","en":"our","de":"unser/-e","bsp":"We live here. This is our house.","hw":"","s":"191","p":false},{"id":"Unit 1|uncle","k":"Unit 1","a":"Station 1: This is my family","en":"uncle","de":"Onkel","bsp":"","hw":"Alle Familienbezeichnungen werden als Name groß geschrieben, z. B.: Uncle Jack, Grandma Carol.","s":"191","p":false},{"id":"Unit 1|aunt","k":"Unit 1","a":"Station 1: This is my family","en":"aunt","de":"Tante","bsp":"","hw":"aunt ↔ uncle","s":"191","p":false},{"id":"Unit 1|grandad","k":"Unit 1","a":"Station 1: This is my family","en":"grandad","de":"Opa; Opi","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|grandma","k":"Unit 1","a":"Station 1: This is my family","en":"grandma","de":"Oma; Omi","bsp":"","hw":"Achtung Aussprache: Das „d“ wird nicht gesprochen.","s":"191","p":true},{"id":"Unit 1|Tell me about ...","k":"Unit 1","a":"Station 1: This is my family","en":"Tell me about ...","de":"Erzähle/Erzählt mir von ...","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|guinea pig","k":"Unit 1","a":"Station 1: This is my family","en":"guinea pig","de":"Meerschweinchen","bsp":"","hw":"","s":"191","p":true},{"id":"Unit 1|quiet","k":"Unit 1","a":"Station 1: This is my family","en":"quiet","de":"still; ruhig; leise","bsp":"Mice and rabbits are quiet animals.","hw":"","s":"191","p":true},{"id":"Unit 1|small","k":"Unit 1","a":"Station 1: This is my family","en":"small","de":"klein","bsp":"","hw":"small ↔ big","s":"191","p":true},{"id":"Unit 1|child, children (pl)","k":"Unit 1","a":"Station 1: This is my family","en":"child, children (pl)","de":"Kind","bsp":"","hw":"one child – two children","s":"191","p":true},{"id":"Unit 1|boring","k":"Unit 1","a":"Station 1: This is my family","en":"boring","de":"langweilig","bsp":"","hw":"That's boring! ↔ That's fun!","s":"191","p":false},{"id":"Unit 1|lucky number","k":"Unit 1","a":"Station 1: This is my family","en":"lucky number","de":"Glückszahl","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|problem","k":"Unit 1","a":"Station 2: What's the problem?","en":"problem","de":"Problem; Schwierigkeit","bsp":"Cats in the house? That's a big problem for Tony!","hw":"","s":"191","p":false},{"id":"Unit 1|part","k":"Unit 1","a":"Station 2: What's the problem?","en":"part","de":"Teil; Stadtteil","bsp":"Greenwich is a part of London.","hw":"","s":"191","p":false},{"id":"Unit 1|end","k":"Unit 1","a":"Station 2: What's the problem?","en":"end","de":"Ende; Schluss","bsp":"We live at the end of a very long road.","hw":"","s":"191","p":false},{"id":"Unit 1|long","k":"Unit 1","a":"Station 2: What's the problem?","en":"long","de":"lang","bsp":"","hw":"","s":"191","p":false},{"id":"Unit 1|road","k":"Unit 1","a":"Station 2: What's the problem?","en":"road","de":"Straße","bsp":"I live in King's Road.","hw":"","s":"191","p":false},{"id":"Unit 1|garden","k":"Unit 1","a":"Station 2: What's the problem?","en":"garden","de":"Garten","bsp":"Luke and his family live in a house with a garden.","hw":"","s":"191","p":false},{"id":"Unit 1|in front of","k":"Unit 1","a":"Station 2: What's the problem?","en":"in front of","de":"vor","bsp":"There is a small garden in front of the house.","hw":"","s":"192","p":true},{"id":"Unit 1|behind","k":"Unit 1","a":"Station 2: What's the problem?","en":"behind","de":"hinter","bsp":"","hw":"behind ↔ in front of","s":"192","p":true},{"id":"Unit 1|only","k":"Unit 1","a":"Station 2: What's the problem?","en":"only","de":"erst; bloß; nur","bsp":"My brother is only two.","hw":"","s":"192","p":false},{"id":"Unit 1|Mr","k":"Unit 1","a":"Station 2: What's the problem?","en":"Mr","de":"Herr (Anrede)","bsp":"Mr Elliot is Luke's father.","hw":"","s":"192","p":true},{"id":"Unit 1|now","k":"Unit 1","a":"Station 2: What's the problem?","en":"now","de":"jetzt; nun","bsp":"Your friends are here, Luke. – Great! Now we can go to the park.","hw":"","s":"192","p":false},{"id":"Unit 1|there's (= there is)","k":"Unit 1","a":"Station 2: What's the problem?","en":"there's (= there is)","de":"es gibt","bsp":"There's one bedroom in the flat. There are three bedrooms in the house.","hw":"","s":"192","p":false},{"id":"Unit 1|car","k":"Unit 1","a":"Station 2: What's the problem?","en":"car","de":"Auto","bsp":"","hw":"","s":"192","p":true},{"id":"Unit 1|everywhere","k":"Unit 1","a":"Station 2: What's the problem?","en":"everywhere","de":"überall","bsp":"The park is great for rabbits. They're everywhere.","hw":"","s":"192","p":false},{"id":"Unit 1|again","k":"Unit 1","a":"Station 2: What's the problem?","en":"again","de":"wieder; noch einmal; noch mal","bsp":"Read the text. Then read it again and answer the questions.","hw":"","s":"192","p":false},{"id":"Unit 1|Look!","k":"Unit 1","a":"Station 2: What's the problem?","en":"Look!","de":"Schau/Schaut mal!","bsp":"Look! There's a mouse in the kitchen.","hw":"","s":"192","p":false},{"id":"Unit 1|floor","k":"Unit 1","a":"Station 2: What's the problem?","en":"floor","de":"Fußboden","bsp":"Your things are everywhere on the floor!","hw":"","s":"192","p":true},{"id":"Unit 1|next to","k":"Unit 1","a":"Station 2: What's the problem?","en":"next to","de":"neben","bsp":"I love this picture! That's Lou next to me.","hw":"","s":"192","p":true},{"id":"Unit 1|thing","k":"Unit 1","a":"Station 2: What's the problem?","en":"thing","de":"Ding; Sache","bsp":"Talk about the things in the picture.","hw":"","s":"192","p":false},{"id":"Unit 1|to listen (to)","k":"Unit 1","a":"Station 2: What's the problem?","en":"to listen (to)","de":"zuhören; anhören","bsp":"","hw":"Achtung Aussprache: Das „t“ wird nicht gesprochen.","s":"192","p":false},{"id":"Unit 1|idea","k":"Unit 1","a":"Station 2: What's the problem?","en":"idea","de":"Idee; Einfall","bsp":"Let's go to the park with Sherlock. – Great idea!","hw":"","s":"192","p":false},{"id":"Unit 1|loft","k":"Unit 1","a":"Station 2: What's the problem?","en":"loft","de":"Dachboden","bsp":"My old school things are in the loft.","hw":"","s":"192","p":false},{"id":"Unit 1|own","k":"Unit 1","a":"Station 2: What's the problem?","en":"own","de":"eigene/-r/-s","bsp":"Wow, your own room!","hw":"","s":"192","p":false},{"id":"Unit 1|toy","k":"Unit 1","a":"Station 2: What's the problem?","en":"toy","de":"Spielzeug","bsp":"Children like toys.","hw":"","s":"192","p":true},{"id":"Unit 1|very","k":"Unit 1","a":"Station 2: What's the problem?","en":"very","de":"sehr","bsp":"Your house is very nice. My new friends are very nice.","hw":"","s":"192","p":false},{"id":"Unit 1|happy","k":"Unit 1","a":"Station 2: What's the problem?","en":"happy","de":"glücklich; froh; fröhlich","bsp":"Luke is very happy.","hw":"","s":"192","p":true},{"id":"Unit 1|fantasy","k":"Unit 1","a":"Station 2: What's the problem?","en":"fantasy","de":"Fantasie; Traum-","bsp":"Is this a picture of your house? – No, it's a fantasy house.","hw":"","s":"192","p":false},{"id":"Unit 1|to play","k":"Unit 1","a":"Station 2: What's the problem?","en":"to play","de":"spielen","bsp":"Let's play football. – No, let's play with my new toy.","hw":"","s":"192","p":true},{"id":"Unit 1|cheese","k":"Unit 1","a":"Station 2: What's the problem?","en":"cheese","de":"Käse","bsp":"Mice love cheese.","hw":"","s":"192","p":true},{"id":"Unit 1|fridge","k":"Unit 1","a":"Station 2: What's the problem?","en":"fridge","de":"Kühlschrank","bsp":"There's only a small fridge in our kitchen.","hw":"","s":"192","p":false},{"id":"Unit 1|their","k":"Unit 1","a":"Station 2: What's the problem?","en":"their","de":"ihr/-e (Pl.)","bsp":"Their dog Sherlock is crazy.","hw":"they're (= they are): They're a nice family.","s":"192","p":false},{"id":"Unit 1|can","k":"Unit 1","a":"Station 2: What's the problem?","en":"can","de":"können; dürfen","bsp":"","hw":"","s":"192","p":false},{"id":"Unit 1|when","k":"Unit 1","a":"Station 2: What's the problem?","en":"when","de":"wenn; wann; als","bsp":"Where's Jamie? Please tell me when you see him.","hw":"","s":"192","p":false},{"id":"Unit 1|to see","k":"Unit 1","a":"Station 2: What's the problem?","en":"to see","de":"sehen","bsp":"What can you see in the picture?","hw":"","s":"192","p":true},{"id":"Unit 1|Thanks.","k":"Unit 1","a":"Station 2: What's the problem?","en":"Thanks.","de":"Danke.","bsp":"Thanks. – Thank you.","hw":"","s":"192","p":false},{"id":"Unit 1|home","k":"Unit 1","a":"Station 2: What's the problem?","en":"home","de":"Zuhause; Heim","bsp":"My home is here in Greenwich with my parents.","hw":"","s":"192","p":true},{"id":"Unit 1|to want (to)","k":"Unit 1","a":"Station 2: What's the problem?","en":"to want (to)","de":"wollen; mögen","bsp":"I want to play a game.","hw":"","s":"193","p":false},{"id":"Unit 1|music","k":"Unit 1","a":"Station 2: What's the problem?","en":"music","de":"Musik","bsp":"","hw":"Achtung Aussprache.","s":"193","p":true},{"id":"Unit 1|near","k":"Unit 1","a":"Station 2: What's the problem?","en":"near","de":"nahe; in der Nähe von","bsp":"Our house is near my school.","hw":"","s":"193","p":false},{"id":"Unit 1|busy","k":"Unit 1","a":"Station 2: What's the problem?","en":"busy","de":"belebt; beschäftigt","bsp":"Let's go to Luke's house. – Not now. I'm busy. Sorry!","hw":"","s":"193","p":false},{"id":"Unit 1|centre","k":"Unit 1","a":"Station 2: What's the problem?","en":"centre","de":"Zentrum; Center","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|Don't worry!","k":"Unit 1","a":"Station 2: What's the problem?","en":"Don't worry!","de":"Keine Sorge!","bsp":"It's OK. Don't worry!","hw":"","s":"193","p":false},{"id":"Unit 1|or","k":"Unit 1","a":"Station 2: What's the problem?","en":"or","de":"oder","bsp":"How old are you? Ten or eleven?","hw":"","s":"193","p":false},{"id":"Unit 1|address","k":"Unit 1","a":"Station 2: What's the problem?","en":"address","de":"Adresse","bsp":"","hw":"Achtung Aussprache und Schreibung.","s":"193","p":false},{"id":"Unit 1|thirteen","k":"Unit 1","a":"Numbers 13–100","en":"thirteen","de":"dreizehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fourteen","k":"Unit 1","a":"Numbers 13–100","en":"fourteen","de":"vierzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fifteen","k":"Unit 1","a":"Numbers 13–100","en":"fifteen","de":"fünfzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|sixteen","k":"Unit 1","a":"Numbers 13–100","en":"sixteen","de":"sechzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|seventeen","k":"Unit 1","a":"Numbers 13–100","en":"seventeen","de":"siebzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|eighteen","k":"Unit 1","a":"Numbers 13–100","en":"eighteen","de":"achtzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|nineteen","k":"Unit 1","a":"Numbers 13–100","en":"nineteen","de":"neunzehn","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|twenty","k":"Unit 1","a":"Numbers 13–100","en":"twenty","de":"zwanzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|twenty-one","k":"Unit 1","a":"Numbers 13–100","en":"twenty-one","de":"einundzwanzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|thirty","k":"Unit 1","a":"Numbers 13–100","en":"thirty","de":"dreißig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|forty","k":"Unit 1","a":"Numbers 13–100","en":"forty","de":"vierzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|fifty","k":"Unit 1","a":"Numbers 13–100","en":"fifty","de":"fünfzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|sixty","k":"Unit 1","a":"Numbers 13–100","en":"sixty","de":"sechzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|seventy","k":"Unit 1","a":"Numbers 13–100","en":"seventy","de":"siebzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|eighty","k":"Unit 1","a":"Numbers 13–100","en":"eighty","de":"achtzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|ninety","k":"Unit 1","a":"Numbers 13–100","en":"ninety","de":"neunzig","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|a/one hundred","k":"Unit 1","a":"Numbers 13–100","en":"a/one hundred","de":"hundert/einhundert","bsp":"","hw":"","s":"193","p":false},{"id":"Unit 1|wall","k":"Unit 1","a":"Station 2: What's the problem?","en":"wall","de":"Wand; Mauer","bsp":"","hw":"","s":"194","p":true},{"id":"Unit 1|newspaper","k":"Unit 1","a":"Station 2: What's the problem?","en":"newspaper","de":"Zeitung","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|people (pl)","k":"Unit 1","a":"Station 2: What's the problem?","en":"people (pl)","de":"Leute; Menschen","bsp":"People like dogs and cats, but not rats!","hw":"","s":"194","p":false},{"id":"Unit 1|I","k":"Unit 1","a":"Pronouns","en":"I","de":"ich","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|you","k":"Unit 1","a":"Pronouns","en":"you","de":"du","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|we","k":"Unit 1","a":"Pronouns","en":"we","de":"wir","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|you (Pl.)","k":"Unit 1","a":"Pronouns","en":"you (Pl.)","de":"Ihr/Sie","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|my","k":"Unit 1","a":"Pronouns","en":"my","de":"mein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|your","k":"Unit 1","a":"Pronouns","en":"your","de":"dein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|her","k":"Unit 1","a":"Pronouns","en":"her","de":"ihr/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|its","k":"Unit 1","a":"Pronouns","en":"its","de":"sein/-e","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|your (Pl.)","k":"Unit 1","a":"Pronouns","en":"your (Pl.)","de":"euer/eure","bsp":"","hw":"","s":"194","p":false},{"id":"Unit 1|so","k":"Unit 1","a":"Station 2: What's the problem?","en":"so","de":"so; also","bsp":"I like rabbits. They're so quiet.","hw":"","s":"194","p":false},{"id":"Unit 1|clothes (pl)","k":"Unit 1","a":"Station 2: What's the problem?","en":"clothes (pl)","de":"Kleider; Kleidung","bsp":"Olivia's clothes are nice.","hw":"Das englische Wort clothes steht immer im Plural.","s":"194","p":false},{"id":"Unit 1|lots (of)","k":"Unit 1","a":"Station 2: What's the problem?","en":"lots (of)","de":"viel/-e; jede Menge","bsp":"There are lots of rabbits in the park. They're everywhere.","hw":"","s":"194","p":false},{"id":"Unit 1|with me","k":"Unit 1","a":"Station 2: What's the problem?","en":"with me","de":"mit mir; bei mir","bsp":"","hw":"","s":"194","p":true},{"id":"Unit 1|from ... to","k":"Unit 1","a":"Station 2: What's the problem?","en":"from ... to","de":"von ... bis","bsp":"Say the numbers from 13 to 20.","hw":"","s":"194","p":false},{"id":"Unit 1|pet","k":"Unit 1","a":"Station 2: What's the problem?","en":"pet","de":"Haustier","bsp":"Sherlock is Luke's pet.","hw":"","s":"194","p":true},{"id":"Unit 1|model","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"model","de":"Modell; Tonmodell; Model","bsp":"Olivia can make models. You too?","hw":"","s":"194","p":false},{"id":"Unit 1|Who ... for?","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"Who ... for?","de":"Für wen ...?","bsp":"A new bedroom! Who is it for: Luke or Jamie?","hw":"","s":"194","p":false},{"id":"Unit 1|to explore","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"to explore","de":"auf Entdeckungsreise gehen; sich umschauen; erkunden; erforschen","bsp":"A new park? Great! Let's go and explore!","hw":"","s":"194","p":false},{"id":"Unit 1|best","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"best","de":"beste/-r/-s","bsp":"Olivia is Holly's best friend.","hw":"","s":"194","p":false},{"id":"Unit 1|maybe","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"maybe","de":"vielleicht","bsp":"Ding-dong! Who's that? – Maybe it's Olivia.","hw":"","s":"194","p":false},{"id":"Unit 1|after","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"after","de":"nach (zeitlich)","bsp":"Let's go to the park after school.","hw":"","s":"194","p":false},{"id":"Unit 1|visit","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"visit","de":"Besuch","bsp":"After Olivia's visit, Holly can only find one guinea pig.","hw":"","s":"194","p":false},{"id":"Unit 1|outside","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"outside","de":"nach draußen; draußen; außerhalb (von)","bsp":"Where's Sherlock? – He's outside in the garden.","hw":"","s":"194","p":false},{"id":"Unit 1|awful","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"awful","de":"schrecklich; furchtbar","bsp":"A mouse in the house? Oh no! This is awful!","hw":"","s":"194","p":false},{"id":"Unit 1|sentence","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"sentence","de":"Satz","bsp":"There are two or more words in a sentence.","hw":"","s":"195","p":false},{"id":"Unit 1|picture","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"picture","de":"Bild; Foto","bsp":"My dog is in the picture.","hw":"","s":"195","p":true},{"id":"Unit 1|right","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"right","de":"richtig; korrekt","bsp":"Is Luke eleven? – Yes, that's right.","hw":"","s":"195","p":true},{"id":"Unit 1|ending","k":"Unit 1","a":"Story: Where's Mr Fluff?!","en":"ending","de":"Ende; Schluss (einer Geschichte)","bsp":"I like the ending of the story.","hw":"","s":"195","p":false},{"id":"Unit 1|around the house","k":"Unit 1","a":"Action UK! Around the house","en":"around the house","de":"rund ums Haus; ums Haus herum","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|What about ...?","k":"Unit 1","a":"Action UK! Around the house","en":"What about ...?","de":"Was ist mit ...?; Wie wär's mit ...?","bsp":"I like football. What about you? You too?","hw":"","s":"195","p":false},{"id":"Unit 1|hair straightener","k":"Unit 1","a":"Action UK! Around the house","en":"hair straightener","de":"Haarglätter","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|magazine","k":"Unit 1","a":"Action UK! Around the house","en":"magazine","de":"Zeitschrift","bsp":"","hw":"magazine – newspaper","s":"195","p":false},{"id":"Unit 1|book","k":"Unit 1","a":"Action UK! Around the house","en":"book","de":"Buch","bsp":"","hw":"","s":"195","p":true},{"id":"Unit 1|radio","k":"Unit 1","a":"Action UK! Around the house","en":"radio","de":"Radio","bsp":"","hw":"Achtung Aussprache.","s":"195","p":false},{"id":"Unit 1|fast","k":"Unit 1","a":"Action UK! Around the house","en":"fast","de":"schnell","bsp":"Not so fast, Olivia! Skating isn't easy.","hw":"","s":"195","p":false},{"id":"Unit 1|interesting","k":"Unit 1","a":"Action UK! Around the house","en":"interesting","de":"interessant","bsp":"This book is very interesting.","hw":"","s":"195","p":false},{"id":"Unit 1|exciting","k":"Unit 1","a":"Action UK! Around the house","en":"exciting","de":"spannend; aufregend","bsp":"I love exciting stories.","hw":"","s":"195","p":false},{"id":"Unit 1|computer","k":"Unit 1","a":"Types of media","en":"computer","de":"Computer","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|film","k":"Unit 1","a":"Types of media","en":"film","de":"Film","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|poster","k":"Unit 1","a":"Types of media","en":"poster","de":"Poster","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|smartphone","k":"Unit 1","a":"Types of media","en":"smartphone","de":"Smartphone","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|tablet","k":"Unit 1","a":"Types of media","en":"tablet","de":"Tablet","bsp":"","hw":"","s":"195","p":false},{"id":"Unit 1|to","k":"Unit 1","a":"Check-out","en":"to","de":"zu; nach; auf; in; an","bsp":"Let's go to the boating lake. Let's go to London.","hw":"Wenn man to nicht betont, spricht man es [tə].","s":"195","p":false}];
+
+const SPEICHER = "vokabeltest.v1";
+// Tage bis zur nächsten Abfrage je Fach (Index = Fach 1..5)
+const FACH_TAGE = [0, 0, 1, 3, 7, 14];
+
+// ---------- Speicher ----------
+
+function leererStand() {
+  return {
+    karten: {},
+    einstellungen: { auswahl: [], richtung: "beide", anzahl: 15, vorlesen: true, nurPunkt: false },
+  };
+}
+
+function ladeStand() {
+  try {
+    const roh = JSON.parse(localStorage.getItem(SPEICHER));
+    if (roh && roh.karten && roh.einstellungen) {
+      return { karten: roh.karten, einstellungen: { ...leererStand().einstellungen, ...roh.einstellungen } };
+    }
+  } catch (e) { /* kaputter Stand -> neu anfangen */ }
+  return leererStand();
+}
+
+let stand = ladeStand();
+
+function speichere() {
+  try { localStorage.setItem(SPEICHER, JSON.stringify(stand)); } catch (e) { /* z. B. privater Modus */ }
+}
+
+function heute() {
+  const d = new Date();
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+}
+
+// ---------- Hilfen ----------
+
+const $ = id => document.getElementById(id);
+
+function mische(liste) {
+  const a = liste.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function abschnittKey(v) { return v.k + "|" + v.a; }
+
+function kapitelListe() {
+  const kapitel = [];
+  for (const v of VOKABELN) {
+    let k = kapitel.find(x => x.name === v.k);
+    if (!k) kapitel.push(k = { name: v.k, abschnitte: [] });
+    let a = k.abschnitte.find(x => x.name === v.a);
+    if (!a) k.abschnitte.push(a = { name: v.a, key: abschnittKey(v), vokabeln: [] });
+    a.vokabeln.push(v);
+  }
+  return kapitel;
+}
+
+// ---------- Antwort prüfen ----------
+
+function norm(s, grossKlein) {
+  s = s.normalize("NFC")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/…/g, " ")
+    .replace(/\.{2,}/g, " ")
+    .replace(/\./g, "")
+    .replace(/[=!?,;:"„“”]/g, " ")
+    .replace(/-+(?=\s|$)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return grossKlein ? s : s.toLowerCase();
+}
+
+function falte(s) {
+  return norm(s).replace(/'/g, "").replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+}
+
+// „Freund/-in“ -> Freund, Freundin; „Komm/Kommt“ -> Komm, Kommt; „der-/die-/dasselbe“ -> derselbe …
+function wortFormen(wort) {
+  if (!wort.includes("/")) return [wort];
+  const teile = wort.split("/");
+  const formen = new Set([wort]);
+  if (teile.slice(1).every(t => t.startsWith("-"))) {
+    formen.add(teile[0]);
+    teile.slice(1).forEach(t => formen.add(teile[0] + t.slice(1)));
+  } else if (teile.slice(0, -1).every(t => t.endsWith("-"))) {
+    const letztes = teile[teile.length - 1];
+    const stamm = letztes.slice(3);
+    formen.add(letztes);
+    teile.slice(0, -1).forEach(t => formen.add(t.slice(0, -1) + stamm));
+  } else {
+    teile.forEach(t => formen.add(t));
+  }
+  return [...formen];
+}
+
+function kombiniere(text) {
+  let ergebnisse = [""];
+  for (const wort of text.split(" ").filter(Boolean)) {
+    const formen = wortFormen(wort);
+    const neu = [];
+    for (const anfang of ergebnisse) for (const f of formen) neu.push(anfang ? anfang + " " + f : f);
+    ergebnisse = neu.slice(0, 64);
+  }
+  return ergebnisse;
+}
+
+const variantenCache = new Map();
+
+// Alle Schreibweisen, die für ein Feld als richtig gelten
+function varianten(feld) {
+  if (variantenCache.has(feld)) return variantenCache.get(feld);
+  const aus = new Set();
+  const mitPlural = /\(pl\)/i.test(feld);
+  for (const alt of feld.split(";")) {
+    for (let a of alt.split(" / ")) {
+      a = a.trim();
+      if (!a) continue;
+      const formen = new Set([a, a.replace(/\([^)]*\)/g, " "), a.replace(/[()]/g, "")]);
+      for (const f of formen) {
+        const stuecke = mitPlural ? [f, ...f.split(",")] : [f];
+        for (const s of stuecke) for (const k of kombiniere(s.replace(/\s+/g, " ").trim())) if (k) aus.add(k);
+      }
+    }
+  }
+  const liste = [...aus];
+  variantenCache.set(feld, liste);
+  return liste;
+}
+
+function abstand(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  const z = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let vorher = z[0];
+    z[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = z[j];
+      z[j] = Math.min(z[j] + 1, z[j - 1] + 1, vorher + (a[i - 1] === b[j - 1] ? 0 : 1));
+      vorher = tmp;
+    }
+  }
+  return z[b.length];
+}
+
+// Deutsche Bedeutung -> alle englischen Einträge damit (für „klein“ = small und little)
+const nachDeutsch = new Map();
+for (const v of VOKABELN) {
+  for (const d of varianten(v.de)) {
+    const n = norm(d);
+    if (!nachDeutsch.has(n)) nachDeutsch.set(n, new Set());
+    nachDeutsch.get(n).add(v);
+  }
+}
+
+function pruefeAntwort(karte, eingabe) {
+  const v = karte.v;
+  const zielFeld = karte.richtung === "en-de" ? v.de : v.en;
+  const loesung = zielFeld;
+  const a = norm(eingabe);
+  if (!a) return { status: "falsch", loesung };
+
+  const ziele = varianten(zielFeld);
+  const zieleNorm = ziele.map(z => norm(z));
+
+  if (zieleNorm.includes(a)) {
+    let tipp = "";
+    const exakt = norm(eingabe, true);
+    const passt = karte.richtung === "en-de"
+      ? ziele.some(z => norm(z, true) === exakt)
+      : ziele.some(z => norm(z, true).slice(1) === exakt.slice(1));
+    if (!passt) tipp = "Achte auf die Groß- und Kleinschreibung.";
+    return { status: "richtig", loesung, tipp };
+  }
+
+  if (karte.richtung === "de-en") {
+    const ohneTo = zieleNorm.filter(z => z.startsWith("to ")).map(z => z.slice(3));
+    if (ohneTo.includes(a)) {
+      return { status: "richtig", loesung, tipp: "Bei Verben gehört das „to“ dazu: " + v.en };
+    }
+  }
+
+  const f = falte(eingabe);
+  if (ziele.some(z => falte(z) === f)) {
+    return { status: "richtig", loesung, tipp: "Achte auf die Schreibweise: " + loesung };
+  }
+
+  if (karte.richtung === "de-en") {
+    const andere = new Set();
+    for (const d of varianten(v.de)) for (const w of nachDeutsch.get(norm(d)) || []) if (w !== v) andere.add(w);
+    for (const w of andere) {
+      if (varianten(w.en).some(z => norm(z) === a)) {
+        return { status: "richtig", loesung, tipp: "Auch richtig! Hier im Buch gemeint ist aber: " + v.en };
+      }
+    }
+  }
+
+  const grenze = a.length >= 8 ? 2 : a.length >= 4 ? 1 : 0;
+  if (grenze && zieleNorm.some(z => abstand(a, z) <= grenze)) {
+    return { status: "fast", loesung };
+  }
+  return { status: "falsch", loesung };
+}
+
+// ---------- Vorlesen ----------
+
+let englischeStimme = null;
+function waehleStimme() {
+  if (!("speechSynthesis" in window)) return;
+  const stimmen = speechSynthesis.getVoices();
+  englischeStimme = stimmen.find(s => s.lang === "en-GB") || stimmen.find(s => s.lang.startsWith("en")) || null;
+}
+if ("speechSynthesis" in window) {
+  waehleStimme();
+  speechSynthesis.onvoiceschanged = waehleStimme;
+}
+
+function sprich(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+  const sauber = text.replace(/\([^)]*\)/g, " ").replace(/\.\.\.|…/g, " ").replace(/\s+/g, " ").trim();
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(sauber);
+  u.lang = "en-GB";
+  if (englischeStimme) u.voice = englischeStimme;
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+// ---------- Karteikasten ----------
+
+function kartenKey(v, richtung) { return v.id + "|" + richtung; }
+
+function fachVon(key) {
+  const k = stand.karten[key];
+  return k ? k.fach : 0;
+}
+
+function ausgewaehlteVokabeln() {
+  const e = stand.einstellungen;
+  return VOKABELN.filter(v => e.auswahl.includes(abschnittKey(v)) && (!e.nurPunkt || v.p));
+}
+
+function richtungen() {
+  const r = stand.einstellungen.richtung;
+  return r === "beide" ? ["en-de", "de-en"] : [r];
+}
+
+function alleKarten() {
+  const karten = [];
+  for (const v of ausgewaehlteVokabeln()) {
+    for (const r of richtungen()) karten.push({ v, richtung: r, key: kartenKey(v, r) });
+  }
+  return karten;
+}
+
+function istFaellig(karte) {
+  const k = stand.karten[karte.key];
+  return !k || k.faellig <= heute();
+}
+
+function baueRunde(karten, anzahl) {
+  const sortiert = mische(karten).sort((a, b) => fachVon(a.key) - fachVon(b.key));
+  // bei „Gemischt“ ein Wort nur einmal pro Runde
+  const gesehen = new Set();
+  const runde = [];
+  for (const k of sortiert) {
+    if (gesehen.has(k.v.id)) continue;
+    gesehen.add(k.v.id);
+    runde.push(k);
+    if (runde.length >= anzahl) break;
+  }
+  return mische(runde);
+}
+
+// ---------- Startseite ----------
+
+const KAPITEL = kapitelListe();
+
+function zeichneStart() {
+  const e = stand.einstellungen;
+  const liste = $("kapitelliste");
+  liste.innerHTML = "";
+  for (const k of KAPITEL) {
+    const block = document.createElement("div");
+    block.className = "kapitel";
+    const alle = k.abschnitte.every(a => e.auswahl.includes(a.key));
+    const einige = k.abschnitte.some(a => e.auswahl.includes(a.key));
+    const kopf = document.createElement("label");
+    kopf.className = "zeile";
+    kopf.innerHTML = `<input type="checkbox"><span class="name"></span><span class="anzahl"></span>`;
+    const kb = kopf.querySelector("input");
+    kb.checked = alle;
+    kb.indeterminate = einige && !alle;
+    kopf.querySelector(".name").textContent = k.name;
+    kopf.querySelector(".anzahl").textContent = k.abschnitte.reduce((n, a) => n + a.vokabeln.length, 0) + " Wörter";
+    kb.addEventListener("change", () => {
+      for (const a of k.abschnitte) setzeAuswahl(a.key, kb.checked);
+      zeichneStart();
+    });
+    block.appendChild(kopf);
+
+    const unter = document.createElement("div");
+    unter.className = "abschnitte";
+    for (const a of k.abschnitte) {
+      const z = document.createElement("label");
+      z.className = "zeile";
+      z.innerHTML = `<input type="checkbox"><span class="name"></span><span class="balken" title="Anteil in Fach 3 bis 5"><span></span></span><span class="anzahl"></span>`;
+      const cb = z.querySelector("input");
+      cb.checked = e.auswahl.includes(a.key);
+      cb.addEventListener("change", () => { setzeAuswahl(a.key, cb.checked); zeichneStart(); });
+      z.querySelector(".name").textContent = a.name;
+      z.querySelector(".anzahl").textContent = a.vokabeln.length;
+      z.querySelector(".balken > span").style.width = Math.round(gelerntAnteil(a.vokabeln) * 100) + "%";
+      unter.appendChild(z);
+    }
+    block.appendChild(unter);
+    liste.appendChild(block);
+  }
+
+  for (const b of $("richtung").querySelectorAll("button")) {
+    b.setAttribute("aria-pressed", String(b.dataset.wert === e.richtung));
+  }
+  $("anzahl").value = String(e.anzahl);
+  $("vorlesen").checked = e.vorlesen;
+  $("nurPunkt").checked = e.nurPunkt;
+
+  const karten = alleKarten();
+  const zaehler = [0, 0, 0, 0, 0, 0];
+  for (const k of karten) zaehler[fachVon(k.key)]++;
+  $("faecher").innerHTML = zaehler.map((n, i) =>
+    `<div class="fach f${i}"><b>${n}</b><small>${i === 0 ? "neu" : "Fach " + i}</small></div>`).join("");
+
+  const faellig = karten.filter(istFaellig).length;
+  const los = $("los");
+  if (!karten.length) {
+    los.textContent = "Wähle mindestens einen Abschnitt";
+    los.disabled = true;
+  } else if (faellig) {
+    los.textContent = `Los geht's (${Math.min(faellig, e.anzahl)} Wörter)`;
+    los.disabled = false;
+  } else {
+    los.textContent = "Heute ist nichts fällig – trotzdem üben";
+    los.disabled = false;
+  }
+}
+
+function gelerntAnteil(vokabeln) {
+  let gelernt = 0, gesamt = 0;
+  for (const v of vokabeln) for (const r of richtungen()) {
+    gesamt++;
+    if (fachVon(kartenKey(v, r)) >= 3) gelernt++;
+  }
+  return gesamt ? gelernt / gesamt : 0;
+}
+
+function setzeAuswahl(key, an) {
+  const a = stand.einstellungen.auswahl.filter(x => x !== key);
+  if (an) a.push(key);
+  stand.einstellungen.auswahl = a;
+  speichere();
+}
+
+$("richtung").addEventListener("click", ev => {
+  const b = ev.target.closest("button");
+  if (!b) return;
+  stand.einstellungen.richtung = b.dataset.wert;
+  speichere();
+  zeichneStart();
+});
+$("anzahl").addEventListener("change", ev => { stand.einstellungen.anzahl = Number(ev.target.value); speichere(); zeichneStart(); });
+$("vorlesen").addEventListener("change", ev => { stand.einstellungen.vorlesen = ev.target.checked; speichere(); });
+$("nurPunkt").addEventListener("change", ev => { stand.einstellungen.nurPunkt = ev.target.checked; speichere(); zeichneStart(); });
+
+$("los").addEventListener("click", () => {
+  const karten = alleKarten();
+  const faellig = karten.filter(istFaellig);
+  starteRunde(baueRunde(faellig.length ? faellig : karten, stand.einstellungen.anzahl));
+});
+
+// ---------- Abfrage ----------
+
+let runde = null;
+
+function zeige(bereich) {
+  for (const id of ["start", "abfrage", "ende"]) $(id).hidden = id !== bereich;
+  window.scrollTo(0, 0);
+}
+
+function starteRunde(karten) {
+  if (!karten.length) return;
+  runde = {
+    schlange: karten.slice(),
+    gesamt: karten.length,
+    fertig: 0,
+    ersterVersuch: new Map(),  // key -> true/false
+    aktuell: null,
+    ergebnis: null,
+  };
+  zeige("abfrage");
+  naechsteKarte();
+}
+
+function naechsteKarte() {
+  if (!runde.schlange.length) return zeigeEnde();
+  const karte = runde.schlange.shift();
+  runde.aktuell = karte;
+  runde.ergebnis = null;
+  const v = karte.v;
+  const enDe = karte.richtung === "en-de";
+
+  $("richtungstext").textContent = enDe ? "Englisch → Deutsch" : "Deutsch → Englisch";
+  $("frage").textContent = enDe ? v.en : v.de;
+  $("frageLaut").hidden = !enDe;
+  $("herkunft").textContent = `${v.k} · ${v.a} · S. ${v.s}`;
+  const fach = fachVon(karte.key);
+  $("fachmarke").textContent = runde.ersterVersuch.has(karte.key) ? "Wiederholung" : fach ? "Fach " + fach : "neues Wort";
+
+  const feld = $("antwort");
+  feld.value = "";
+  feld.disabled = false;
+  feld.placeholder = enDe ? "auf Deutsch" : "auf Englisch";
+  $("pruefen").disabled = false;
+  $("weissNicht").hidden = false;
+  $("rueckmeldung").hidden = true;
+  zeichneFortschritt();
+  feld.focus();
+  if (enDe && stand.einstellungen.vorlesen) sprich(v.en);
+}
+
+function zeichneFortschritt() {
+  $("fortschrittsbalken").style.width = Math.round(runde.fertig / runde.gesamt * 100) + "%";
+  $("zaehler").textContent = `${runde.fertig} / ${runde.gesamt}`;
+}
+
+function werteAus(eingabe) {
+  if (runde.ergebnis) return;
+  const karte = runde.aktuell;
+  const e = pruefeAntwort(karte, eingabe);
+  runde.ergebnis = e;
+  $("antwort").disabled = true;
+  $("pruefen").disabled = true;
+  $("weissNicht").hidden = true;
+  zeigeRueckmeldung();
+  if (karte.richtung === "de-en" && stand.einstellungen.vorlesen) sprich(karte.v.en);
+}
+
+const LOB = ["Richtig!", "Super!", "Klasse!", "Genau!", "Stark!", "Perfekt!"];
+
+function zeigeRueckmeldung() {
+  const e = runde.ergebnis;
+  const v = runde.aktuell.v;
+  const rm = $("rueckmeldung");
+  rm.className = "rueckmeldung " + e.status;
+  $("rmTitel").textContent = e.status === "richtig" ? LOB[Math.floor(Math.random() * LOB.length)]
+    : e.status === "fast" ? "Fast! Schau dir die Schreibweise an:" : "Leider nicht. Richtig ist:";
+  $("rmLoesung").textContent = e.loesung;
+  $("loesungLaut").hidden = runde.aktuell.richtung !== "de-en";
+  $("rmTipp").hidden = !e.tipp;
+  $("rmTipp").textContent = e.tipp || "";
+  $("rmBeispiel").hidden = !v.bsp;
+  $("rmBeispielText").textContent = v.bsp;
+  $("rmHinweis").hidden = !v.hw;
+  $("rmHinweisText").textContent = v.hw;
+  $("dochRichtig").hidden = e.status === "richtig" || !norm($("antwort").value);
+  rm.hidden = false;
+  $("weiter").focus();
+}
+
+function buche() {
+  const karte = runde.aktuell;
+  const richtig = runde.ergebnis.status === "richtig";
+  if (!runde.ersterVersuch.has(karte.key)) {
+    runde.ersterVersuch.set(karte.key, richtig);
+    const alt = stand.karten[karte.key] || { fach: 0, richtig: 0, falsch: 0 };
+    // neue Wörter, die auf Anhieb sitzen, rücken gleich in Fach 2
+    const fach = richtig ? Math.min(5, Math.max(alt.fach, 1) + 1) : 1;
+    stand.karten[karte.key] = {
+      fach,
+      faellig: heute() + FACH_TAGE[fach],
+      richtig: alt.richtig + (richtig ? 1 : 0),
+      falsch: alt.falsch + (richtig ? 0 : 1),
+    };
+    speichere();
+  }
+  if (richtig) {
+    runde.fertig++;
+  } else {
+    // falsch beantwortete Wörter kommen in dieser Runde noch einmal
+    runde.schlange.splice(Math.min(3, runde.schlange.length), 0, karte);
+  }
+}
+
+$("formular").addEventListener("submit", ev => { ev.preventDefault(); werteAus($("antwort").value); });
+$("weissNicht").addEventListener("click", () => werteAus(""));
+$("weiter").addEventListener("click", () => { buche(); naechsteKarte(); });
+$("dochRichtig").addEventListener("click", () => {
+  runde.ergebnis = { ...runde.ergebnis, status: "richtig", tipp: "" };
+  zeigeRueckmeldung();
+});
+$("frageLaut").addEventListener("click", () => sprich(runde.aktuell.v.en));
+$("loesungLaut").addEventListener("click", () => sprich(runde.aktuell.v.en));
+$("beispielLaut").addEventListener("click", () => sprich(runde.aktuell.v.bsp));
+$("beenden").addEventListener("click", () => {
+  if (runde.fertig === 0 || confirm("Runde beenden? Was du schon beantwortet hast, bleibt gespeichert.")) {
+    zeigeEnde();
+  }
+});
+
+// ---------- Ende ----------
+
+function zeigeEnde() {
+  const versuche = [...runde.ersterVersuch.values()];
+  const richtig = versuche.filter(Boolean).length;
+  const gesamt = versuche.length;
+  const quote = gesamt ? richtig / gesamt : 0;
+  $("endeBild").textContent = !gesamt ? "👋" : quote === 1 ? "🏆" : quote >= 0.8 ? "🎉" : quote >= 0.5 ? "👍" : "💪";
+  $("endeZahl").textContent = gesamt ? `${richtig} von ${gesamt} beim ersten Versuch richtig` : "Keine Wörter beantwortet";
+  $("endeText").textContent = !gesamt ? "" : quote === 1 ? "Alles gewusst – großartig!"
+    : quote >= 0.8 ? "Sehr gut gemacht!" : quote >= 0.5 ? "Gut! Die restlichen Wörter kommen bald wieder dran."
+    : "Dranbleiben – mit jeder Runde bleibt mehr hängen.";
+
+  const falsche = [];
+  for (const [key, ok] of runde.ersterVersuch) {
+    if (!ok) falsche.push(alleKartenNachKey(key));
+  }
+  runde.falsche = falsche.filter(Boolean);
+  const ul = $("endeFehler");
+  ul.innerHTML = "";
+  for (const k of runde.falsche) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="en"></span><span class="de"></span>`;
+    li.querySelector(".en").textContent = k.v.en;
+    li.querySelector(".de").textContent = k.v.de;
+    ul.appendChild(li);
+  }
+  $("endeFehlerBox").hidden = !runde.falsche.length;
+  $("nurFehler").hidden = !runde.falsche.length;
+  zeige("ende");
+  $("zumStart").focus();
+}
+
+function alleKartenNachKey(key) {
+  const trenner = key.lastIndexOf("|");
+  const id = key.slice(0, trenner);
+  const richtung = key.slice(trenner + 1);
+  const v = VOKABELN.find(x => x.id === id);
+  return v ? { v, richtung, key } : null;
+}
+
+$("nurFehler").addEventListener("click", () => starteRunde(mische(runde.falsche)));
+$("zumStart").addEventListener("click", () => { zeichneStart(); zeige("start"); });
+
+// ---------- Fortschritt sichern / laden ----------
+
+$("sichern").addEventListener("click", () => {
+  const d = new Date();
+  const datum = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const inhalt = JSON.stringify({ app: "vokabeltest", version: 1, gesichert: datum, stand }, null, 1);
+  const url = URL.createObjectURL(new Blob([inhalt], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vokabeltest-fortschritt-${datum}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("laden").addEventListener("click", () => $("datei").click());
+$("datei").addEventListener("change", async ev => {
+  const datei = ev.target.files[0];
+  ev.target.value = "";
+  if (!datei) return;
+  try {
+    const d = JSON.parse(await datei.text());
+    if (d.app !== "vokabeltest" || !d.stand || !d.stand.karten) throw new Error();
+    if (!confirm(`Fortschritt vom ${d.gesichert || "?"} laden? Der jetzige Stand wird ersetzt.`)) return;
+    stand = { karten: d.stand.karten, einstellungen: { ...leererStand().einstellungen, ...d.stand.einstellungen } };
+    speichere();
+    zeichneStart();
+  } catch (e) {
+    alert("Diese Datei ist keine Fortschritts-Sicherung vom Vokabeltrainer.");
+  }
+});
+
+$("zuruecksetzen").addEventListener("click", () => {
+  if (!confirm("Wirklich den ganzen Fortschritt löschen? Alle Wörter fangen wieder bei „neu“ an.")) return;
+  stand = { ...leererStand(), einstellungen: stand.einstellungen };
+  speichere();
+  zeichneStart();
+});
+
+// ---------- Start ----------
+
+if (!stand.einstellungen.auswahl.length && KAPITEL.length) {
+  stand.einstellungen.auswahl = KAPITEL[0].abschnitte.map(a => a.key);
+}
+zeichneStart();
+</script>
+</body>
+</html>
