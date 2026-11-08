@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5b3f9e">
+<title>Reismann 5d Politik Trainer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+<style>
+  :root {
+    --haupt: #5b3f9e;
+    --haupt-hell: #eee8fa;
+    --gruen: #2f7d4f;
+    --gruen-hell: #e3f3e8;
+    --blau: #2563a8;
+    --blau-hell: #e5eef9;
+    --rot: #c0392b;
+    --rot-hell: #fbe9e7;
+    --gelb: #b7791f;
+    --gelb-hell: #fdf3dc;
+    --text: #1f2933;
+    --grau: #6b7785;
+    --linie: #d9dee4;
+    --hinter: #f6f5f9;
+    --karte: #ffffff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    color: var(--text);
+    background: var(--hinter);
+    line-height: 1.4;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 2px; color: var(--haupt); }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .unterzeile { color: var(--grau); margin: 0; }
+  .titelkopf { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
+  .titelkopf .symbol {
+    width: 64px; height: 64px; flex: none; border-radius: 18px;
+    background: var(--haupt); display: grid; place-items: center; font-size: 2.1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+  }
+  .box {
+    background: var(--karte);
+    border: 1px solid var(--linie);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 18px;
+    cursor: pointer;
+    background: var(--blau-hell);
+    color: var(--blau);
+    font-weight: 600;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  button.haupt { background: var(--haupt); color: #fff; width: 100%; font-size: 1.1rem; padding: 15px; }
+  button.leise { background: transparent; color: var(--grau); padding: 8px 10px; font-weight: 500; }
+  button.klein { padding: 7px 12px; font-size: .9rem; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #f2b705; outline-offset: 2px; }
+
+  /* Modus-Kacheln */
+  .modi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .modus {
+    background: var(--karte); border: 2px solid var(--linie); border-radius: var(--radius);
+    padding: 14px 12px; text-align: left; color: var(--text); font-weight: 400;
+  }
+  .modus b { display: block; font-size: 1.05rem; margin: 4px 0 2px; }
+  .modus .ico { font-size: 1.6rem; }
+  .modus small { color: var(--grau); display: block; }
+  .modus[aria-pressed="true"] { border-color: var(--haupt); background: var(--haupt-hell); }
+
+  /* Auswahl */
+  .kapitel { border-top: 1px solid var(--linie); padding: 10px 0 4px; }
+  .kapitel:first-of-type { border-top: 0; padding-top: 0; }
+  .abschnitte { margin: 6px 0 0 4px; }
+  label.zeile { display: flex; align-items: center; gap: 10px; padding: 6px 4px; cursor: pointer; }
+  label.zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--haupt); }
+  .kapitel > label .name { font-weight: 700; }
+  .zeile .name { flex: 1; }
+  .zeile .anzahl { color: var(--grau); font-size: .85rem; white-space: nowrap; min-width: 24px; text-align: right; }
+  .balken { width: 70px; height: 8px; border-radius: 4px; background: var(--linie); overflow: hidden; flex: none; }
+  .balken > span { display: block; height: 100%; background: var(--gruen); }
+
+  .umschalter { display: flex; gap: 6px; flex-wrap: wrap; }
+  .umschalter button { flex: 1; min-width: 110px; background: #eef1f4; color: var(--text); font-weight: 500; }
+  .umschalter button[aria-pressed="true"] { background: var(--haupt); color: #fff; font-weight: 700; }
+  .optionen { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+  .optionen select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--linie); }
+
+  .faecher { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; text-align: center; }
+  .fach { background: #eef1f4; border-radius: 10px; padding: 8px 2px; }
+  .fach b { display: block; font-size: 1.2rem; }
+  .fach small { color: var(--grau); font-size: .75rem; }
+  .fach.f5 { background: var(--gruen-hell); }
+  .erklaerung { color: var(--grau); font-size: .85rem; margin: 10px 0 0; }
+  .verlauf { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
+  .verlauf li { display: flex; gap: 10px; padding: 5px 0; border-top: 1px solid var(--linie); }
+  .verlauf li:first-child { border-top: 0; }
+  .verlauf .datum { color: var(--grau); width: 86px; flex: none; }
+  .verlauf .themen { flex: 1; color: var(--grau); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .verlauf .pkt { font-weight: 700; white-space: nowrap; }
+
+  .fusszeile { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+
+  /* Abfrage */
+  .kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .fortschritt { flex: 1; height: 10px; background: var(--linie); border-radius: 5px; overflow: hidden; }
+  .fortschritt > span { display: block; height: 100%; background: var(--haupt); transition: width .3s; }
+  .zaehler { color: var(--grau); font-size: .9rem; white-space: nowrap; }
+  .karte { padding: 20px 16px; }
+  .richtung { color: var(--grau); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; text-align: center; }
+  .frage { font-size: 1.3rem; font-weight: 700; margin: 10px 0 4px; text-align: center; word-break: break-word; }
+  .frage.gross { font-size: 1.8rem; }
+  .herkunft { color: var(--grau); font-size: .8rem; text-align: center; }
+  .marke { text-align: center; }
+  .fachmarke { display: inline-block; background: #eef1f4; border-radius: 8px; padding: 2px 8px; font-size: .75rem; color: var(--grau); margin-top: 8px; }
+
+  .eingabe { display: flex; gap: 8px; margin-top: 18px; }
+  .eingabe input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1.2rem;
+    padding: 12px 14px; border: 2px solid var(--linie); border-radius: 10px;
+  }
+  .eingabe input:disabled { background: #f3f4f6; color: var(--text); }
+  .nebenknoepfe { display: flex; justify-content: center; margin-top: 6px; }
+
+  .auswahl { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+  .auswahl button {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left;
+    background: #fff; border: 2px solid var(--linie); color: var(--text); font-weight: 500; padding: 12px 14px;
+  }
+  .auswahl button .bst {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; background: #eef1f4;
+    display: grid; place-items: center; font-weight: 700; font-size: .9rem; color: var(--grau);
+  }
+  .auswahl button:not(:disabled):hover { border-color: var(--haupt); }
+  .auswahl button.gewaehlt { border-color: var(--haupt); background: var(--haupt-hell); }
+  .auswahl button.ist-richtig { border-color: var(--gruen); background: var(--gruen-hell); opacity: 1; }
+  .auswahl button.ist-falsch { border-color: var(--rot); background: var(--rot-hell); opacity: 1; }
+  .auswahl button:disabled { cursor: default; opacity: .7; }
+
+  .aufdecken { margin-top: 18px; }
+  .aufdecken button { width: 100%; }
+
+  .rueckmeldung { border-radius: var(--radius); padding: 14px 16px; margin-top: 14px; }
+  .rueckmeldung.richtig { background: var(--gruen-hell); }
+  .rueckmeldung.fast { background: var(--gelb-hell); }
+  .rueckmeldung.falsch { background: var(--rot-hell); }
+  .rueckmeldung.neutral { background: var(--haupt-hell); }
+  .rueckmeldung .titel { font-weight: 700; font-size: 1.1rem; }
+  .richtig .titel { color: var(--gruen); }
+  .fast .titel { color: var(--gelb); }
+  .falsch .titel { color: var(--rot); }
+  .neutral .titel { color: var(--haupt); }
+  .loesung { font-size: 1.15rem; font-weight: 700; margin: 6px 0; }
+  .zusatz { font-size: .95rem; margin-top: 6px; }
+  .zusatz .etikett { color: var(--grau); font-size: .8rem; display: block; }
+  .tipp { font-size: .95rem; margin-top: 6px; }
+  .knopfreihe { display: flex; gap: 8px; margin-top: 14px; }
+  .knopfreihe button { flex: 1; }
+  .knopfreihe button.weiter { background: var(--haupt); color: #fff; }
+  .knopfreihe button.ja { background: var(--gruen); color: #fff; }
+  .knopfreihe button.nein { background: var(--rot-hell); color: var(--rot); }
+
+  /* Ende */
+  .ergebnis { text-align: center; }
+  .ergebnis .gross { font-size: 3rem; margin: 4px 0; }
+  .ergebnis .zahl { font-size: 1.3rem; font-weight: 700; }
+  .fehlerliste { list-style: none; padding: 0; margin: 0; }
+  .fehlerliste li { padding: 10px 0; border-top: 1px solid var(--linie); }
+  .fehlerliste li:first-child { border-top: 0; }
+  .fehlerliste .f { font-weight: 700; }
+  .fehlerliste .r { color: var(--gruen); }
+  .fehlerliste .d { color: var(--rot); text-decoration: line-through; }
+  .fehlerliste .e { color: var(--grau); font-size: .9rem; }
+  .fehlerliste .ok::before { content: "✓ "; color: var(--gruen); }
+  .fehlerliste .nok::before { content: "✗ "; color: var(--rot); }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Startseite -->
+  <section id="start">
+    <header class="titelkopf">
+      <div class="symbol" aria-hidden="true">🏛️</div>
+      <div>
+        <h1>Reismann 5d Politik Trainer</h1>
+        <p class="unterzeile">Wähle aus, was du üben möchtest.</p>
+      </div>
+    </header>
+
+    <div class="modi" id="modi">
+      <button type="button" class="modus" data-wert="begriffe">
+        <span class="ico">📖</span><b>Begriffe lernen</b><small id="infoBegriffe"></small>
+      </button>
+      <button type="button" class="modus" data-wert="fragen">
+        <span class="ico">✅</span><b>Wissenstest</b><small id="infoFragen"></small>
+      </button>
+    </div>
+
+    <div class="box">
+      <h2>Themen</h2>
+      <div id="kapitelliste"></div>
+    </div>
+
+    <!-- Einstellungen Begriffe -->
+    <div class="box" id="optBegriffe">
+      <h2>Abfrage</h2>
+      <div class="umschalter" id="richtung">
+        <button type="button" data-wert="e-b">Erklärung → Begriff</button>
+        <button type="button" data-wert="b-e">Begriff → Erklärung</button>
+        <button type="button" data-wert="beide">Gemischt</button>
+      </div>
+      <p class="erklaerung" id="richtungsHilfe"></p>
+      <div class="optionen">
+        <label class="zeile"><span class="name">Begriffe pro Runde</span>
+          <select id="anzahlB"><option>10</option><option>15</option><option>20</option><option>30</option></select>
+        </label>
+      </div>
+    </div>
+
+    <!-- Einstellungen Fragen -->
+    <div class="box" id="optFragen">
+      <h2>Art</h2>
+      <div class="umschalter" id="testart">
+        <button type="button" data-wert="ueben">Üben</button>
+        <button type="button" data-wert="probe">Probetest</button>
+      </div>
+      <p class="erklaerung" id="testartHilfe"></p>
+      <div class="optionen">
+        <label class="zeile"><span class="name">Fragen pro Runde</span>
+          <select id="anzahlF"><option>10</option><option>15</option><option>20</option><option value="0">alle</option></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="box" id="kastenBox">
+      <h2>Dein Karteikasten</h2>
+      <div class="faecher" id="faecher"></div>
+      <p class="erklaerung">Richtig beantwortet rückt eine Karte ein Fach weiter und kommt seltener dran. Falsch beantwortet geht sie zurück in Fach 1.</p>
+    </div>
+
+    <div class="box" id="verlaufBox" hidden>
+      <h2>Letzte Probetests</h2>
+      <ul class="verlauf" id="verlauf"></ul>
+    </div>
+
+    <button type="button" class="haupt" id="los">Los geht's</button>
+
+    <div class="fusszeile">
+      <button type="button" class="leise klein" id="sichern">Fortschritt sichern</button>
+      <button type="button" class="leise klein" id="laden">Fortschritt laden</button>
+      <button type="button" class="leise klein" id="zuruecksetzen">Alles zurücksetzen</button>
+      <input type="file" id="datei" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <!-- Abfrage -->
+  <section id="abfrage" hidden>
+    <div class="kopf">
+      <button type="button" class="leise klein" id="beenden">✕ Beenden</button>
+      <div class="fortschritt"><span id="fortschrittsbalken"></span></div>
+      <span class="zaehler" id="zaehler"></span>
+    </div>
+
+    <div class="box karte">
+      <div class="richtung" id="richtungstext"></div>
+      <div class="frage" id="frage"></div>
+      <div class="herkunft" id="herkunft"></div>
+      <div class="marke"><span class="fachmarke" id="fachmarke"></span></div>
+
+      <!-- Begriff eintippen -->
+      <div id="bereichTippen" hidden>
+        <form class="eingabe" id="formular" autocomplete="off">
+          <input id="antwort" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Begriff eintippen">
+          <button type="submit" id="pruefen">Prüfen</button>
+        </form>
+        <div class="nebenknoepfe"><button type="button" class="leise klein" id="weissNicht">Weiß ich nicht</button></div>
+      </div>
+
+      <!-- Karteikarte aufdecken -->
+      <div class="aufdecken" id="bereichAufdecken" hidden>
+        <button type="button" id="aufdecken">Erklärung aufdecken</button>
+      </div>
+
+      <!-- Multiple Choice -->
+      <div class="auswahl" id="bereichAuswahl" hidden></div>
+
+      <div class="rueckmeldung" id="rueckmeldung" hidden>
+        <div class="titel" id="rmTitel"></div>
+        <div class="loesung" id="rmLoesung"></div>
+        <div class="tipp" id="rmTipp" hidden></div>
+        <div class="zusatz" id="rmErkl" hidden><span class="etikett" id="rmErklEtikett">Erklärung</span><span id="rmErklText"></span></div>
+        <div class="knopfreihe" id="reiheWeiter">
+          <button type="button" id="dochRichtig" hidden>Ich hatte doch recht</button>
+          <button type="button" class="weiter" id="weiter">Weiter</button>
+        </div>
+        <div class="knopfreihe" id="reiheSelbst" hidden>
+          <button type="button" class="nein" id="nichtGewusst">✗ Nicht gewusst</button>
+          <button type="button" class="ja" id="gewusst">✓ Gewusst</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ende einer Runde -->
+  <section id="ende" hidden>
+    <div class="box ergebnis">
+      <div class="gross" id="endeBild"></div>
+      <div class="zahl" id="endeZahl"></div>
+      <p id="endeText"></p>
+    </div>
+    <div class="box" id="endeListeBox" hidden>
+      <h2 id="endeListeTitel"></h2>
+      <ul class="fehlerliste" id="endeListe"></ul>
+    </div>
+    <div class="knopfreihe">
+      <button type="button" id="nurFehler" hidden>Fehler nochmal üben</button>
+      <button type="button" class="weiter" id="zumStart">Zum Start</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+const BEGRIFFE = [{"id":"b|Politik und Demokratie|Politik","t":"Politik und Demokratie","a":"Was ist Politik?","b":"Politik","e":"Entscheidungen für die Gemeinschaft treffen, in der wir leben","bsp":"Das Wort kommt aus dem alten Griechenland und bedeutete „Stadt“ oder „Gemeinschaft“.","q":"Arbeitsblatt Politik S. 5"},{"id":"b|Politik und Demokratie|Demokratie","t":"Politik und Demokratie","a":"Was ist Demokratie?","b":"Demokratie","e":"Herrschaft des Volkes – das Volk entscheidet in regelmäßigen freien Wahlen über die Regierung","bsp":"Unser politisches System ist eine Demokratie.","q":"Buch S. 37"},{"id":"b|Politik und Demokratie|Meinungsfreiheit","t":"Politik und Demokratie","a":"Was ist Demokratie?","b":"Meinungsfreiheit","e":"Jeder darf seine eigene Meinung haben und sagen – muss aber die Ansichten anderer respektieren.","bsp":"","q":"Arbeitsblatt Demokratie"},{"id":"b|Politik und Demokratie|undemokratisch","t":"Politik und Demokratie","a":"Was ist Demokratie?","b":"undemokratisch","e":"wenn die Interessen anderer missachtet werden","bsp":"„Das ist aber undemokratisch!“","q":"Arbeitsblatt Demokratie"},{"id":"b|Politik und Demokratie|Grundgesetz","t":"Politik und Demokratie","a":"Demokratie-Check","b":"Grundgesetz","e":"enthält die wichtigsten Regeln und die Grundrechte in Deutschland","bsp":"Jede Person ist gleich viel wert.","q":"Heft 15.09.2026"},{"id":"b|Politik und Demokratie|Grundrechte","t":"Politik und Demokratie","a":"Demokratie-Check","b":"Grundrechte","e":"die wichtigsten Rechte jedes Menschen, die im Grundgesetz stehen","bsp":"z. B. Meinungsfreiheit","q":"Heft 15.09.2026"},{"id":"b|Politik und Demokratie|Bundestag","t":"Politik und Demokratie","a":"Demokratie-Check","b":"Bundestag","e":"Parlament von ganz Deutschland – die Abgeordneten stimmen für ganz Deutschland ab und wählen den Bundeskanzler","bsp":"","q":"Heft 15.09.2026 / Buch S. 37"},{"id":"b|Wahlen|Abgeordnete|Abgeordneter","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Abgeordnete|Abgeordneter","e":"gewählte Vertreter, die in einem Parlament für ihre Wähler entscheiden","bsp":"Bundestagsabgeordnete, Landtagsabgeordnete","q":"Buch S. 37"},{"id":"b|Wahlen|Parlament","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Parlament","e":"gewählte Versammlung, die Gesetze beschließt","bsp":"Bundestag, Landtag","q":"Buch S. 37"},{"id":"b|Wahlen|Landtag","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Landtag","e":"Parlament eines Bundeslandes","bsp":"In Berlin heißt es Abgeordnetenhaus.","q":"Buch S. 37"},{"id":"b|Wahlen|Kreistag","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Kreistag","e":"Parlament eines Kreises","bsp":"","q":"Buch S. 37"},{"id":"b|Wahlen|Stadtrat|Gemeinderat","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Stadtrat|Gemeinderat","e":"Parlament einer Stadt oder Gemeinde","bsp":"Der Stadtrat von Paderborn hat 60 Sitze.","q":"Buch S. 37"},{"id":"b|Wahlen|Europäisches Parlament","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Europäisches Parlament","e":"Parlament der Europäischen Union – dort sitzen die Europaabgeordneten","bsp":"","q":"Buch S. 37"},{"id":"b|Wahlen|Schulkonferenz","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Schulkonferenz","e":"Gremium aus Gewählten der Eltern-, Lehrer- und Schülerschaft","bsp":"","q":"Buch S. 37"},{"id":"b|Wahlen|Schülervertretung|SV|Schülerrat","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Schülervertretung|SV|Schülerrat","e":"alle Klassensprecherinnen und Klassensprecher einer Schule zusammen","bsp":"","q":"Buch S. 37"},{"id":"b|Wahlen|repräsentieren","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"repräsentieren","e":"stellvertretend für andere handeln und entscheiden","bsp":"Die Gewählten repräsentieren ihre Wählerschaft.","q":"Buch S. 37"},{"id":"b|Wahlen|Legislative","t":"Wahlen","a":"Wahlen in einer Demokratie","b":"Legislative","e":"die gesetzgebende Gewalt – die haben die Parlamente","bsp":"Exekutive und Judikative kommen in Klasse 8.","q":"Buch S. 37"},{"id":"b|Wahlen|Wahlgrundsätze","t":"Wahlen","a":"Die Wahlgrundsätze","b":"Wahlgrundsätze","e":"die fünf Regeln für demokratische Wahlen: allgemein, unmittelbar, frei, gleich, geheim","bsp":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|allgemein","t":"Wahlen","a":"Die Wahlgrundsätze","b":"allgemein","e":"Alle Bürger dürfen wählen – keine Gruppe wird ausgeschlossen.","bsp":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|unmittelbar","t":"Wahlen","a":"Die Wahlgrundsätze","b":"unmittelbar","e":"Die Stimmen werden direkt für die Abgeordnetensitze verwendet – ohne Zwischeninstanz.","bsp":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|frei","t":"Wahlen","a":"Die Wahlgrundsätze","b":"frei","e":"Man wählt ohne Zwang und ohne unerlaubte Beeinflussung.","bsp":"Keiner kann dich zwingen.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|gleich","t":"Wahlen","a":"Die Wahlgrundsätze","b":"gleich","e":"Alle haben gleich viele Stimmen, jede Stimme hat das gleiche Gewicht.","bsp":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|geheim","t":"Wahlen","a":"Die Wahlgrundsätze","b":"geheim","e":"Niemand darf feststellen können, wie jemand gewählt hat.","bsp":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"b|Wahlen|Abgeordnetenhaus","t":"Wahlen","a":"Wahlen 2026","b":"Abgeordnetenhaus","e":"Name des Landesparlaments von Berlin","bsp":"2026 wurde Die Linke dort stärkste Kraft.","q":"Arbeitsblatt 22.09.2026"},{"id":"b|Wahlen|Stimmenanteil","t":"Wahlen","a":"Wahlen 2026","b":"Stimmenanteil","e":"wie viel Prozent der Stimmen eine Partei bei einer Wahl bekommen hat","bsp":"AfD in Mecklenburg-Vorpommern 2026: 38,2 %","q":"Arbeitsblatt 22.09.2026"},{"id":"b|Wahlen|Koalition","t":"Wahlen","a":"Wahlen 2026","b":"Koalition","e":"Zusammenschluss von Parteien, die gemeinsam regieren","bsp":"In Paderborn laut Steckbrief: CDU und Bündnis 90/Die Grünen","q":"Steckbrief Paderborn"},{"id":"b|Die Gemeinde|Pflichtaufgaben","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","b":"Pflichtaufgaben","e":"Aufgaben, die die Gemeinde erledigen muss","bsp":"Strom, Wasser, Abwasser, Schule, Kita, Feuerwehr","q":"Heft „Das Rathaus“"},{"id":"b|Die Gemeinde|freiwillige Aufgaben","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","b":"freiwillige Aufgaben","e":"Aufgaben, die die Gemeinde übernehmen kann, aber nicht muss","bsp":"Freibad, Bücherei, Museum","q":"Heft „Das Rathaus“"},{"id":"b|Die Gemeinde|übertragene Aufgaben|vom Staat übertragene Aufgaben","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","b":"übertragene Aufgaben|vom Staat übertragene Aufgaben","e":"Aufgaben, die der Staat an die Gemeinde abgegeben hat","bsp":"Pass- und Meldewesen, Standesamt","q":"Heft „Das Rathaus“"},{"id":"b|Die Gemeinde|Bürgermeister|Bürgermeisterin","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Bürgermeister|Bürgermeisterin","e":"leitet die Gemeinde und die Verwaltung, ist Vorsitzender des Gemeinderats (nur 1 Stimme) – wird alle 5 Jahre gewählt","bsp":"","q":"Heft 14.10.2026"},{"id":"b|Die Gemeinde|Repräsentation","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Repräsentation","e":"wenn der Bürgermeister die Gemeinde bei wichtigen Anlässen vertritt","bsp":"","q":"Heft 14.10.2026"},{"id":"b|Die Gemeinde|Gemeinderatssitzung","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Gemeinderatssitzung","e":"Treffen des Gemeinderats, in dem entschieden wird","bsp":"z. B. über einen Schulneubau","q":"Heft 14.10.2026"},{"id":"b|Die Gemeinde|Fachausschuss|Ausschuss","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Fachausschuss|Ausschuss","e":"Expertengruppe des Gemeinderats, die ein Thema berät und vorbereitet – entscheidet aber nicht","bsp":"Jugendausschuss, Bauausschuss, Sportausschuss","q":"Heft 14.10.2026"},{"id":"b|Die Gemeinde|Tagesordnung","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Tagesordnung","e":"Liste der Themen, über die in einer Sitzung gesprochen und entschieden wird","bsp":"Ein Antrag kommt erst nach dem Ausschuss auf die Tagesordnung.","q":"Heft 14.10.2026"},{"id":"b|Die Gemeinde|Antrag","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Antrag","e":"schriftliche Bitte, dass über eine Sache entschieden wird","bsp":"Antrag auf eine Skaterbahn","q":"Gruppe 3: Die Ausschüsse"},{"id":"b|Die Gemeinde|Gemeindeverwaltung|Verwaltung","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Gemeindeverwaltung|Verwaltung","e":"setzt die Beschlüsse des Gemeinderats um – aufgeteilt in viele Ämter, geleitet vom Bürgermeister","bsp":"","q":"Heft 03.11.2026"},{"id":"b|Die Gemeinde|Einwohnermeldeamt","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Einwohnermeldeamt","e":"Amt für die Anmeldung bei einem Umzug und für neue Personalausweise","bsp":"","q":"Heft 03.11.2026"},{"id":"b|Die Gemeinde|Standesamt","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Standesamt","e":"Amt für Geburtsurkunden und Eheschließungen","bsp":"","q":"Heft 03.11.2026"},{"id":"b|Die Gemeinde|Ordnungsamt","t":"Die Gemeinde","a":"Gemeindeorgane","b":"Ordnungsamt","e":"Amt, das z. B. Bußgelder für Müllsünder verhängt","bsp":"","q":"Heft 03.11.2026"},{"id":"b|Die Gemeinde|Bürgerinitiative","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","b":"Bürgerinitiative","e":"Gruppe von Bürgern, die sich gemeinsam für ein Anliegen einsetzt und Druck auf den Gemeinderat macht","bsp":"","q":"Heft 04.11.2026"},{"id":"b|Die Gemeinde|Einwohnerantrag","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","b":"Einwohnerantrag","e":"Antrag von Einwohnern, damit sich der Gemeinderat mit einem Thema beschäftigt","bsp":"","q":"Heft 04.11.2026"},{"id":"b|Die Gemeinde|Bürgerentscheid","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","b":"Bürgerentscheid","e":"Die Bürger stimmen selbst über eine Sache ab – direkte Demokratie.","bsp":"","q":"Heft 04.11.2026"},{"id":"b|Die Gemeinde|direkte Demokratie","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","b":"direkte Demokratie","e":"Das Volk entscheidet selbst über eine Sache, nicht die Gewählten.","bsp":"z. B. Bürgerentscheid","q":"Heft 04.11.2026"},{"id":"b|Die Gemeinde|Einnahmen","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Einnahmen","e":"Geld, das in die Stadtkasse fließt","bsp":"Eintrittsgelder, Steuern, Bußgelder, Fördermittel","q":"Heft 07.10.2026"},{"id":"b|Die Gemeinde|Ausgaben","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Ausgaben","e":"Geld, das die Stadt bezahlen muss","bsp":"Heiz- und Personalkosten, Zinsen","q":"Heft 07.10.2026"},{"id":"b|Die Gemeinde|Grundsteuer","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Grundsteuer","e":"Steuer, die Eigentümer von Grundstücken an ihre Stadt zahlen – die Höhe beschließt der Rat","bsp":"","q":"M13"},{"id":"b|Die Gemeinde|Fördermittel","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Fördermittel","e":"Geld, das die Stadt z. B. vom Land für besondere Projekte bekommt","bsp":"Sanierung des Anna-Gymnasiums","q":"M13"},{"id":"b|Die Gemeinde|Bußgeld","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Bußgeld","e":"Geldstrafe, z. B. für Falschparken oder Müll","bsp":"Die Stadt nahm über 4 Millionen € durch Bußgelder ein.","q":"M13"},{"id":"b|Die Gemeinde|Kredit","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Kredit","e":"Geld, das man sich von der Bank leiht und mit Zinsen zurückzahlen muss","bsp":"","q":"M13"},{"id":"b|Die Gemeinde|Zinsen","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Zinsen","e":"Geld, das man zusätzlich bezahlen muss, wenn man sich Geld geliehen hat","bsp":"","q":"M13"},{"id":"b|Die Gemeinde|Kämmerer|Kämmerin","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","b":"Kämmerer|Kämmerin","e":"verwaltet in der Stadt die Finanzen (Stadtkasse)","bsp":"Der Kämmerer plant eine Erhöhung der Grundsteuer.","q":"M13"}];
+const FRAGEN = [{"id":"f|Politik und Demokratie|Was bedeutet Politik?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Was bedeutet Politik?","r":"Entscheidungen für die Gemeinschaft treffen, in der wir leben","x":["Geld für den Staat verdienen","Streit zwischen Nachbarn schlichten","Gesetze nur für Erwachsene schreiben"],"e":"Zum Beispiel in einer Stadt oder in einem Land.","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Woher kommt das Wort „Politik“?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Woher kommt das Wort „Politik“?","r":"aus dem alten Griechenland","x":["aus dem alten Rom","aus England","aus Ägypten"],"e":"","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Was bedeutete das Wort „Politik“ ursprünglich?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Was bedeutete das Wort „Politik“ ursprünglich?","r":"Stadt oder Gemeinschaft","x":["Herrschaft des Königs","Gesetz und Ordnung","Macht und Geld"],"e":"","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Wer durfte im alten Griechenland über wichtige Dinge der Stadt entscheiden?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Wer durfte im alten Griechenland über wichtige Dinge der Stadt entscheiden?","r":"nur die Männer","x":["alle Bürgerinnen und Bürger","nur die Frauen","nur die Kinder"],"e":"Heute dürfen alle mitreden, also auch Frauen, Kinder und Jugendliche.","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Wer darf heute in der Politik mitreden?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Wer darf heute in der Politik mitreden?","r":"alle Bürgerinnen und Bürger – auch Frauen, Kinder und Jugendliche","x":["nur Männer","nur Politikerinnen und Politiker","nur Erwachsene über 30"],"e":"","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Wo können Kinder und Jugendliche Politik machen?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Wo können Kinder und Jugendliche Politik machen?","r":"in Vereinen, Gruppen und in der Schule","x":["nur im Bundestag","gar nicht – Politik ist nur für Erwachsene","nur im Rathaus"],"e":"Sie können mitbestimmen, ihre Meinung sagen und helfen, Probleme zu lösen.","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Worum geht es in der Politik?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Worum geht es in der Politik?","r":"Lösungen für Probleme finden, die für alle wichtig sind","x":["möglichst viel Geld sparen","dass alle immer einer Meinung sind","Gesetze abschaffen"],"e":"Oft gibt es dabei unterschiedliche Meinungen.","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Warum ist Politik auch „ein Wettstreit um Macht und Einfluss“?","t":"Politik und Demokratie","a":"Was ist Politik?","f":"Warum ist Politik auch „ein Wettstreit um Macht und Einfluss“?","r":"Verschiedene Gruppen kämpfen darum, dass ihre Ideen durchgesetzt werden.","x":["Politiker machen Sportwettkämpfe.","Wer am lautesten ist, gewinnt immer.","Es gibt nur eine einzige Partei."],"e":"","q":"Arbeitsblatt Politik S. 5"},{"id":"f|Politik und Demokratie|Wie kann man das Wort „Demokratie“ übersetzen?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Wie kann man das Wort „Demokratie“ übersetzen?","r":"Herrschaft des Volkes","x":["Herrschaft des Königs","Herrschaft der Reichen","Herrschaft der Armee"],"e":"Unser politisches System ist eine Demokratie.","q":"Buch S. 37"},{"id":"f|Politik und Demokratie|Wann sagt jemand: „Das ist aber undemokratisch!“?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Wann sagt jemand: „Das ist aber undemokratisch!“?","r":"wenn die Interessen anderer missachtet werden","x":["wenn abgestimmt wird","wenn alle mitreden dürfen","wenn die Mehrheit entscheidet"],"e":"","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Wodurch zeichnen sich demokratische Entscheidungen aus?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Wodurch zeichnen sich demokratische Entscheidungen aus?","r":"durch Diskussion und gemeinsame Beratung","x":["durch Befehle von oben","durch Auslosen","dadurch, dass der Lauteste bestimmt"],"e":"Zum Beispiel in der Familie, wenn die Mehrheit über das Urlaubsziel entscheidet.","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Wie viel sind die Menschen in einer Demokratie wert?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Wie viel sind die Menschen in einer Demokratie wert?","r":"Alle Menschen sind gleich viel wert.","x":["Erwachsene sind mehr wert als Kinder.","Reiche sind mehr wert als Arme.","Politiker sind mehr wert als Bürger."],"e":"","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Was gilt in einer Demokratie für die eigene Meinung?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Was gilt in einer Demokratie für die eigene Meinung?","r":"Jeder darf seine Meinung sagen, muss aber die Ansichten anderer respektieren.","x":["Man darf nur die Meinung der Regierung haben.","Man muss immer der Mehrheit zustimmen.","Man darf seine Meinung nur zu Hause sagen."],"e":"Das nennt man Meinungsfreiheit.","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Hat die Freiheit in einer Demokratie Grenzen?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Hat die Freiheit in einer Demokratie Grenzen?","r":"Ja – sie darf nicht dazu führen, Gesetze und die Freiheit anderer zu missachten.","x":["Nein, jeder darf alles.","Ja, man darf nie seine Meinung sagen.","Nein, Gesetze gelten nur für den Staat."],"e":"","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Warum ist Demokratie besser als ein Leben unter wenigen Machthabern?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Warum ist Demokratie besser als ein Leben unter wenigen Machthabern?","r":"Weil sonst wenige Menschen vorschreiben, wie man leben und denken soll.","x":["Weil Demokratie nichts kostet.","Weil es in einer Demokratie keine Gesetze gibt.","Weil dann niemand mehr arbeiten muss."],"e":"Auch wenn es manchmal schwer ist, die Vielfalt der Meinungen zu akzeptieren.","q":"Arbeitsblatt „Was ist eigentlich Demokratie?“"},{"id":"f|Politik und Demokratie|Wie entscheidet das Volk in einer Demokratie über die Regierung?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Wie entscheidet das Volk in einer Demokratie über die Regierung?","r":"durch regelmäßige freie Wahlen","x":["Der König bestimmt die Regierung.","Die Regierung bleibt für immer.","Durch ein Los."],"e":"","q":"Heft (Demokratie in der Politik)"},{"id":"f|Politik und Demokratie|Für wen gelten die Gesetze, die das gewählte Parlament beschließt?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Für wen gelten die Gesetze, die das gewählte Parlament beschließt?","r":"für alle – für die Bürger und auch für den Staat","x":["nur für die Bürger","nur für Politiker","nur für Kinder"],"e":"","q":"Heft (Demokratie in der Politik)"},{"id":"f|Politik und Demokratie|Welche Pflichten haben Bürger in einer Demokratie?","t":"Politik und Demokratie","a":"Was ist Demokratie?","f":"Welche Pflichten haben Bürger in einer Demokratie?","r":"Gesetze einhalten und die Rechte anderer Menschen respektieren","x":["keine – nur Rechte","jeden Tag wählen gehen","im Rathaus mitarbeiten"],"e":"Neben Rechten haben Bürger in einer Demokratie auch Pflichten.","q":"Heft (Demokratie in der Politik)"},{"id":"f|Politik und Demokratie|Was steht im Grundgesetz?","t":"Politik und Demokratie","a":"Demokratie-Check","f":"Was steht im Grundgesetz?","r":"die wichtigsten Regeln und die Grundrechte","x":["die Regeln für den Sportverein","die Stundenpläne aller Schulen","die Preise im Supermarkt"],"e":"Zum Beispiel: Jede Person ist gleich viel wert, und es gibt Meinungsfreiheit.","q":"Heft 15.09.2026"},{"id":"f|Politik und Demokratie|Welches dieser Grundrechte steht im Grundgesetz?","t":"Politik und Demokratie","a":"Demokratie-Check","f":"Welches dieser Grundrechte steht im Grundgesetz?","r":"Meinungsfreiheit","x":["Recht auf ein eigenes Auto","Recht auf Taschengeld","Recht auf schulfrei"],"e":"","q":"Heft 15.09.2026"},{"id":"f|Politik und Demokratie|Wie müssen demokratische Wahlen laut Heft sein?","t":"Politik und Demokratie","a":"Demokratie-Check","f":"Wie müssen demokratische Wahlen laut Heft sein?","r":"frei, gleich und geheim","x":["öffentlich, laut und schnell","freiwillig, bezahlt und online","geheim, teuer und selten"],"e":"Insgesamt gibt es fünf Wahlgrundsätze: allgemein, unmittelbar, frei, gleich und geheim.","q":"Heft 15.09.2026"},{"id":"f|Politik und Demokratie|Was machen die Abgeordneten im Bundestag?","t":"Politik und Demokratie","a":"Demokratie-Check","f":"Was machen die Abgeordneten im Bundestag?","r":"Sie stimmen für ganz Deutschland ab und wählen den Bundeskanzler oder die Bundeskanzlerin.","x":["Sie leiten die Gemeinden.","Sie sprechen Urteile vor Gericht.","Sie wählen den Bürgermeister."],"e":"","q":"Heft 15.09.2026"},{"id":"f|Politik und Demokratie|Wer wählt den Bundeskanzler oder die Bundeskanzlerin?","t":"Politik und Demokratie","a":"Demokratie-Check","f":"Wer wählt den Bundeskanzler oder die Bundeskanzlerin?","r":"die Abgeordneten im Bundestag","x":["alle Bürger direkt","der Bürgermeister","der Gemeinderat"],"e":"","q":"Heft 15.09.2026"},{"id":"f|Wahlen|Worum geht es bei Wahlen?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Worum geht es bei Wahlen?","r":"Die Wählenden suchen sich Personen aus, die in ihrem Sinne Entscheidungen treffen sollen.","x":["Man bestimmt den Sieger eines Wettbewerbs.","Man kauft sich ein Amt.","Die Lehrerin bestimmt, wer entscheidet."],"e":"Wahlen finden auf verschiedenen Ebenen statt – von der Klasse bis Europa.","q":"Buch S. 37"},{"id":"f|Wahlen|Wen wählt eine Klasse?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wen wählt eine Klasse?","r":"den Klassensprecher oder die Klassensprecherin","x":["den Bürgermeister","die Schulleitung","die Landtagsabgeordneten"],"e":"Die Klassensprecher bilden zusammen die Schülervertretung (Schülerrat).","q":"Buch S. 37"},{"id":"f|Wahlen|Wer bildet zusammen die Schülervertretung (SV)?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wer bildet zusammen die Schülervertretung (SV)?","r":"die Klassensprecherinnen und Klassensprecher","x":["die Lehrerinnen und Lehrer","die Eltern","die Stadtratsabgeordneten"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|In welchem Gremium sitzen Gewählte der Eltern-, Lehrer- und Schülerschaft?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"In welchem Gremium sitzen Gewählte der Eltern-, Lehrer- und Schülerschaft?","r":"in der Schulkonferenz","x":["im Stadtrat","im Landtag","in der Schülervertretung"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|In der Stadt werden Stadtratsabgeordnete gewählt. Wo arbeiten sie?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"In der Stadt werden Stadtratsabgeordnete gewählt. Wo arbeiten sie?","r":"im Stadtrat","x":["im Kreistag","im Landtag","im Bundestag"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Wie heißt das Parlament eines Kreises?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wie heißt das Parlament eines Kreises?","r":"Kreistag","x":["Stadtrat","Landtag","Bundestag"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Wie heißt das Parlament eines Bundeslandes?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wie heißt das Parlament eines Bundeslandes?","r":"Landtag (Landesparlament)","x":["Bundestag","Kreistag","Stadtrat"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Wie heißt das Parlament von ganz Deutschland?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wie heißt das Parlament von ganz Deutschland?","r":"Bundestag (Bundesparlament)","x":["Landtag","Europäisches Parlament","Kreistag"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Wo arbeiten die Europaabgeordneten?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wo arbeiten die Europaabgeordneten?","r":"im Europäischen Parlament","x":["im Bundestag","im Landtag","im Kreistag"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Was bedeutet: Die Gewählten „repräsentieren“ die Wählerschaft?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Was bedeutet: Die Gewählten „repräsentieren“ die Wählerschaft?","r":"Sie handeln stellvertretend für ihre Wähler in der jeweiligen Versammlung.","x":["Sie machen nur, was ihnen selbst gefällt.","Sie dürfen nicht abstimmen.","Sie bezahlen die Steuern ihrer Wähler."],"e":"Sie sollen Regeln und Gesetze so beschließen, wie es die Mehrheit möchte.","q":"Buch S. 37"},{"id":"f|Wahlen|Wie lange haben die gewählten Repräsentanten ihre Macht?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Wie lange haben die gewählten Repräsentanten ihre Macht?","r":"nur auf Zeit – bis zur nächsten Wahl","x":["für immer","bis sie 18 Jahre alt sind","bis der König sie absetzt"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Welche Gewalt haben die Parlamente?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Welche Gewalt haben die Parlamente?","r":"die gesetzgebende Gewalt (Legislative)","x":["die ausführende Gewalt (Exekutive)","die rechtsprechende Gewalt (Judikative)","die Polizeigewalt"],"e":"Exekutive und Judikative lernt ihr erst in Klasse 8 genauer kennen.","q":"Buch S. 37"},{"id":"f|Wahlen|Was ist ein zentrales Merkmal einer Demokratie?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Was ist ein zentrales Merkmal einer Demokratie?","r":"Wahlen","x":["ein König","eine einzige erlaubte Partei","eine Geheimpolizei"],"e":"Aber aufgepasst: Nicht jede Wahl ist eine demokratische Wahl!","q":"Buch S. 37"},{"id":"f|Wahlen|Im Land XYZ gibt es nur zwei zugelassene Kandidaten. Ist das eine demokratische Wahl?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Im Land XYZ gibt es nur zwei zugelassene Kandidaten. Ist das eine demokratische Wahl?","r":"Nein – man hat keine echte Auswahl, die Wahl ist nicht frei.","x":["Ja, zwei Kandidaten reichen.","Ja, solange geheim gewählt wird.","Ja, wenn viele Menschen wählen gehen."],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Im Land ABC wird beobachtet, wen man wählt, und wer den „falschen“ Kandidaten wählt, wird bestraft. Welcher Wahlgrundsatz wird verletzt?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Im Land ABC wird beobachtet, wen man wählt, und wer den „falschen“ Kandidaten wählt, wird bestraft. Welcher Wahlgrundsatz wird verletzt?","r":"geheim (und dadurch auch frei)","x":["allgemein","unmittelbar","gleich"],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Im Land ÖÖÖ haben Personen mit einem Unternehmen doppelt so viele Stimmen wie andere. Welcher Wahlgrundsatz wird verletzt?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Im Land ÖÖÖ haben Personen mit einem Unternehmen doppelt so viele Stimmen wie andere. Welcher Wahlgrundsatz wird verletzt?","r":"gleich","x":["geheim","frei","unmittelbar"],"e":"Alle Stimmen müssen das gleiche Gewicht haben.","q":"Buch S. 37"},{"id":"f|Wahlen|Im Land WWW werden die Stimmzettel heimlich ausgezählt und es werden ausgefüllte Stimmzettel dazugetan. Ist das demokratisch?","t":"Wahlen","a":"Wahlen in einer Demokratie","f":"Im Land WWW werden die Stimmzettel heimlich ausgezählt und es werden ausgefüllte Stimmzettel dazugetan. Ist das demokratisch?","r":"Nein – das Ergebnis wird gefälscht.","x":["Ja, wenn das Ergebnis am Ende stimmt.","Ja, das Auszählen ist Sache der Regierung.","Ja, solange die Wahl geheim war."],"e":"","q":"Buch S. 37"},{"id":"f|Wahlen|Wie viele Wahlgrundsätze gibt es?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Wie viele Wahlgrundsätze gibt es?","r":"fünf","x":["drei","vier","sechs"],"e":"allgemein, unmittelbar, frei, gleich und geheim","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher Wahlgrundsatz ist gemeint? „Die Wählerstimmen werden direkt für die Zuteilung der Abgeordnetensitze verwendet. Es gibt keine Zwischeninstanz.“","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher Wahlgrundsatz ist gemeint? „Die Wählerstimmen werden direkt für die Zuteilung der Abgeordnetensitze verwendet. Es gibt keine Zwischeninstanz.“","r":"unmittelbar","x":["allgemein","frei","geheim"],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher Wahlgrundsatz ist gemeint? „Die Stimme kann ohne staatlichen Zwang oder sonstige unzulässige Beeinflussung abgegeben werden.“","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher Wahlgrundsatz ist gemeint? „Die Stimme kann ohne staatlichen Zwang oder sonstige unzulässige Beeinflussung abgegeben werden.“","r":"frei","x":["gleich","geheim","unmittelbar"],"e":"Wichtig, weil dich keiner zwingen kann.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher Wahlgrundsatz ist gemeint? „Alle Wahlberechtigten haben gleich viele Stimmen. Alle Stimmen haben das gleiche Gewicht.“","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher Wahlgrundsatz ist gemeint? „Alle Wahlberechtigten haben gleich viele Stimmen. Alle Stimmen haben das gleiche Gewicht.“","r":"gleich","x":["allgemein","frei","unmittelbar"],"e":"Wichtig, damit keiner mehr oder weniger zu sagen hat.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher Wahlgrundsatz ist gemeint? „Es darf nicht feststellbar sein, wie der einzelne Bürger gewählt hat.“","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher Wahlgrundsatz ist gemeint? „Es darf nicht feststellbar sein, wie der einzelne Bürger gewählt hat.“","r":"geheim","x":["frei","gleich","allgemein"],"e":"Wichtig, weil dich dann keiner dafür ärgern kann, wen du gewählt hast.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher Wahlgrundsatz ist gemeint? „Alle Bürger sind wahlberechtigt. Keine Gruppe ist aus sozialen, politischen oder wirtschaftlichen Gründen von der Wahl ausgeschlossen.“","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher Wahlgrundsatz ist gemeint? „Alle Bürger sind wahlberechtigt. Keine Gruppe ist aus sozialen, politischen oder wirtschaftlichen Gründen von der Wahl ausgeschlossen.“","r":"allgemein","x":["gleich","frei","unmittelbar"],"e":"Wichtig, weil niemand ausgeschlossen werden darf – auch nicht, wenn andere seine Meinung nicht mögen.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Was bedeutet der Wahlgrundsatz „geheim“?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Was bedeutet der Wahlgrundsatz „geheim“?","r":"Niemand darf feststellen können, wie ich gewählt habe.","x":["Ich darf niemandem erzählen, dass ich wählen war.","Die Wahl findet nachts statt.","Die Ergebnisse werden nicht veröffentlicht."],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Was bedeutet der Wahlgrundsatz „gleich“?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Was bedeutet der Wahlgrundsatz „gleich“?","r":"Alle haben gleich viele Stimmen, und jede Stimme zählt gleich viel.","x":["Alle müssen dieselbe Partei wählen.","Alle wählen am gleichen Ort.","Alle Parteien bekommen gleich viele Sitze."],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Was bedeutet der Wahlgrundsatz „frei“?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Was bedeutet der Wahlgrundsatz „frei“?","r":"Niemand darf mich zwingen oder unerlaubt beeinflussen, wen ich wähle.","x":["Die Wahl kostet nichts.","Man darf so oft wählen, wie man will.","Man muss nicht zur Schule."],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Was bedeutet der Wahlgrundsatz „allgemein“?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Was bedeutet der Wahlgrundsatz „allgemein“?","r":"Alle Bürger dürfen wählen – keine Gruppe wird ausgeschlossen.","x":["Man wählt nur allgemeine Themen.","Nur Politiker dürfen wählen.","Die Wahl ist freiwillig."],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Was bedeutet der Wahlgrundsatz „unmittelbar“?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Was bedeutet der Wahlgrundsatz „unmittelbar“?","r":"Die Stimmen werden direkt für die Abgeordnetensitze verwendet – ohne Zwischeninstanz.","x":["Man muss sofort nach dem Aufstehen wählen.","Das Ergebnis steht sofort fest.","Man wählt nur Personen aus der Nachbarschaft."],"e":"","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welcher ist KEIN Wahlgrundsatz?","t":"Wahlen","a":"Die Wahlgrundsätze","f":"Welcher ist KEIN Wahlgrundsatz?","r":"öffentlich","x":["geheim","frei","allgemein"],"e":"Die fünf Wahlgrundsätze: allgemein, unmittelbar, frei, gleich, geheim.","q":"Arbeitsblatt Wahlgrundsätze"},{"id":"f|Wahlen|Welche Partei gewann 2026 die Landtagswahl in Mecklenburg-Vorpommern?","t":"Wahlen","a":"Wahlen 2026","f":"Welche Partei gewann 2026 die Landtagswahl in Mecklenburg-Vorpommern?","r":"AfD (38,2 %)","x":["SPD","Die Linke","CDU"],"e":"Auf Platz 2 kam die SPD mit 35,5 %.","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Welche Partei wurde 2026 Zweite in Mecklenburg-Vorpommern?","t":"Wahlen","a":"Wahlen 2026","f":"Welche Partei wurde 2026 Zweite in Mecklenburg-Vorpommern?","r":"SPD (35,5 %)","x":["AfD","CDU","Grüne"],"e":"","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Welche Partei wurde 2026 stärkste Kraft in Berlin?","t":"Wahlen","a":"Wahlen 2026","f":"Welche Partei wurde 2026 stärkste Kraft in Berlin?","r":"Die Linke (25,7 %)","x":["CDU","AfD","SPD"],"e":"Danach kamen CDU (18,8 %) und AfD (16,3 %).","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Welche Partei wurde 2026 Zweite in Berlin?","t":"Wahlen","a":"Wahlen 2026","f":"Welche Partei wurde 2026 Zweite in Berlin?","r":"CDU (18,8 %)","x":["AfD","Grüne","SPD"],"e":"","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Wie heißt das Landesparlament von Berlin, das 2026 gewählt wurde?","t":"Wahlen","a":"Wahlen 2026","f":"Wie heißt das Landesparlament von Berlin, das 2026 gewählt wurde?","r":"Abgeordnetenhaus","x":["Landtag","Stadtrat","Bundestag"],"e":"Berlin ist Stadt und Bundesland zugleich.","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|In welchem Bundesland hatten AfD und SPD 2026 viel mehr Stimmen?","t":"Wahlen","a":"Wahlen 2026","f":"In welchem Bundesland hatten AfD und SPD 2026 viel mehr Stimmen?","r":"in Mecklenburg-Vorpommern","x":["in Berlin","in beiden gleich viel","in keinem von beiden"],"e":"AfD: 38,2 % in MV, 16,3 % in Berlin. SPD: 35,5 % in MV, 12,1 % in Berlin.","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Welche Partei bekam 2026 in beiden Ländern weniger als 5 %?","t":"Wahlen","a":"Wahlen 2026","f":"Welche Partei bekam 2026 in beiden Ländern weniger als 5 %?","r":"BSW","x":["CDU","Grüne","Die Linke"],"e":"BSW: 4,8 % in MV und 4,7 % in Berlin.","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Wahlen|Warum können eine Großstadt und ein Flächenland ganz unterschiedlich wählen?","t":"Wahlen","a":"Wahlen 2026","f":"Warum können eine Großstadt und ein Flächenland ganz unterschiedlich wählen?","r":"Die Menschen haben dort andere Sorgen und Ziele, deshalb sind andere Parteien beliebter.","x":["In Großstädten wird nicht gewählt.","In Flächenländern gelten andere Wahlgrundsätze.","In Städten zählen die Stimmen doppelt."],"e":"","q":"Arbeitsblatt 22.09.2026"},{"id":"f|Die Gemeinde|Wofür sorgt die Gemeinde zum Beispiel?","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Wofür sorgt die Gemeinde zum Beispiel?","r":"gute Sportplätze, Sauberkeit, Reparaturen, Ausstattung und Räume","x":["für die Bundeswehr","für Gesetze in ganz Deutschland","für das Fernsehprogramm"],"e":"Die Gemeinde bezahlt dafür auch Mitarbeiter.","q":"Heft 30.09.2026 (Buch S. 148)"},{"id":"f|Die Gemeinde|Welche drei Arten von Aufgaben hat die Gemeinde?","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Welche drei Arten von Aufgaben hat die Gemeinde?","r":"Pflichtaufgaben, freiwillige Aufgaben und vom Staat übertragene Aufgaben","x":["Hausaufgaben, Klassenarbeiten und Tests","Bundesaufgaben, Landesaufgaben und Europaaufgaben","Einnahmen, Ausgaben und Kredite"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Welche dieser Aufgaben ist eine Pflichtaufgabe der Gemeinde?","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Welche dieser Aufgaben ist eine Pflichtaufgabe der Gemeinde?","r":"Feuerwehr","x":["Freibad","Museum","Bücherei"],"e":"Pflichtaufgaben: Strom- und Wasserversorgung, Abwasserbeseitigung, Schule, Kita, Feuerwehr","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Welche dieser Aufgaben ist eine freiwillige Aufgabe der Gemeinde?","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Welche dieser Aufgaben ist eine freiwillige Aufgabe der Gemeinde?","r":"Freibad","x":["Feuerwehr","Schule","Wasserversorgung"],"e":"Freiwillige Aufgaben: Freibad, Bücherei, Museum","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Welche dieser Aufgaben ist vom Staat übertragen?","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Welche dieser Aufgaben ist vom Staat übertragen?","r":"Pass- und Meldewesen","x":["Bücherei","Kita","Freibad"],"e":"Vom Staat übertragen: Pass- und Meldewesen, Standesamt","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Die Wasserversorgung ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Die Wasserversorgung ist …","r":"eine Pflichtaufgabe","x":["eine freiwillige Aufgabe","eine vom Staat übertragene Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Die Stromversorgung ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Die Stromversorgung ist …","r":"eine Pflichtaufgabe","x":["eine freiwillige Aufgabe","eine vom Staat übertragene Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Die Abwasserbeseitigung ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Die Abwasserbeseitigung ist …","r":"eine Pflichtaufgabe","x":["eine freiwillige Aufgabe","eine vom Staat übertragene Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Schule und Kita sind …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Schule und Kita sind …","r":"Pflichtaufgaben","x":["freiwillige Aufgaben","vom Staat übertragene Aufgaben"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Die Bücherei ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Die Bücherei ist …","r":"eine freiwillige Aufgabe","x":["eine Pflichtaufgabe","eine vom Staat übertragene Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Das Museum ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Das Museum ist …","r":"eine freiwillige Aufgabe","x":["eine Pflichtaufgabe","eine vom Staat übertragene Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Das Standesamt ist …","t":"Die Gemeinde","a":"Aufgaben der Gemeinde","f":"Das Standesamt ist …","r":"eine vom Staat übertragene Aufgabe","x":["eine Pflichtaufgabe","eine freiwillige Aufgabe"],"e":"","q":"Heft „Das Rathaus“"},{"id":"f|Die Gemeinde|Welche vier Gemeindeorgane gibt es?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Welche vier Gemeindeorgane gibt es?","r":"Bürgermeister, Gemeinderat, Ausschüsse und Gemeindeverwaltung","x":["Bundestag, Landtag, Kreistag und Stadtrat","Schule, Kita, Feuerwehr und Freibad","Einwohnermeldeamt, Standesamt, Ordnungsamt und Bauamt"],"e":"","q":"Heft 14.10. und 03.11.2026"},{"id":"f|Die Gemeinde|Wer leitet die Gemeinde?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wer leitet die Gemeinde?","r":"der Bürgermeister","x":["der Gemeinderat","der Bauausschuss","das Ordnungsamt"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Wie oft wird der Bürgermeister gewählt?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wie oft wird der Bürgermeister gewählt?","r":"alle 5 Jahre","x":["jedes Jahr","alle 4 Jahre","alle 10 Jahre"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Wann arbeitet ein Bürgermeister laut Heft ehrenamtlich, wann hauptberuflich?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wann arbeitet ein Bürgermeister laut Heft ehrenamtlich, wann hauptberuflich?","r":"unter 10.000 Einwohnern ehrenamtlich, über 10.000 Einwohnern hauptberuflich","x":["immer ehrenamtlich","immer hauptberuflich","unter 100.000 Einwohnern hauptberuflich, darüber ehrenamtlich"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Welche drei Aufgaben hat der Bürgermeister?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Welche drei Aufgaben hat der Bürgermeister?","r":"Er geht zu wichtigen Anlässen (Repräsentation), ist Chef der Gemeindearbeiter und Vorsitzender des Gemeinderats.","x":["Er schreibt Gesetze, leitet die Polizei und wählt den Gemeinderat.","Er unterrichtet, baut Straßen und löscht Brände.","Er wählt den Bundeskanzler, leitet den Landtag und bestimmt die Steuern allein."],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Wie viele Stimmen hat der Bürgermeister im Gemeinderat?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wie viele Stimmen hat der Bürgermeister im Gemeinderat?","r":"nur 1 Stimme","x":["2 Stimmen","10 Stimmen","keine Stimme"],"e":"Er ist zwar Vorsitzender, hat aber nur eine Stimme.","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Wer wählt den Gemeinderat und wie oft?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wer wählt den Gemeinderat und wie oft?","r":"die Bürger, alle 5 Jahre","x":["der Bürgermeister, jedes Jahr","der Landtag, alle 4 Jahre","die Ausschüsse, alle 2 Jahre"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Was passiert in den Gemeinderatssitzungen?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Was passiert in den Gemeinderatssitzungen?","r":"Es wird über Dinge der Gemeinde entschieden, z. B. über einen Schulneubau.","x":["Es werden Gesetze für ganz Deutschland beschlossen.","Es werden Personalausweise ausgestellt.","Es werden Urteile gesprochen."],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Wie viele Stimmen hat jedes Gemeinderatsmitglied?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wie viele Stimmen hat jedes Gemeinderatsmitglied?","r":"eine","x":["zwei","drei","so viele, wie es Jahre im Rat ist"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Warum gibt es Ausschüsse?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Warum gibt es Ausschüsse?","r":"Die Gemeinderäte sind keine Experten für alles und können sich nicht in jedes Thema einarbeiten.","x":["Weil der Bürgermeister keine Lust hat.","Damit der Gemeinderat nicht abstimmen muss.","Weil es so im Grundgesetz steht."],"e":"Darum werden Anträge zuerst an den zuständigen Fachausschuss weitergeleitet.","q":"Heft 14.10.2026 / Gruppe 3"},{"id":"f|Die Gemeinde|Wie heißen die Expertengruppen des Gemeinderats?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wie heißen die Expertengruppen des Gemeinderats?","r":"Fachausschüsse","x":["Fraktionen","Ämter","Bürgerinitiativen"],"e":"","q":"Heft 14.10.2026"},{"id":"f|Die Gemeinde|Welche davon sind Fachausschüsse?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Welche davon sind Fachausschüsse?","r":"Jugendausschuss, Bauausschuss, Sportausschuss","x":["Ordnungsamt, Standesamt, Einwohnermeldeamt","Bundestag, Landtag, Kreistag","Feuerwehr, Polizei, Rettungsdienst"],"e":"Weitere Beispiele: Schulausschuss, Festausschuss.","q":"Heft 14.10.2026 / Gruppe 3"},{"id":"f|Die Gemeinde|Wann kommt ein Antrag auf die Tagesordnung der Gemeinderatssitzung?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wann kommt ein Antrag auf die Tagesordnung der Gemeinderatssitzung?","r":"erst nachdem sich der zuständige Ausschuss damit beschäftigt hat","x":["sofort, wenn er eingeht","nur wenn der Bürgermeister es will","erst nach einer Bürgerbefragung"],"e":"","q":"Heft 14.10.2026 / Gruppe 3"},{"id":"f|Die Gemeinde|Wer entscheidet am Ende: der Ausschuss oder der Gemeinderat?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wer entscheidet am Ende: der Ausschuss oder der Gemeinderat?","r":"der Gemeinderat – der Ausschuss berät nur","x":["der Ausschuss allein","der Bürgermeister allein","die Gemeindeverwaltung"],"e":"Ausschüsse leisten nur beratende und vorbereitende Arbeit.","q":"Heft 14.10.2026 / Gruppe 3"},{"id":"f|Die Gemeinde|Was macht ein Ausschuss z. B. bei einem Antrag auf eine Skaterbahn?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Was macht ein Ausschuss z. B. bei einem Antrag auf eine Skaterbahn?","r":"Er informiert sich über Kosten und Standort und berät den Gemeinderat.","x":["Er baut die Skaterbahn sofort.","Er lehnt den Antrag endgültig ab.","Er stimmt endgültig darüber ab."],"e":"","q":"Gruppe 3: Die Ausschüsse"},{"id":"f|Die Gemeinde|Was macht die Gemeindeverwaltung?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Was macht die Gemeindeverwaltung?","r":"Sie setzt die Beschlüsse des Gemeinderats um.","x":["Sie beschließt die Gesetze.","Sie wählt den Bürgermeister.","Sie berät nur den Gemeinderat."],"e":"Sie ist in viele Ämter aufgeteilt.","q":"Heft 03.11.2026"},{"id":"f|Die Gemeinde|Wer leitet die Gemeindeverwaltung?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Wer leitet die Gemeindeverwaltung?","r":"der Bürgermeister","x":["der Gemeinderat","der Bauausschuss","der Landtag"],"e":"","q":"Heft 03.11.2026"},{"id":"f|Die Gemeinde|Zu welchem Amt geht man bei einem Umzug oder für einen neuen Personalausweis?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Zu welchem Amt geht man bei einem Umzug oder für einen neuen Personalausweis?","r":"Einwohnermeldeamt","x":["Standesamt","Ordnungsamt","Bauamt"],"e":"","q":"Heft 03.11.2026"},{"id":"f|Die Gemeinde|Welches Amt stellt Geburtsurkunden aus und ist für Eheschließungen zuständig?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Welches Amt stellt Geburtsurkunden aus und ist für Eheschließungen zuständig?","r":"Standesamt","x":["Einwohnermeldeamt","Ordnungsamt","Jugendamt"],"e":"","q":"Heft 03.11.2026"},{"id":"f|Die Gemeinde|Welches Amt verhängt Bußgelder, z. B. für Müllsünder?","t":"Die Gemeinde","a":"Gemeindeorgane","f":"Welches Amt verhängt Bußgelder, z. B. für Müllsünder?","r":"Ordnungsamt","x":["Standesamt","Einwohnermeldeamt","Bauamt"],"e":"","q":"Heft 03.11.2026"},{"id":"f|Die Gemeinde|Welche ist KEINE Möglichkeit, sich in der Gemeinde zu beteiligen?","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","f":"Welche ist KEINE Möglichkeit, sich in der Gemeinde zu beteiligen?","r":"den Bürgermeister selbst absetzen","x":["Ratsmitglieder persönlich oder online kontaktieren","Unterschriften sammeln","sich an die Presse wenden"],"e":"Möglichkeiten: Ratsmitglieder kontaktieren, Bürgerinitiative, Einwohnerantrag, Bürgerentscheid, Presse, Unterschriften sammeln.","q":"Heft 04.11.2026"},{"id":"f|Die Gemeinde|Was bewirkt eine Bürgerinitiative?","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","f":"Was bewirkt eine Bürgerinitiative?","r":"Sie erhöht den Druck auf die Gemeinderatsmitglieder, sich mit dem Problem zu beschäftigen.","x":["Sie entscheidet selbst über das Problem.","Sie ersetzt den Gemeinderat.","Sie wählt einen neuen Bürgermeister."],"e":"","q":"Heft 04.11.2026"},{"id":"f|Die Gemeinde|Welche Beteiligungsmöglichkeit ist direkte Demokratie?","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","f":"Welche Beteiligungsmöglichkeit ist direkte Demokratie?","r":"Bürgerentscheid","x":["ein Ratsmitglied anrufen","sich an die Presse wenden","einen Leserbrief schreiben"],"e":"Beim Bürgerentscheid stimmen die Bürger selbst über eine Sache ab.","q":"Heft 04.11.2026"},{"id":"f|Die Gemeinde|Wie kann man Ratsmitglieder erreichen?","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","f":"Wie kann man Ratsmitglieder erreichen?","r":"persönlich oder online","x":["gar nicht","nur durch den Bürgermeister","nur bei der Wahl"],"e":"","q":"Heft 04.11.2026"},{"id":"f|Die Gemeinde|Wie kann man über die Zeitung auf ein Problem in der Gemeinde aufmerksam machen?","t":"Die Gemeinde","a":"Mitmachen in der Gemeinde","f":"Wie kann man über die Zeitung auf ein Problem in der Gemeinde aufmerksam machen?","r":"sich an die Presse wenden","x":["einen Kredit aufnehmen","einen Ausschuss gründen","das Standesamt anrufen"],"e":"","q":"Heft 04.11.2026"},{"id":"f|Die Gemeinde|Eintrittsgelder im Schwimmbad sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Eintrittsgelder im Schwimmbad sind für die Stadt …","r":"eine Einnahme","x":["eine Ausgabe"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Heiz- und Personalkosten sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Heiz- und Personalkosten sind für die Stadt …","r":"eine Ausgabe","x":["eine Einnahme"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Bußgelder sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Bußgelder sind für die Stadt …","r":"eine Einnahme","x":["eine Ausgabe"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Fördermittel vom Land sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Fördermittel vom Land sind für die Stadt …","r":"eine Einnahme","x":["eine Ausgabe"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Die Grundsteuer ist für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Die Grundsteuer ist für die Stadt …","r":"eine Einnahme","x":["eine Ausgabe"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Bezahlte Überstunden der Feuerwehr sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Bezahlte Überstunden der Feuerwehr sind für die Stadt …","r":"eine Ausgabe","x":["eine Einnahme"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Die Rückzahlung eines Kredits mit Zinsen ist für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Die Rückzahlung eines Kredits mit Zinsen ist für die Stadt …","r":"eine Ausgabe","x":["eine Einnahme"],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Hundesteuer und Gebühren für Abwasser sind für die Stadt …","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Hundesteuer und Gebühren für Abwasser sind für die Stadt …","r":"Einnahmen","x":["Ausgaben"],"e":"","q":"M13"},{"id":"f|Die Gemeinde|Was ist die Grundsteuer?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Was ist die Grundsteuer?","r":"eine Steuer, die Eigentümer von Grundstücken an ihre Stadt zahlen müssen","x":["eine Steuer für Hundebesitzer","eine Gebühr für den Schwimmbad-Eintritt","ein Bußgeld für Falschparker"],"e":"Hausbesitzer, die Wohnungen vermieten, beteiligen die Mieter an den Kosten.","q":"M13"},{"id":"f|Die Gemeinde|Wer beschließt die Höhe der Grundsteuer?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Wer beschließt die Höhe der Grundsteuer?","r":"der Rat der Stadt","x":["der Bundestag","die Hausbesitzer","die Bank"],"e":"","q":"M13"},{"id":"f|Die Gemeinde|Wie wollte Neustadt Energiekosten sparen?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Wie wollte Neustadt Energiekosten sparen?","r":"Die Straßenlaternen werden nachts abgeschaltet.","x":["Das Schwimmbad wird geheizt.","Es werden mehr Laternen gebaut.","Die Feuerwehr bekommt neue Fahrzeuge."],"e":"Abgeschaltet zwischen 0:30 und 3:30 Uhr – Einsparung 125.000 €.","q":"M13"},{"id":"f|Die Gemeinde|Warum muss eine Stadt manchmal einen Kredit bei der Bank aufnehmen?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Warum muss eine Stadt manchmal einen Kredit bei der Bank aufnehmen?","r":"um die Lücke zwischen Einnahmen und Ausgaben auszugleichen","x":["weil sie zu viel Geld hat","um Bußgelder zu bezahlen","weil die Bank es verlangt"],"e":"Das führt zu neuen Ausgaben für Zinsen.","q":"M13"},{"id":"f|Die Gemeinde|Was ist der Nachteil eines Kredits für die Stadt?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Was ist der Nachteil eines Kredits für die Stadt?","r":"Sie muss ihn zurückzahlen und zusätzlich Zinsen bezahlen.","x":["Sie bekommt dafür weniger Steuern.","Sie darf keine Schulen mehr bauen.","Es gibt keinen Nachteil."],"e":"","q":"Heft 07.10.2026 / M13"},{"id":"f|Die Gemeinde|Wer gibt der Stadt Fördermittel, z. B. für die Sanierung eines Gymnasiums?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Wer gibt der Stadt Fördermittel, z. B. für die Sanierung eines Gymnasiums?","r":"das Land (z. B. NRW)","x":["die Bank","die Bürger","die Schule selbst"],"e":"","q":"M13"},{"id":"f|Die Gemeinde|Warum ist es schwierig, die Einnahmen einer Stadt zu erhöhen?","t":"Die Gemeinde","a":"Einnahmen und Ausgaben","f":"Warum ist es schwierig, die Einnahmen einer Stadt zu erhöhen?","r":"Die Bürger haben unterschiedliche Interessen, z. B. Kinder, Autofahrer, Hausbesitzer und Hundebesitzer.","x":["Weil Städte kein Geld nehmen dürfen.","Weil der Bundestag es verbietet.","Weil alle Bürger dasselbe wollen."],"e":"Beispiel: Höherer Eintritt im Schwimmbad freut die Stadtkasse, ärgert aber Familien mit Kindern.","q":"M13"},{"id":"f|Die Gemeinde|Wo liegt Paderborn?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wo liegt Paderborn?","r":"im östlichen Teil von NRW","x":["im Westen von Bayern","an der Nordsee","in Mecklenburg-Vorpommern"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Paderborn ist eine …","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Paderborn ist eine …","r":"Großstadt","x":["Kleinstadt","Hauptstadt","Dorf"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Wie viele Einwohner hat Paderborn ungefähr?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wie viele Einwohner hat Paderborn ungefähr?","r":"156.000","x":["56.000","15.600","1,5 Millionen"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Woraus setzt sich die Gemeinde Paderborn zusammen?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Woraus setzt sich die Gemeinde Paderborn zusammen?","r":"aus der Kernstadt und 8 Ortsteilen","x":["aus 3 Dörfern","aus der Kernstadt und 20 Ortsteilen","nur aus der Kernstadt"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Wann wurde Paderborn das erste Mal erwähnt?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wann wurde Paderborn das erste Mal erwähnt?","r":"777 n. Chr.","x":["1777","77 v. Chr.","1949"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Wie viele Sitze hat der Stadtrat von Paderborn?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wie viele Sitze hat der Stadtrat von Paderborn?","r":"60","x":["16","100","600"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Wer ist Bürgermeister von Paderborn?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wer ist Bürgermeister von Paderborn?","r":"Stefan-Oliver Strate (seit 2025)","x":["Hendrik Wüst","Thomas Kufen","Henriette Reker"],"e":"Vor ihm war Michael Dreier Bürgermeister.","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Was ist eine Koalition?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Was ist eine Koalition?","r":"ein Zusammenschluss von Parteien","x":["ein Ausschuss des Gemeinderats","ein Amt der Stadtverwaltung","eine Sehenswürdigkeit"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Welche Parteien bilden laut Steckbrief die Koalition im Paderborner Stadtrat?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Welche Parteien bilden laut Steckbrief die Koalition im Paderborner Stadtrat?","r":"CDU und Bündnis 90/Die Grünen","x":["SPD und FDP","AfD und BSW","SPD und Die Linke"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Woher hat Paderborn seinen Namen?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Woher hat Paderborn seinen Namen?","r":"vom Paderquellgebiet","x":["vom Dom","von einem König Pader","vom Heinz-Nixdorf-Museum"],"e":"","q":"Steckbrief 06.10.2026"},{"id":"f|Die Gemeinde|Wofür ist Paderborn berühmt?","t":"Die Gemeinde","a":"Steckbrief Paderborn","f":"Wofür ist Paderborn berühmt?","r":"den Dom, das Heinz-Nixdorf-Museum und das Paderquellgebiet","x":["das Brandenburger Tor","den Kölner Dom","den Hamburger Hafen"],"e":"Außerdem gibt es ein Theater.","q":"Steckbrief 06.10.2026"}];
+
+const SPEICHER = "politiktrainer.v1";
+const APP = "politiktrainer";
+// Tage bis zur nächsten Abfrage je Fach (Index = Fach 1..5)
+const FACH_TAGE = [0, 0, 1, 3, 7, 14];
+
+// ---------- Speicher ----------
+
+function leererStand() {
+  return {
+    karten: {},
+    tests: [],
+    einstellungen: { modus: "fragen", auswahl: [], richtung: "beide", anzahlB: 15, testart: "ueben", anzahlF: 10 },
+  };
+}
+
+function ladeStand() {
+  try {
+    const roh = JSON.parse(localStorage.getItem(SPEICHER));
+    if (roh && roh.karten && roh.einstellungen) {
+      return { karten: roh.karten, tests: roh.tests || [], einstellungen: { ...leererStand().einstellungen, ...roh.einstellungen } };
+    }
+  } catch (e) { /* kaputter Stand -> neu anfangen */ }
+  return leererStand();
+}
+
+let stand = ladeStand();
+
+function speichere() {
+  try { localStorage.setItem(SPEICHER, JSON.stringify(stand)); } catch (e) { /* z. B. privater Modus */ }
+}
+
+function heute() {
+  const d = new Date();
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+}
+
+// ---------- Hilfen ----------
+
+const $ = id => document.getElementById(id);
+
+function mische(liste) {
+  const a = liste.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function abschnittKey(v) { return v.t + "|" + v.a; }
+
+// Themen und Abschnitte in Reihenfolge der Dateien – aus Begriffen und Fragen zusammen
+function themenListe() {
+  const themen = [];
+  for (const v of [...FRAGEN, ...BEGRIFFE]) {
+    let t = themen.find(x => x.name === v.t);
+    if (!t) themen.push(t = { name: v.t, abschnitte: [] });
+    let a = t.abschnitte.find(x => x.name === v.a);
+    if (!a) t.abschnitte.push(a = { name: v.a, key: abschnittKey(v), begriffe: [], fragen: [] });
+    (v.f ? a.fragen : a.begriffe).push(v);
+  }
+  return themen;
+}
+
+const THEMEN = themenListe();
+
+function istBegriffe() { return stand.einstellungen.modus === "begriffe"; }
+function eintraegeVon(a) { return istBegriffe() ? a.begriffe : a.fragen; }
+
+// ---------- Begriff prüfen ----------
+
+function norm(s) {
+  return s.normalize("NFC").toLowerCase()
+    .replace(/[’‘`´]/g, "'")
+    .replace(/[.,;:!?"„“”()]/g, " ")
+    .replace(/-/g, " ")
+    .replace(/^(der|die|das|ein|eine) /, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function falte(s) {
+  return norm(s).replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/ /g, "");
+}
+
+function abstand(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  const z = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let vorher = z[0];
+    z[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = z[j];
+      z[j] = Math.min(z[j] + 1, z[j - 1] + 1, vorher + (a[i - 1] === b[j - 1] ? 0 : 1));
+      vorher = tmp;
+    }
+  }
+  return z[b.length];
+}
+
+// „Fachausschuss|Ausschuss“: erste Schreibweise wird gezeigt, alle zählen als richtig
+function begriffAnzeige(b) { return b.b.split("|")[0]; }
+function begriffVarianten(b) { return b.b.split("|").map(s => s.trim()).filter(Boolean); }
+
+function pruefeBegriff(b, eingabe) {
+  const loesung = begriffAnzeige(b);
+  const a = norm(eingabe);
+  if (!a) return { status: "falsch", loesung };
+  const ziele = begriffVarianten(b);
+  const passend = ziele.find(z => norm(z) === a);
+  if (passend) {
+    const tipp = passend !== loesung ? "Auch richtig! Im Heft steht: " + loesung : "";
+    return { status: "richtig", loesung, tipp };
+  }
+  const f = falte(eingabe);
+  if (ziele.some(z => falte(z) === f)) {
+    return { status: "richtig", loesung, tipp: "Achte auf die Schreibweise: " + loesung };
+  }
+  const grenze = f.length >= 8 ? 2 : f.length >= 4 ? 1 : 0;
+  if (grenze && ziele.some(z => abstand(f, falte(z)) <= grenze)) {
+    return { status: "fast", loesung };
+  }
+  return { status: "falsch", loesung };
+}
+
+// ---------- Karteikasten ----------
+
+function fachVon(key) {
+  const k = stand.karten[key];
+  return k ? k.fach : 0;
+}
+
+function ausgewaehlt(liste) {
+  return liste.filter(v => stand.einstellungen.auswahl.includes(abschnittKey(v)));
+}
+
+function richtungen() {
+  const r = stand.einstellungen.richtung;
+  return r === "beide" ? ["e-b", "b-e"] : [r];
+}
+
+// Eine Karte = ein Eintrag in einer Abfrageart
+function alleKarten() {
+  if (istBegriffe()) {
+    const karten = [];
+    for (const v of ausgewaehlt(BEGRIFFE)) for (const r of richtungen()) karten.push({ v, art: r, key: v.id + "|" + r });
+    return karten;
+  }
+  return ausgewaehlt(FRAGEN).map(v => ({ v, art: "mc", key: v.id }));
+}
+
+function istFaellig(karte) {
+  const k = stand.karten[karte.key];
+  return !k || k.faellig <= heute();
+}
+
+function baueRunde(karten, anzahl) {
+  const sortiert = mische(karten).sort((a, b) => fachVon(a.key) - fachVon(b.key));
+  const gesehen = new Set();
+  const runde = [];
+  for (const k of sortiert) {
+    if (gesehen.has(k.v.id)) continue;   // bei „Gemischt“ jeder Begriff nur einmal pro Runde
+    gesehen.add(k.v.id);
+    runde.push(k);
+    if (anzahl && runde.length >= anzahl) break;
+  }
+  return mische(runde);
+}
+
+// ---------- Startseite ----------
+
+function zeichneStart() {
+  const e = stand.einstellungen;
+  const begriffe = istBegriffe();
+  const probe = !begriffe && e.testart === "probe";
+
+  for (const b of $("modi").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.wert === e.modus));
+  $("infoBegriffe").textContent = BEGRIFFE.length + " Begriffe";
+  $("infoFragen").textContent = FRAGEN.length + " Fragen";
+
+  const liste = $("kapitelliste");
+  liste.innerHTML = "";
+  for (const t of THEMEN) {
+    const abschnitte = t.abschnitte.filter(a => eintraegeVon(a).length);
+    if (!abschnitte.length) continue;
+    const block = document.createElement("div");
+    block.className = "kapitel";
+    const alle = abschnitte.every(a => e.auswahl.includes(a.key));
+    const einige = abschnitte.some(a => e.auswahl.includes(a.key));
+    const kopf = document.createElement("label");
+    kopf.className = "zeile";
+    kopf.innerHTML = `<input type="checkbox"><span class="name"></span><span class="anzahl"></span>`;
+    const kb = kopf.querySelector("input");
+    kb.checked = alle;
+    kb.indeterminate = einige && !alle;
+    kopf.querySelector(".name").textContent = t.name;
+    kopf.querySelector(".anzahl").textContent = abschnitte.reduce((n, a) => n + eintraegeVon(a).length, 0) + (begriffe ? " Begriffe" : " Fragen");
+    kb.addEventListener("change", () => {
+      for (const a of t.abschnitte) setzeAuswahl(a.key, kb.checked);
+      zeichneStart();
+    });
+    block.appendChild(kopf);
+
+    const unter = document.createElement("div");
+    unter.className = "abschnitte";
+    for (const a of abschnitte) {
+      const z = document.createElement("label");
+      z.className = "zeile";
+      z.innerHTML = `<input type="checkbox"><span class="name"></span><span class="balken" title="Anteil in Fach 3 bis 5"><span></span></span><span class="anzahl"></span>`;
+      const cb = z.querySelector("input");
+      cb.checked = e.auswahl.includes(a.key);
+      cb.addEventListener("change", () => { setzeAuswahl(a.key, cb.checked); zeichneStart(); });
+      z.querySelector(".name").textContent = a.name;
+      z.querySelector(".anzahl").textContent = eintraegeVon(a).length;
+      z.querySelector(".balken > span").style.width = Math.round(gelerntAnteil(eintraegeVon(a)) * 100) + "%";
+      unter.appendChild(z);
+    }
+    block.appendChild(unter);
+    liste.appendChild(block);
+  }
+
+  $("optBegriffe").hidden = !begriffe;
+  $("optFragen").hidden = begriffe;
+  for (const b of $("richtung").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.wert === e.richtung));
+  for (const b of $("testart").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.wert === e.testart));
+  $("richtungsHilfe").textContent = {
+    "e-b": "Die Erklärung steht da – du tippst den Begriff ein.",
+    "b-e": "Der Begriff steht da – du überlegst die Erklärung, deckst auf und sagst selbst, ob du es wusstest.",
+    "beide": "Mal so, mal so.",
+  }[e.richtung];
+  $("testartHilfe").textContent = probe
+    ? "Wie eine Klassenarbeit: Du siehst erst am Ende, was richtig war. Der Karteikasten bleibt unverändert."
+    : "Nach jeder Frage siehst du sofort, ob es stimmt. Falsche Fragen kommen in der Runde nochmal.";
+  $("anzahlB").value = String(e.anzahlB);
+  $("anzahlF").value = String(e.anzahlF);
+
+  const karten = alleKarten();
+  $("kastenBox").hidden = probe;
+  const zaehler = [0, 0, 0, 0, 0, 0];
+  for (const k of karten) zaehler[fachVon(k.key)]++;
+  $("faecher").innerHTML = zaehler.map((n, i) =>
+    `<div class="fach f${i}"><b>${n}</b><small>${i === 0 ? "neu" : "Fach " + i}</small></div>`).join("");
+
+  zeichneVerlauf(!begriffe);
+
+  const faellig = karten.filter(istFaellig).length;
+  const wort = begriffe ? "Begriffe" : "Fragen";
+  const anzahl = begriffe ? e.anzahlB : e.anzahlF;
+  const los = $("los");
+  if (!karten.length) {
+    los.textContent = "Wähle mindestens einen Abschnitt";
+    los.disabled = true;
+  } else if (probe) {
+    los.textContent = `Probetest starten (${anzahl ? Math.min(anzahl, karten.length) : karten.length} Fragen)`;
+    los.disabled = false;
+  } else if (faellig) {
+    los.textContent = `Los geht's (${anzahl ? Math.min(faellig, anzahl) : faellig} ${wort})`;
+    los.disabled = false;
+  } else {
+    los.textContent = "Heute ist nichts fällig – trotzdem üben";
+    los.disabled = false;
+  }
+}
+
+function zeichneVerlauf(zeigen) {
+  const tests = stand.tests.slice(-5).reverse();
+  $("verlaufBox").hidden = !zeigen || !tests.length;
+  $("verlauf").innerHTML = "";
+  for (const t of tests) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="datum"></span><span class="themen"></span><span class="pkt"></span>`;
+    li.querySelector(".datum").textContent = t.datum;
+    li.querySelector(".themen").textContent = t.themen;
+    li.querySelector(".pkt").textContent = `${t.richtig}/${t.gesamt} (${Math.round(t.richtig / t.gesamt * 100)} %)`;
+    $("verlauf").appendChild(li);
+  }
+}
+
+function gelerntAnteil(eintraege) {
+  let gelernt = 0, gesamt = 0;
+  for (const v of eintraege) {
+    const keys = v.f ? [v.id] : richtungen().map(r => v.id + "|" + r);
+    for (const k of keys) { gesamt++; if (fachVon(k) >= 3) gelernt++; }
+  }
+  return gesamt ? gelernt / gesamt : 0;
+}
+
+function setzeAuswahl(key, an) {
+  const a = stand.einstellungen.auswahl.filter(x => x !== key);
+  if (an) a.push(key);
+  stand.einstellungen.auswahl = a;
+  speichere();
+}
+
+function umschalter(id, feld) {
+  $(id).addEventListener("click", ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    stand.einstellungen[feld] = b.dataset.wert;
+    speichere();
+    zeichneStart();
+  });
+}
+umschalter("modi", "modus");
+umschalter("richtung", "richtung");
+umschalter("testart", "testart");
+$("anzahlB").addEventListener("change", ev => { stand.einstellungen.anzahlB = Number(ev.target.value); speichere(); zeichneStart(); });
+$("anzahlF").addEventListener("change", ev => { stand.einstellungen.anzahlF = Number(ev.target.value); speichere(); zeichneStart(); });
+
+$("los").addEventListener("click", () => {
+  const e = stand.einstellungen;
+  const karten = alleKarten();
+  if (!istBegriffe() && e.testart === "probe") return starteRunde(baueRunde(mische(karten), e.anzahlF), true);
+  const faellig = karten.filter(istFaellig);
+  starteRunde(baueRunde(faellig.length ? faellig : karten, istBegriffe() ? e.anzahlB : e.anzahlF), false);
+});
+
+// ---------- Abfrage ----------
+
+let runde = null;
+
+function zeige(bereich) {
+  for (const id of ["start", "abfrage", "ende"]) $(id).hidden = id !== bereich;
+  window.scrollTo(0, 0);
+}
+
+function starteRunde(karten, probe) {
+  if (!karten.length) return;
+  runde = {
+    probe,
+    schlange: karten.slice(),
+    gesamt: karten.length,
+    fertig: 0,
+    ersterVersuch: new Map(),   // key -> true/false
+    antworten: [],              // nur Probetest: { karte, gewaehlt }
+    aktuell: null,
+    ergebnis: null,
+    optionen: [],
+  };
+  zeige("abfrage");
+  naechsteKarte();
+}
+
+function naechsteKarte() {
+  if (!runde.schlange.length) return zeigeEnde();
+  const karte = runde.schlange.shift();
+  runde.aktuell = karte;
+  runde.ergebnis = null;
+  const v = karte.v;
+
+  $("bereichTippen").hidden = karte.art !== "e-b";
+  $("bereichAufdecken").hidden = karte.art !== "b-e";
+  $("bereichAuswahl").hidden = karte.art !== "mc";
+  $("rueckmeldung").hidden = true;
+
+  const frage = $("frage");
+  frage.classList.toggle("gross", karte.art === "b-e");
+  if (karte.art === "e-b") {
+    $("richtungstext").textContent = "Wie heißt der Begriff?";
+    frage.textContent = v.e;
+  } else if (karte.art === "b-e") {
+    $("richtungstext").textContent = "Was bedeutet …";
+    frage.textContent = begriffAnzeige(v);
+  } else {
+    $("richtungstext").textContent = runde.probe ? "Probetest" : "Wissensfrage";
+    frage.textContent = v.f;
+  }
+  $("herkunft").textContent = [v.t, v.a].join(" · ");
+  const fach = fachVon(karte.key);
+  $("fachmarke").hidden = runde.probe;
+  $("fachmarke").textContent = runde.ersterVersuch.has(karte.key) ? "Wiederholung" : fach ? "Fach " + fach : "neu";
+
+  if (karte.art === "e-b") {
+    const feld = $("antwort");
+    feld.value = "";
+    feld.disabled = false;
+    $("pruefen").disabled = false;
+    $("weissNicht").hidden = false;
+    feld.focus();
+  } else if (karte.art === "b-e") {
+    $("aufdecken").focus();
+  } else {
+    zeichneAuswahl(v);
+  }
+  zeichneFortschritt();
+}
+
+const BUCHSTABEN = ["A", "B", "C", "D"];
+
+function zeichneAuswahl(v) {
+  runde.optionen = mische([v.r, ...v.x]);
+  const box = $("bereichAuswahl");
+  box.innerHTML = "";
+  runde.optionen.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = `<span class="bst">${BUCHSTABEN[i]}</span><span></span>`;
+    b.lastChild.textContent = text;
+    b.addEventListener("click", () => waehle(i));
+    box.appendChild(b);
+  });
+}
+
+function waehle(i) {
+  if (runde.ergebnis || runde.aktuell.art !== "mc") return;
+  const karte = runde.aktuell;
+  const text = runde.optionen[i];
+  const richtig = text === karte.v.r;
+  const knoepfe = [...$("bereichAuswahl").children];
+  knoepfe.forEach(b => { b.disabled = true; });
+
+  if (runde.probe) {
+    // keine Rückmeldung – kurz markieren, dann weiter
+    knoepfe[i].classList.add("gewaehlt");
+    runde.ergebnis = { status: richtig ? "richtig" : "falsch" };
+    runde.antworten.push({ karte, gewaehlt: text });
+    runde.ersterVersuch.set(karte.key, richtig);
+    runde.fertig++;
+    setTimeout(naechsteKarte, 350);
+    return;
+  }
+
+  knoepfe.forEach((b, j) => {
+    if (runde.optionen[j] === karte.v.r) b.classList.add("ist-richtig");
+    else if (j === i) b.classList.add("ist-falsch");
+  });
+  runde.ergebnis = { status: richtig ? "richtig" : "falsch", loesung: karte.v.r };
+  zeigeRueckmeldung();
+}
+
+function zeichneFortschritt() {
+  $("fortschrittsbalken").style.width = Math.round(runde.fertig / runde.gesamt * 100) + "%";
+  $("zaehler").textContent = `${runde.fertig} / ${runde.gesamt}`;
+}
+
+function werteAusTippen(eingabe) {
+  if (runde.ergebnis) return;
+  runde.ergebnis = pruefeBegriff(runde.aktuell.v, eingabe);
+  $("antwort").disabled = true;
+  $("pruefen").disabled = true;
+  $("weissNicht").hidden = true;
+  zeigeRueckmeldung();
+}
+
+const LOB = ["Richtig!", "Super!", "Klasse!", "Genau!", "Stark!", "Perfekt!"];
+
+function zeigeRueckmeldung() {
+  const karte = runde.aktuell;
+  const v = karte.v;
+  const e = runde.ergebnis;
+  const rm = $("rueckmeldung");
+  const selbst = karte.art === "b-e";
+
+  rm.className = "rueckmeldung " + (selbst ? "neutral" : e.status);
+  if (selbst) {
+    $("rmTitel").textContent = "Bedeutung:";
+    $("rmLoesung").textContent = v.e;
+  } else if (karte.art === "mc") {
+    $("rmTitel").textContent = e.status === "richtig" ? LOB[Math.floor(Math.random() * LOB.length)] : "Leider nicht. Richtig ist:";
+    $("rmLoesung").textContent = e.status === "richtig" ? "" : v.r;
+  } else {
+    $("rmTitel").textContent = e.status === "richtig" ? LOB[Math.floor(Math.random() * LOB.length)]
+      : e.status === "fast" ? "Fast! Schau dir die Schreibweise an:" : "Leider nicht. Gesucht war:";
+    $("rmLoesung").textContent = e.loesung;
+  }
+  $("rmLoesung").hidden = !$("rmLoesung").textContent;
+  $("rmTipp").hidden = !e || !e.tipp;
+  $("rmTipp").textContent = (e && e.tipp) || "";
+
+  const zusatz = karte.art === "mc" ? v.e : v.bsp;
+  $("rmErkl").hidden = !zusatz;
+  $("rmErklEtikett").textContent = karte.art === "mc" ? "Erklärung" : "Beispiel";
+  $("rmErklText").textContent = zusatz || "";
+
+  $("reiheWeiter").hidden = selbst;
+  $("reiheSelbst").hidden = !selbst;
+  $("dochRichtig").hidden = karte.art !== "e-b" || e.status === "richtig" || !norm($("antwort").value);
+  rm.hidden = false;
+  (selbst ? $("gewusst") : $("weiter")).focus();
+}
+
+function buche(richtig) {
+  const karte = runde.aktuell;
+  if (!runde.ersterVersuch.has(karte.key)) {
+    runde.ersterVersuch.set(karte.key, richtig);
+    const alt = stand.karten[karte.key] || { fach: 0, richtig: 0, falsch: 0 };
+    // neue Karten, die auf Anhieb sitzen, rücken gleich in Fach 2
+    const fach = richtig ? Math.min(5, Math.max(alt.fach, 1) + 1) : 1;
+    stand.karten[karte.key] = {
+      fach,
+      faellig: heute() + FACH_TAGE[fach],
+      richtig: alt.richtig + (richtig ? 1 : 0),
+      falsch: alt.falsch + (richtig ? 0 : 1),
+    };
+    speichere();
+  }
+  if (richtig) {
+    runde.fertig++;
+  } else {
+    // falsch beantwortete Karten kommen in dieser Runde noch einmal
+    runde.schlange.splice(Math.min(3, runde.schlange.length), 0, karte);
+  }
+}
+
+$("formular").addEventListener("submit", ev => { ev.preventDefault(); werteAusTippen($("antwort").value); });
+$("weissNicht").addEventListener("click", () => werteAusTippen(""));
+$("aufdecken").addEventListener("click", () => { runde.ergebnis = { status: "neutral" }; zeigeRueckmeldung(); });
+$("weiter").addEventListener("click", () => { buche(runde.ergebnis.status === "richtig"); naechsteKarte(); });
+$("gewusst").addEventListener("click", () => { buche(true); naechsteKarte(); });
+$("nichtGewusst").addEventListener("click", () => { buche(false); naechsteKarte(); });
+$("dochRichtig").addEventListener("click", () => {
+  runde.ergebnis = { ...runde.ergebnis, status: "richtig", tipp: "" };
+  zeigeRueckmeldung();
+});
+$("beenden").addEventListener("click", () => {
+  const frage = runde.probe
+    ? "Probetest abbrechen? Das Ergebnis wird nicht gespeichert."
+    : "Runde beenden? Was du schon beantwortet hast, bleibt gespeichert.";
+  if (runde.fertig === 0 || confirm(frage)) {
+    if (runde.probe) { zeichneStart(); zeige("start"); } else zeigeEnde();
+  }
+});
+
+// Tastatur: 1–4 bzw. A–D für Multiple Choice, Enter für „Weiter“
+document.addEventListener("keydown", ev => {
+  if ($("abfrage").hidden || !runde || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (runde.aktuell && runde.aktuell.art === "mc" && !runde.ergebnis) {
+    const i = "1234".indexOf(ev.key) >= 0 ? "1234".indexOf(ev.key) : "abcd".indexOf(ev.key.toLowerCase());
+    if (i >= 0 && i < runde.optionen.length) { ev.preventDefault(); waehle(i); }
+  }
+});
+
+// ---------- Ende ----------
+
+function zeigeEnde() {
+  const versuche = [...runde.ersterVersuch.values()];
+  const richtig = versuche.filter(Boolean).length;
+  const gesamt = versuche.length;
+  const quote = gesamt ? richtig / gesamt : 0;
+  $("endeBild").textContent = !gesamt ? "👋" : quote === 1 ? "🏆" : quote >= 0.8 ? "🎉" : quote >= 0.5 ? "👍" : "💪";
+  $("endeZahl").textContent = !gesamt ? "Nichts beantwortet"
+    : runde.probe ? `${richtig} von ${gesamt} Punkten (${Math.round(quote * 100)} %)`
+    : `${richtig} von ${gesamt} beim ersten Versuch richtig`;
+  $("endeText").textContent = !gesamt ? "" : quote === 1 ? "Alles gewusst – großartig!"
+    : quote >= 0.8 ? "Sehr gut gemacht!" : quote >= 0.5 ? "Gut! Den Rest schaffst du auch noch."
+    : "Dranbleiben – mit jeder Runde bleibt mehr hängen.";
+
+  const ul = $("endeListe");
+  ul.innerHTML = "";
+  runde.falsche = [];
+  if (runde.probe) {
+    // Probetest: alle Fragen mit Auflösung
+    if (gesamt) {
+      stand.tests.push({ datum: new Date().toLocaleDateString("de-DE"), themen: themenText(runde.antworten), richtig, gesamt });
+      stand.tests = stand.tests.slice(-20);
+      speichere();
+    }
+    for (const { karte, gewaehlt } of runde.antworten) {
+      const ok = gewaehlt === karte.v.r;
+      if (!ok) runde.falsche.push(karte);
+      ul.appendChild(eintrag(karte.v.f, ok, karte.v.r, ok ? "" : gewaehlt, karte.v.e));
+    }
+    $("endeListeTitel").textContent = "Auflösung";
+  } else {
+    for (const [key, ok] of runde.ersterVersuch) {
+      if (ok) continue;
+      const karte = kartenNachKey(key);
+      if (!karte) continue;
+      runde.falsche.push(karte);
+      const v = karte.v;
+      if (karte.art === "mc") ul.appendChild(eintrag(v.f, null, v.r, "", ""));
+      else ul.appendChild(eintrag(begriffAnzeige(v), null, v.e, "", ""));
+    }
+    $("endeListeTitel").textContent = "Das üben wir nochmal";
+  }
+  $("endeListeBox").hidden = !ul.children.length;
+  $("nurFehler").hidden = !runde.falsche.length;
+  zeige("ende");
+  $("zumStart").focus();
+}
+
+function eintrag(frage, ok, richtig, falsch, erkl) {
+  const li = document.createElement("li");
+  const f = document.createElement("div");
+  f.className = "f" + (ok === true ? " ok" : ok === false ? " nok" : "");
+  f.textContent = frage;
+  li.appendChild(f);
+  if (falsch) { const d = document.createElement("div"); d.className = "d"; d.textContent = falsch; li.appendChild(d); }
+  const r = document.createElement("div"); r.className = "r"; r.textContent = richtig; li.appendChild(r);
+  if (erkl) { const e = document.createElement("div"); e.className = "e"; e.textContent = erkl; li.appendChild(e); }
+  return li;
+}
+
+function themenText(antworten) {
+  return [...new Set(antworten.map(a => a.karte.v.t))].join(", ");
+}
+
+function kartenNachKey(key) {
+  const f = FRAGEN.find(x => x.id === key);
+  if (f) return { v: f, art: "mc", key };
+  const trenner = key.lastIndexOf("|");
+  const v = BEGRIFFE.find(x => x.id === key.slice(0, trenner));
+  return v ? { v, art: key.slice(trenner + 1), key } : null;
+}
+
+// „Fehler nochmal üben“ ist immer eine Übungsrunde, auch nach einem Probetest
+$("nurFehler").addEventListener("click", () => starteRunde(mische(runde.falsche), false));
+$("zumStart").addEventListener("click", () => { zeichneStart(); zeige("start"); });
+
+// ---------- Fortschritt sichern / laden ----------
+
+$("sichern").addEventListener("click", () => {
+  const d = new Date();
+  const datum = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const inhalt = JSON.stringify({ app: APP, version: 1, gesichert: datum, stand }, null, 1);
+  const url = URL.createObjectURL(new Blob([inhalt], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `politik-fortschritt-${datum}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("laden").addEventListener("click", () => $("datei").click());
+$("datei").addEventListener("change", async ev => {
+  const datei = ev.target.files[0];
+  ev.target.value = "";
+  if (!datei) return;
+  try {
+    const d = JSON.parse(await datei.text());
+    if (d.app !== APP || !d.stand || !d.stand.karten) throw new Error();
+    if (!confirm(`Fortschritt vom ${d.gesichert || "?"} laden? Der jetzige Stand wird ersetzt.`)) return;
+    stand = { karten: d.stand.karten, tests: d.stand.tests || [], einstellungen: { ...leererStand().einstellungen, ...d.stand.einstellungen } };
+    speichere();
+    zeichneStart();
+  } catch (e) {
+    alert("Diese Datei ist keine Fortschritts-Sicherung vom Politik-Trainer.");
+  }
+});
+
+$("zuruecksetzen").addEventListener("click", () => {
+  if (!confirm("Wirklich den ganzen Fortschritt löschen? Karteikasten und Probetest-Ergebnisse fangen wieder bei null an.")) return;
+  stand = { ...leererStand(), einstellungen: stand.einstellungen };
+  speichere();
+  zeichneStart();
+});
+
+// ---------- Start ----------
+
+if (!stand.einstellungen.auswahl.length) {
+  stand.einstellungen.auswahl = THEMEN.flatMap(t => t.abschnitte.map(a => a.key));
+}
+zeichneStart();
+</script>
+</body>
+</html>
