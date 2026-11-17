@@ -184,7 +184,6 @@
           </select>
         </label>
         <label class="zeile"><input type="checkbox" id="vorlesen"><span class="name">Englische Wörter vorlesen</span></label>
-        <label class="zeile"><input type="checkbox" id="nurPunkt"><span class="name">Nur Wörter mit Punkt (•) aus dem Buch</span></label>
       </div>
     </div>
 
@@ -271,7 +270,7 @@ const FACH_TAGE = [0, 0, 1, 3, 7, 14];
 function leererStand() {
   return {
     karten: {},
-    einstellungen: { auswahl: [], richtung: "beide", anzahl: 15, vorlesen: true, nurPunkt: false },
+    einstellungen: { auswahl: [], richtung: "beide", anzahl: 15, vorlesen: true },
   };
 }
 
@@ -504,7 +503,7 @@ function fachVon(key) {
 
 function ausgewaehlteVokabeln() {
   const e = stand.einstellungen;
-  return VOKABELN.filter(v => e.auswahl.includes(abschnittKey(v)) && (!e.nurPunkt || v.p));
+  return VOKABELN.filter(v => e.auswahl.includes(abschnittKey(v)));
 }
 
 function richtungen() {
@@ -607,7 +606,6 @@ function zeichneStart() {
   }
   $("anzahl").value = String(e.anzahl);
   $("vorlesen").checked = e.vorlesen;
-  $("nurPunkt").checked = e.nurPunkt;
 
   const karten = alleKarten();
   const zaehler = [0, 0, 0, 0, 0, 0];
@@ -654,7 +652,6 @@ $("richtung").addEventListener("click", ev => {
 });
 $("anzahl").addEventListener("change", ev => { stand.einstellungen.anzahl = Number(ev.target.value); speichere(); zeichneStart(); });
 $("vorlesen").addEventListener("change", ev => { stand.einstellungen.vorlesen = ev.target.checked; speichere(); });
-$("nurPunkt").addEventListener("change", ev => { stand.einstellungen.nurPunkt = ev.target.checked; speichere(); zeichneStart(); });
 
 $("los").addEventListener("click", () => {
   const karten = alleKarten();
