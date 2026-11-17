@@ -77,6 +77,7 @@
   .aufklapp .pfeil { color: var(--grau); transition: transform .15s; display: inline-block; }
   .aufklapp[aria-expanded="true"] .pfeil { transform: rotate(90deg); }
   .aufklapp .name { flex: 1; }
+  .aufklapp .seiten { color: var(--grau); font-size: .85rem; font-weight: 400; white-space: nowrap; }
   .aufklapp .anzahl { color: var(--grau); font-size: .85rem; font-weight: 400; white-space: nowrap; }
   .abschnitte { margin: 6px 0 0 4px; }
   label.zeile {
@@ -565,7 +566,11 @@ function zeichneStart() {
     kb.setAttribute("aria-label", k.name + " auswählen");
     const knopf = kopf.querySelector(".aufklapp");
     knopf.setAttribute("aria-expanded", String(offen));
-    knopf.querySelector(".name").textContent = k.name;
+    const seiten = k.abschnitte.flatMap(a => a.vokabeln.map(v => parseInt(v.s, 10))).filter(n => !isNaN(n));
+    const von = Math.min(...seiten), bis = Math.max(...seiten);
+    knopf.querySelector(".name").innerHTML = `<span></span> <span class="seiten"></span>`;
+    knopf.querySelector(".name > span").textContent = k.name;
+    knopf.querySelector(".seiten").textContent = !seiten.length ? "" : von === bis ? `S. ${von}` : `S. ${von}–${bis}`;
     const gewaehlt = k.abschnitte.filter(a => e.auswahl.includes(a.key)).length;
     knopf.querySelector(".anzahl").textContent = k.abschnitte.reduce((n, a) => n + a.vokabeln.length, 0) + " Wörter"
       + (gewaehlt ? ` · ${gewaehlt}/${k.abschnitte.length} gewählt` : "");
