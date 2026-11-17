@@ -86,7 +86,14 @@
   .zeile .neu { background: var(--haupt); color: #fff; border-radius: 6px; padding: 0 6px; font-size: .75rem; margin-left: 6px; }
   label.zeile { display: flex; align-items: center; gap: 10px; padding: 6px 4px; cursor: pointer; }
   label.zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--haupt); }
-  .kapitel > label .name { font-weight: 700; }
+  .kapitel > .zeile .name { font-weight: 700; }
+  .kapitel > .zeile { display: flex; align-items: center; gap: 10px; padding: 6px 4px; }
+  .kapitel > .zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--haupt); cursor: pointer; }
+  .klapp {
+    flex: 1; display: flex; align-items: center; gap: 6px; text-align: left;
+    background: transparent; color: var(--text); padding: 2px 0; font-weight: 700;
+  }
+  .klapp .pfeil { color: var(--grau); width: 14px; display: inline-block; }
   .zeile .name { flex: 1; }
   .zeile .anzahl { color: var(--grau); font-size: .85rem; white-space: nowrap; min-width: 24px; text-align: right; }
   .balken { width: 70px; height: 8px; border-radius: 4px; background: var(--linie); overflow: hidden; flex: none; }
@@ -423,6 +430,9 @@ function wochenListe() {
 
 const WOCHEN = wochenListe();
 
+// aufgeklappte Themen (nur für diesen Besuch, anfangs alle zu)
+const OFFENE_THEMEN = new Set();
+
 function nachWochen() { return stand.einstellungen.gruppierung === "wochen"; }
 
 function istBegriffe() { return stand.einstellungen.modus === "begriffe"; }
@@ -553,12 +563,21 @@ function zeichneStart() {
     block.className = "kapitel";
     const alle = abschnitte.every(a => e.auswahl.includes(a.key));
     const einige = abschnitte.some(a => e.auswahl.includes(a.key));
-    const kopf = document.createElement("label");
+    const offen = OFFENE_THEMEN.has(t.name);
+    const kopf = document.createElement("div");
     kopf.className = "zeile";
-    kopf.innerHTML = `<input type="checkbox"><span class="name"></span><span class="anzahl"></span>`;
+    kopf.innerHTML = `<input type="checkbox"><button type="button" class="klapp"><span class="pfeil"></span><span class="name"></span></button><span class="anzahl"></span>`;
     const kb = kopf.querySelector("input");
     kb.checked = alle;
     kb.indeterminate = einige && !alle;
+    kb.setAttribute("aria-label", t.name + " auswählen");
+    const klapp = kopf.querySelector(".klapp");
+    klapp.setAttribute("aria-expanded", String(offen));
+    kopf.querySelector(".pfeil").textContent = offen ? "▾" : "▸";
+    klapp.addEventListener("click", () => {
+      if (offen) OFFENE_THEMEN.delete(t.name); else OFFENE_THEMEN.add(t.name);
+      zeichneStart();
+    });
     kopf.querySelector(".name").textContent = t.name;
     kopf.querySelector(".anzahl").textContent = abschnitte.reduce((n, a) => n + eintraegeVon(a).length, 0) + (begriffe ? " Begriffe" : " Fragen");
     kb.addEventListener("change", () => {
@@ -569,6 +588,7 @@ function zeichneStart() {
 
     const unter = document.createElement("div");
     unter.className = "abschnitte";
+    unter.hidden = !offen;
     for (const a of abschnitte) {
       const z = document.createElement("label");
       z.className = "zeile";
