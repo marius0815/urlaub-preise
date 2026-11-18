@@ -1312,7 +1312,8 @@ function sterne(key) {
 
 // ---------- Startseite ----------
 
-const OFFENE_THEMEN = new Set(THEMEN.map(t => t.name));
+// aufgeklappte Themen (nur für diesen Besuch, anfangs alle zu)
+const OFFENE_THEMEN = new Set();
 
 function zeichneStart() {
   const e = stand.einstellungen;
