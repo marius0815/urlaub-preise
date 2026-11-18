@@ -298,7 +298,7 @@
     <h3>Geld</h3>
     <p>1 € = 100 ct</p>
     <h3>Flächen (Umrechnungszahl 100)</h3>
-    <p>1 cm² = 100 mm² · 1 dm² = 100 cm² · 1 m² = 100 dm² · 1 a = 100 m² · 1 ha = 100 a · 1 km² = 100 ha</p>
+    <p>1 cm² = 100 mm² · 1 dm² = 100 cm² · 1 m² = 100 dm² · 1 a = 100 m²</p>
     <div class="merke">
       <b>Merke:</b> Von der größeren zur kleineren Einheit wird die Zahl größer → <b>mal</b> Umrechnungszahl.
       Von der kleineren zur größeren Einheit wird die Zahl kleiner → <b>geteilt durch</b> Umrechnungszahl.
@@ -372,7 +372,7 @@ const GR = {
   laenge:  { kette: ["mm", "cm", "dm", "m", "km"], f: { mm: 1, cm: 10, dm: 100, m: 1e3, km: 1e6 } },
   gewicht: { kette: ["mg", "g", "kg", "t"], f: { mg: 1, g: 1e3, kg: 1e6, t: 1e9 } },
   geld:    { kette: ["ct", "€"], f: { ct: 1, "€": 100 } },
-  flaeche: { kette: ["mm²", "cm²", "dm²", "m²", "a", "ha", "km²"], f: { "mm²": 1, "cm²": 1e2, "dm²": 1e4, "m²": 1e6, a: 1e8, ha: 1e10, "km²": 1e12 } },
+  flaeche: { kette: ["mm²", "cm²", "dm²", "m²", "a"], f: { "mm²": 1, "cm²": 1e2, "dm²": 1e4, "m²": 1e6, a: 1e8 } },
 };
 
 function kettenText(g, i, j) {
@@ -699,7 +699,7 @@ function zeitRechnen(st) {
 // ---------- Einheiten umwandeln ----------
 
 const MISCH_PAARE = [[0, "m", "cm", 100], [0, "km", "m", 1000], [0, "cm", "mm", 10], [0, "kg", "g", 1000], [0, "t", "kg", 1000],
-  [0, "€", "ct", 100], [1, "g", "mg", 1000], [2, "m²", "dm²", 100], [2, "ha", "a", 100]];
+  [0, "€", "ct", 100], [1, "g", "mg", 1000], [2, "m²", "dm²", 100]];
 
 function einheitenGemischt(st) {
   const [, g, k, F] = eins(MISCH_PAARE.filter(p => p[0] <= st));
@@ -1083,18 +1083,10 @@ function sGarten(st) {
   return aufgabe({ sach: true, frage: `Ein Garten ist ${l} m lang und ${b} m breit. Wie groß ist er in Ar (a)?`,
     felder: ["a"], loesung: [f / 100], weg: [`Fläche: ${l} m · ${b} m = ${f} m²`, "1 a = 100 m²", `${f} m² = ${gr(f / 100, "a")}`] });
 }
-function sBauernhof(st) {
-  const x = st === 0 ? 100 * r(2, 9) : r(150, 950);
-  return umr({ v: x, von: "a", nach: "ha", F: 100, runter: false, sach: true, frage: `Ein Bauernhof hat ${x} a Wiese. Wie viel Hektar (ha) sind das?` });
-}
 function sFussballfeld() {
   const [l, b] = eins([[105, 68], [100, 70], [100, 64], [110, 70]]), f = l * b;
   return aufgabe({ sach: true, frage: `Ein Fußballfeld ist ${l} m lang und ${b} m breit. Wie viel Ar (a) sind das?`,
     felder: ["a"], loesung: [f / 100], weg: [`${l} m · ${b} m = ${gr(f, "m²")}`, "1 a = 100 m²", `${gr(f, "m²")} = ${gr(f / 100, "a")}`] });
-}
-function sWald(st) {
-  const k = st === 2 ? r(12, 95) / 10 : r(2, 9);
-  return umr({ v: k, von: "km²", nach: "ha", F: 100, runter: true, sach: true, frage: `Ein Wald ist ${gr(k, "km²")} groß. Wie viel Hektar sind das?` });
 }
 function sBriefmarke() {
   const l = r(2, 4), b = r(2, 3), f = l * b;
@@ -1185,7 +1177,7 @@ const THEMEN = [
     { name: "Längen", rechnen: st => umrechnen("laenge", st), sach: [[0, sStapel], [0, sRegal], [0, sSchulwegKm], [1, sRunden], [1, sWeitsprung], [2, sBrett], [2, sSchnecke]] },
     { name: "Gewichte", rechnen: st => umrechnen("gewicht", st), sach: [[0, sSchultasche], [0, sMehl], [0, sAepfel], [1, sAepfelKilo], [1, sTabletten], [1, sLkw], [2, sPaket]] },
     { name: "Geld", rechnen: st => umrechnen("geld", st), sach: [[0, sSparen], [0, sBroetchen], [1, sTaschengeld], [1, sKino], [1, sSparschwein], [2, sHefte]] },
-    { name: "Flächen", rechnen: st => umrechnen("flaeche", st), sach: [[0, sZimmer], [0, sGarten], [0, sBauernhof], [1, sFussballfeld], [1, sWald], [1, sBriefmarke], [2, sTeppich]] },
+    { name: "Flächen", rechnen: st => umrechnen("flaeche", st), sach: [[0, sZimmer], [0, sGarten], [0, sBriefmarke], [1, sFussballfeld], [2, sTeppich]] },
     { name: "Gemischte Angaben", rechnen: einheitenGemischt, sach: [[0, sSprungCm], [0, sKoffer], [0, sSpardose], [1, sStrecke]] },
     { name: "Kommaschreibweise", rechnen: kommaschreibweise, sach: [[0, sKoerpergroesse], [0, sMelone], [0, sBuchpreis], [1, sSportplatz], [2, sEuroKomma]] },
     { name: "Vergleichen", rechnen: vergleichen, sach: [[0, sWerGroesser], [0, sPakete], [1, sLaden], [1, sGaerten]] },
@@ -1242,7 +1234,7 @@ function leseUhr(roh) {
   return [(h * 60 + mi) % 1440];
 }
 
-const PAAR_F = { "h|min": 60, "min|s": 60, "Tage|h": 24, "Wochen|Tage": 7, "km|m": 1000, "m|cm": 100, "cm|mm": 10, "kg|g": 1000, "t|kg": 1000, "g|mg": 1000, "€|ct": 100, "m²|dm²": 100, "ha|a": 100 };
+const PAAR_F = { "h|min": 60, "min|s": 60, "Tage|h": 24, "Wochen|Tage": 7, "km|m": 1000, "m|cm": 100, "cm|mm": 10, "kg|g": 1000, "t|kg": 1000, "g|mg": 1000, "€|ct": 100, "m²|dm²": 100 };
 
 function pruefe(a, texte) {
   const istUhr = a.felder[0] === "Uhr";
