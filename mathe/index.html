@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1d6f8a">
+<title>Reismann 5d Mathe Trainer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<style>
+  :root {
+    --haupt: #1d6f8a;
+    --haupt-hell: #e2f1f5;
+    --gruen: #2f7d4f;
+    --gruen-hell: #e3f3e8;
+    --blau: #2563a8;
+    --blau-hell: #e5eef9;
+    --rot: #c0392b;
+    --rot-hell: #fbe9e7;
+    --gelb: #9a6514;
+    --gelb-hell: #fdf3dc;
+    --text: #1f2933;
+    --grau: #6b7785;
+    --linie: #d9dee4;
+    --hinter: #f4f7f8;
+    --karte: #ffffff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    color: var(--text);
+    background: var(--hinter);
+    line-height: 1.4;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 2px; color: var(--haupt); }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .unterzeile { color: var(--grau); margin: 0; }
+  .titelkopf { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
+  .titelkopf .symbol {
+    width: 64px; height: 64px; flex: none; border-radius: 18px;
+    background: var(--haupt); display: grid; place-items: center; font-size: 2.1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+  }
+  .box { background: var(--karte); border: 1px solid var(--linie); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  button {
+    font: inherit; border: 0; border-radius: 10px; padding: 12px 18px; cursor: pointer;
+    background: var(--blau-hell); color: var(--blau); font-weight: 600;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  button.haupt { background: var(--haupt); color: #fff; width: 100%; font-size: 1.1rem; padding: 15px; }
+  button.leise { background: transparent; color: var(--grau); padding: 8px 10px; font-weight: 500; }
+  button.klein { padding: 7px 12px; font-size: .9rem; }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid #f2b705; outline-offset: 2px; }
+
+  /* Auswahl */
+  .kapitel { border-top: 1px solid var(--linie); padding: 10px 0 4px; }
+  .kapitel:first-of-type { border-top: 0; padding-top: 0; }
+  .abschnitte { margin: 6px 0 0 4px; }
+  label.zeile { display: flex; align-items: center; gap: 10px; padding: 6px 4px; cursor: pointer; }
+  label.zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--haupt); }
+  .kapitel > .zeile { display: flex; align-items: center; gap: 10px; padding: 6px 4px; }
+  .kapitel > .zeile input { width: 20px; height: 20px; flex: none; accent-color: var(--haupt); cursor: pointer; }
+  .klapp { flex: 1; display: flex; align-items: center; gap: 6px; text-align: left; background: transparent; color: var(--text); padding: 2px 0; font-weight: 700; }
+  .klapp .pfeil { color: var(--grau); width: 14px; display: inline-block; }
+  .zeile .name { flex: 1; }
+  .sterne { color: #e0a800; letter-spacing: 1px; white-space: nowrap; font-size: .95rem; }
+  .sterne.neu { color: var(--grau); font-size: .8rem; letter-spacing: 0; }
+
+  .umschalter { display: flex; gap: 6px; flex-wrap: wrap; }
+  .umschalter button { flex: 1; min-width: 90px; background: #eef1f4; color: var(--text); font-weight: 500; }
+  .umschalter button[aria-pressed="true"] { background: var(--haupt); color: #fff; font-weight: 700; }
+  .optionen { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+  .optionen select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--linie); }
+  .erklaerung { color: var(--grau); font-size: .85rem; margin: 10px 0 0; }
+  .einstellung + .einstellung { margin-top: 16px; }
+  .einstellung h3 { font-size: .95rem; margin: 0 0 8px; }
+  .verlauf { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
+  .verlauf li { display: flex; gap: 10px; padding: 5px 0; border-top: 1px solid var(--linie); }
+  .verlauf li:first-child { border-top: 0; }
+  .verlauf .datum { color: var(--grau); width: 86px; flex: none; }
+  .verlauf .themen { flex: 1; color: var(--grau); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .verlauf .pkt { font-weight: 700; white-space: nowrap; }
+  .fusszeile { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+
+  /* Abfrage */
+  .kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .fortschritt { flex: 1; height: 10px; background: var(--linie); border-radius: 5px; overflow: hidden; }
+  .fortschritt > span { display: block; height: 100%; background: var(--haupt); transition: width .3s; }
+  .zaehler { color: var(--grau); font-size: .9rem; white-space: nowrap; }
+  .karte { padding: 20px 16px; }
+  .auftrag { color: var(--grau); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; text-align: center; }
+  .frage { font-size: 1.15rem; font-weight: 600; margin: 12px 0 4px; word-break: break-word; }
+  .frage.gross { font-size: 1.9rem; font-weight: 700; text-align: center; }
+  .marke { text-align: center; }
+  .wdh { display: inline-block; background: var(--gelb-hell); color: var(--gelb); border-radius: 8px; padding: 2px 8px; font-size: .75rem; margin-top: 6px; }
+
+  .eingabe { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+  .felder { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+  .felder .vorwort { color: var(--grau); font-weight: 600; }
+  .feld { display: inline-flex; align-items: center; gap: 6px; }
+  .feld input {
+    width: 7.5em; font: inherit; font-size: 1.3rem; text-align: right;
+    padding: 10px 12px; border: 2px solid var(--linie); border-radius: 10px;
+  }
+  .feld input.uhrfeld { width: 6em; text-align: center; }
+  .feld input:disabled { background: #f3f4f6; color: var(--text); }
+  .feld .einheit { font-size: 1.2rem; font-weight: 600; min-width: 1.2em; }
+  .formhinweis { color: var(--rot); text-align: center; font-size: .9rem; margin-top: 8px; }
+  .nebenknoepfe { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+  .tippbox { background: var(--gelb-hell); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: .95rem; }
+  .tippbox::before { content: "💡 "; }
+
+  .wahl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; justify-content: center; }
+  .wahl button { flex: 1; min-width: 90px; background: #fff; border: 2px solid var(--linie); color: var(--text); font-weight: 600; font-size: 1.1rem; }
+  .wahl.zeichen button { font-size: 1.8rem; padding: 8px 0; max-width: 120px; }
+  .wahl button:not(:disabled):hover { border-color: var(--haupt); }
+  .wahl button.ist-richtig { border-color: var(--gruen); background: var(--gruen-hell); opacity: 1; }
+  .wahl button.ist-falsch { border-color: var(--rot); background: var(--rot-hell); opacity: 1; }
+  .wahl button:disabled { cursor: default; opacity: .7; }
+
+  .rueckmeldung { border-radius: var(--radius); padding: 14px 16px; margin-top: 14px; }
+  .rueckmeldung.richtig { background: var(--gruen-hell); }
+  .rueckmeldung.falsch { background: var(--rot-hell); }
+  .rueckmeldung .titel { font-weight: 700; font-size: 1.1rem; }
+  .richtig .titel { color: var(--gruen); }
+  .falsch .titel { color: var(--rot); }
+  .loesung { font-size: 1.15rem; font-weight: 700; margin: 6px 0; }
+  .fehlerhinweis { background: #fff; border-left: 4px solid var(--gelb); border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-size: .95rem; }
+  details.weg { margin-top: 8px; }
+  details.weg summary { cursor: pointer; font-weight: 600; color: var(--haupt); }
+  .weg ol { margin: 6px 0 0; padding-left: 1.4em; }
+  .weg li { margin: 3px 0; }
+  .knopfreihe { display: flex; gap: 8px; margin-top: 14px; }
+  .knopfreihe button { flex: 1; }
+  .knopfreihe button.weiter { background: var(--haupt); color: #fff; }
+
+  /* Ende */
+  .ergebnis { text-align: center; }
+  .ergebnis .gross { font-size: 3rem; margin: 4px 0; }
+  .ergebnis .zahl { font-size: 1.3rem; font-weight: 700; }
+  .fehlerliste { list-style: none; padding: 0; margin: 0; }
+  .fehlerliste > li { padding: 10px 0; border-top: 1px solid var(--linie); }
+  .fehlerliste > li:first-child { border-top: 0; }
+  .fehlerliste .f { font-weight: 700; }
+  .fehlerliste .r { color: var(--gruen); }
+  .fehlerliste .d { color: var(--rot); text-decoration: line-through; }
+  .fehlerliste .e { color: var(--grau); font-size: .9rem; }
+  .fehlerliste .ok::before { content: "✓ "; color: var(--gruen); }
+  .fehlerliste .nok::before { content: "✗ "; color: var(--rot); }
+
+  /* Umrechnungstabelle */
+  dialog { border: 0; border-radius: var(--radius); padding: 0; max-width: 560px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+  dialog::backdrop { background: rgba(20, 30, 40, .45); }
+  .dlgkopf { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--linie); }
+  .dlgkopf h2 { margin: 0; }
+  .dlginhalt { padding: 6px 16px 16px; max-height: 70vh; overflow: auto; }
+  .tabelle h3 { font-size: .95rem; margin: 14px 0 4px; color: var(--haupt); }
+  .tabelle p { margin: 0; }
+  .merke { background: var(--haupt-hell); border-radius: 10px; padding: 10px 12px; margin-top: 14px; font-size: .95rem; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Startseite -->
+  <section id="start">
+    <header class="titelkopf">
+      <div class="symbol" aria-hidden="true">📐</div>
+      <div>
+        <h1>Reismann 5d Mathe Trainer</h1>
+        <p class="unterzeile">Wähle aus, was du üben möchtest.</p>
+      </div>
+    </header>
+
+    <div class="box">
+      <h2>Was willst du üben?</h2>
+      <div id="kapitelliste"></div>
+      <p class="erklaerung">Die Sterne zeigen, wie gut es bei den letzten 20 Aufgaben lief.</p>
+    </div>
+
+    <div class="box">
+      <div class="einstellung">
+        <h3>Aufgaben</h3>
+        <div class="umschalter" id="mischung">
+          <button type="button" data-wert="rechnen">Nur Rechnen</button>
+          <button type="button" data-wert="gemischt">Gemischt</button>
+          <button type="button" data-wert="sach">Nur Sachaufgaben</button>
+        </div>
+        <p class="erklaerung" id="mischungHilfe"></p>
+      </div>
+      <div class="einstellung">
+        <h3>Schwierigkeit</h3>
+        <div class="umschalter" id="stufe">
+          <button type="button" data-wert="leicht">Leicht</button>
+          <button type="button" data-wert="mittel">Mittel</button>
+          <button type="button" data-wert="schwer">Schwer</button>
+        </div>
+        <p class="erklaerung" id="stufeHilfe"></p>
+      </div>
+      <div class="einstellung">
+        <h3>Art</h3>
+        <div class="umschalter" id="art">
+          <button type="button" data-wert="ueben">Üben</button>
+          <button type="button" data-wert="probe">Probetest</button>
+        </div>
+        <p class="erklaerung" id="artHilfe"></p>
+        <div class="optionen">
+          <label class="zeile"><span class="name">Aufgaben pro Runde</span>
+            <select id="anzahl"><option>10</option><option>15</option><option>20</option></select>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="box" id="verlaufBox" hidden>
+      <h2>Letzte Probetests</h2>
+      <ul class="verlauf" id="verlauf"></ul>
+    </div>
+
+    <button type="button" class="haupt" id="los">Los geht's</button>
+
+    <div class="fusszeile">
+      <button type="button" class="leise klein" id="tabelleStart">📋 Umrechnungstabelle</button>
+      <button type="button" class="leise klein" id="sichern">Fortschritt sichern</button>
+      <button type="button" class="leise klein" id="laden">Fortschritt laden</button>
+      <button type="button" class="leise klein" id="zuruecksetzen">Alles zurücksetzen</button>
+      <input type="file" id="datei" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <!-- Abfrage -->
+  <section id="abfrage" hidden>
+    <div class="kopf">
+      <button type="button" class="leise klein" id="beenden">✕ Beenden</button>
+      <div class="fortschritt"><span id="fortschrittsbalken"></span></div>
+      <span class="zaehler" id="zaehler"></span>
+      <button type="button" class="leise klein" id="tabelleAbfrage" title="Umrechnungstabelle" aria-label="Umrechnungstabelle">📋</button>
+    </div>
+
+    <div class="box karte">
+      <div class="auftrag" id="auftrag"></div>
+      <div class="frage" id="frage"></div>
+      <div class="marke"><span class="wdh" id="wdh" hidden>Nochmal mit neuen Zahlen</span></div>
+
+      <form class="eingabe" id="formular" autocomplete="off">
+        <div class="felder" id="felder"></div>
+        <button type="submit" id="pruefen">Prüfen</button>
+      </form>
+      <div class="formhinweis" id="formHinweis" hidden></div>
+      <div class="wahl" id="wahl" hidden></div>
+      <div class="nebenknoepfe" id="nebenknoepfe">
+        <button type="button" class="leise klein" id="tippKnopf">💡 Tipp</button>
+        <button type="button" class="leise klein" id="weissNicht">Weiß ich nicht</button>
+      </div>
+      <div class="tippbox" id="tippBox" hidden></div>
+
+      <div class="rueckmeldung" id="rueckmeldung" hidden>
+        <div class="titel" id="rmTitel"></div>
+        <div class="loesung" id="rmLoesung"></div>
+        <div class="fehlerhinweis" id="rmHinweis" hidden></div>
+        <details class="weg" id="rmWeg"><summary>Rechenweg</summary><ol id="rmWegListe"></ol></details>
+        <div class="knopfreihe">
+          <button type="button" class="weiter" id="weiter">Weiter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ende einer Runde -->
+  <section id="ende" hidden>
+    <div class="box ergebnis">
+      <div class="gross" id="endeBild"></div>
+      <div class="zahl" id="endeZahl"></div>
+      <p id="endeText"></p>
+    </div>
+    <div class="box" id="endeListeBox" hidden>
+      <h2 id="endeListeTitel"></h2>
+      <ul class="fehlerliste" id="endeListe"></ul>
+    </div>
+    <div class="knopfreihe">
+      <button type="button" id="nurFehler" hidden>Fehler nochmal üben</button>
+      <button type="button" class="weiter" id="zumStart">Zum Start</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Umrechnungstabelle: reiner Info-Dialog ohne Eingaben, darf per ESC/Klick daneben schließen -->
+<dialog id="tabelle" aria-labelledby="tabelleTitel">
+  <div class="dlgkopf">
+    <h2 id="tabelleTitel">📋 Umrechnungstabelle</h2>
+    <button type="button" class="klein" id="tabelleZu">Schließen</button>
+  </div>
+  <div class="dlginhalt tabelle">
+    <h3>Zeit</h3>
+    <p>1 min = 60 s · 1 h = 60 min · 1 Tag = 24 h · 1 Woche = 7 Tage · 1 Jahr = 12 Monate = 365 Tage</p>
+    <p>½ h = 30 min · ¼ h = 15 min · ¾ h = 45 min</p>
+    <h3>Längen</h3>
+    <p>1 cm = 10 mm · 1 dm = 10 cm · 1 m = 10 dm = 100 cm · 1 km = 1000 m</p>
+    <h3>Gewichte</h3>
+    <p>1 g = 1000 mg · 1 kg = 1000 g · 1 t = 1000 kg</p>
+    <h3>Geld</h3>
+    <p>1 € = 100 ct</p>
+    <h3>Flächen (Umrechnungszahl 100)</h3>
+    <p>1 cm² = 100 mm² · 1 dm² = 100 cm² · 1 m² = 100 dm² · 1 a = 100 m² · 1 ha = 100 a · 1 km² = 100 ha</p>
+    <div class="merke">
+      <b>Merke:</b> Von der größeren zur kleineren Einheit wird die Zahl größer → <b>mal</b> Umrechnungszahl.
+      Von der kleineren zur größeren Einheit wird die Zahl kleiner → <b>geteilt durch</b> Umrechnungszahl.
+      Bei 10, 100, 1000 rutscht das Komma um 1, 2 oder 3 Stellen.
+    </div>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+
+const HEFT = [];
+
+const SPEICHER = "mathetrainer.v1";
+const APP = "mathetrainer";
+const STUFEN = ["leicht", "mittel", "schwer"];
+
+// ---------- Hilfen ----------
+
+const $ = id => document.getElementById(id);
+const r = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const eins = liste => liste[Math.floor(Math.random() * liste.length)];
+const zufall = (p = 0.5) => Math.random() < p;
+const rund = x => Math.round(x * 1e6) / 1e6;
+const nah = (a, b) => Math.abs(a - b) < 1e-9 * Math.max(1, Math.abs(b));
+
+function mische(liste) {
+  const a = liste.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const NAMEN = ["Lena", "Tim", "Mia", "Ben", "Emma", "Jonas", "Lina", "Finn", "Sophie", "Leo", "Hanna", "Elias"];
+const name = () => eins(NAMEN);
+function zweiNamen() { const a = name(); let b; do b = name(); while (b === a); return [a, b]; }
+
+// Zahl deutsch: Komma, ab 5 Stellen mit schmalem Leerzeichen gruppiert
+function zahl(x, stellen) {
+  x = rund(x);
+  let s = stellen != null ? x.toFixed(stellen) : String(x);
+  const neg = s.startsWith("-");
+  if (neg) s = s.slice(1);
+  let [g, d] = s.split(".");
+  if (g.length > 4) g = g.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return (neg ? "−" : "") + g + (d ? "," + d : "");
+}
+function zahlE(x, e) { return e === "€" && !Number.isInteger(rund(x)) ? zahl(x, 2) : zahl(x); }
+const EINZAHL = { Tage: "Tag", Wochen: "Woche", Jahre: "Jahr", Monate: "Monat", Pakete: "Paket" };
+function et(x, e) { return nah(x, 1) && EINZAHL[e] ? EINZAHL[e] : e; }
+function gr(x, e) { return zahlE(x, e) + " " + et(x, e); }
+function uhr(t) { t = ((t % 1440) + 1440) % 1440; return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") + " Uhr"; }
+// Angabe in zwei Einheiten, z. B. zp(135, "h", "min", 60) = "2 h 15 min"
+function zp(n, g, k, F) {
+  const a = Math.floor(n / F), b = rund(n - a * F);
+  if (a && b) return `${gr(a, g)} ${gr(b, k)}`;
+  return a ? gr(a, g) : gr(b, k);
+}
+const dauer = n => zp(n, "h", "min", 60);
+const LABEL = { h: "Stunden", min: "Minuten", s: "Sekunden" };
+
+function aufgabe(o) {
+  return Object.assign({ sach: false, auftrag: "Rechne um", frage: "", felder: [], loesung: [], wahl: null, weg: [], tipp: "", hinweis: null }, o);
+}
+
+// ---------- Einheiten ----------
+
+const GR = {
+  laenge:  { kette: ["mm", "cm", "dm", "m", "km"], f: { mm: 1, cm: 10, dm: 100, m: 1e3, km: 1e6 } },
+  gewicht: { kette: ["mg", "g", "kg", "t"], f: { mg: 1, g: 1e3, kg: 1e6, t: 1e9 } },
+  geld:    { kette: ["ct", "€"], f: { ct: 1, "€": 100 } },
+  flaeche: { kette: ["mm²", "cm²", "dm²", "m²", "a", "ha", "km²"], f: { "mm²": 1, "cm²": 1e2, "dm²": 1e4, "m²": 1e6, a: 1e8, ha: 1e10, "km²": 1e12 } },
+};
+
+function kettenText(g, i, j) {
+  const k = g.kette;
+  const F = g.f[k[j]] / g.f[k[i]];
+  if (j - i === 1) return `1 ${k[j]} = ${zahl(F)} ${k[i]}`;
+  const teile = [];
+  for (let x = j; x > i; x--) teile.push(`1 ${k[x]} = ${zahl(g.f[k[x]] / g.f[k[x - 1]])} ${k[x - 1]}`);
+  return teile.join(", ") + `, also 1 ${k[j]} = ${zahl(F)} ${k[i]}`;
+}
+
+// typische Fehler beim Umrechnen erkennen
+function faktorHinweis(w, v, F, runter, gross, klein) {
+  const L = runter ? v * F : v / F;
+  if (nah(w, L)) return null;
+  if (nah(w, runter ? v / F : v * F)) return runter
+    ? `Von ${gross} zu ${klein} geht es zur kleineren Einheit – die Zahl wird größer, also mal ${zahl(F)}.`
+    : `Von ${klein} zu ${gross} geht es zur größeren Einheit – die Zahl wird kleiner, also geteilt durch ${zahl(F)}.`;
+  for (const G of [10, 100, 1000, 60, 24, 7, 12, 10000]) {
+    if (G === F) continue;
+    if (nah(w, runter ? v * G : v / G)) return `Achtung: 1 ${et(1, gross)} = ${zahl(F)} ${klein}, nicht ${zahl(G)} ${klein}.`;
+  }
+  if ([10, 100, 0.1, 0.01].some(f => nah(w, L * f))) return "Fast – die Ziffern stimmen, aber Nullen oder Komma sind verrutscht.";
+  return null;
+}
+
+// eine Größe in eine andere Einheit umrechnen
+function umr({ v, von, nach, F, runter, kette, frage, sach, auftrag }) {
+  const L = rund(runter ? v * F : v / F);
+  const gross = runter ? von : nach, klein = runter ? nach : von;
+  const weg = [kette || `1 ${et(1, gross)} = ${zahl(F)} ${klein}`];
+  const n = Math.round(Math.log10(F));
+  if (10 ** n === F && (!Number.isInteger(rund(v)) || !Number.isInteger(L))) {
+    weg.push(runter ? `Mal ${zahl(F)} heißt: Komma um ${n} Stelle${n > 1 ? "n" : ""} nach rechts.`
+                    : `Geteilt durch ${zahl(F)} heißt: Komma um ${n} Stelle${n > 1 ? "n" : ""} nach links.`);
+  }
+  weg.push(runter ? `${gr(v, von)} = ${zahlE(v, von)} · ${zahl(F)} ${nach} = ${gr(L, nach)}`
+                  : `${gr(v, von)} = ${zahlE(v, von)} : ${zahl(F)} ${nach} = ${gr(L, nach)}`);
+  return aufgabe({
+    sach: !!sach, auftrag: auftrag || "Rechne um", frage: frage || `${gr(v, von)} =`, felder: [nach], loesung: [L], weg,
+    tipp: `${weg[0]}. Von der ${runter ? "größeren zur kleineren" : "kleineren zur größeren"} Einheit: ${runter ? "mal" : "geteilt durch"} ${zahl(F)}.`,
+    hinweis: x => faktorHinweis(x[0], v, F, runter, gross, klein),
+  });
+}
+
+function grossWert(st, F) {
+  if (st === 0) return r(2, 9);
+  if (st === 1) return zufall() ? r(2, 9) : r(11, 99);
+  if (zufall(0.35)) return r(2, 99);
+  if (F >= 100 && zufall()) return r(101, 999) / 100;
+  return zufall(0.3) ? r(1, 9) / 10 : r(11, 99) / 10;
+}
+
+function umrechnen(gk, st) {
+  const g = GR[gk], k = g.kette;
+  const maxA = st === 0 ? 1 : st === 1 ? 2 : (gk === "flaeche" ? 2 : 3);
+  const i = r(0, k.length - 2), j = Math.min(k.length - 1, i + r(1, maxA));
+  const F = g.f[k[j]] / g.f[k[i]];
+  let G = grossWert(st, F);
+  if (G * F > 1e7) G = r(2, 9);
+  const runter = zufall();
+  const K = rund(G * F);
+  return umr({ v: runter ? G : K, von: runter ? k[j] : k[i], nach: runter ? k[i] : k[j], F, runter, kette: kettenText(g, i, j) });
+}
+
+// „3 m 25 cm = ? cm“
+function zusammenfassen(a, b, g, k, F, o) {
+  const N = a * F + b;
+  return aufgabe(Object.assign({
+    frage: `${gr(a, g)} ${gr(b, k)} =`, felder: [k], loesung: [N],
+    weg: [`1 ${et(1, g)} = ${zahl(F)} ${k}`, `${gr(a, g)} = ${zahl(a)} · ${zahl(F)} ${k} = ${gr(a * F, k)}`, `${gr(a * F, k)} + ${gr(b, k)} = ${gr(N, k)}`],
+    hinweis: x => {
+      const w = x[0];
+      if (F % 10 !== 0 && nah(w, a * 100 + b)) return `Achtung: 1 ${et(1, g)} = ${zahl(F)} ${k}, nicht 100 ${k}.`;
+      if (nah(w, Number(String(a) + String(b)))) return `Achte auf die Nullen: ${gr(a, g)} = ${gr(a * F, k)}, dazu kommen noch ${gr(b, k)}.`;
+      if (nah(w, a + b)) return `Rechne zuerst ${gr(a, g)} in ${k} um.`;
+      if (nah(w, a * F)) return `Du hast die ${gr(b, k)} vergessen dazuzuzählen.`;
+      return null;
+    },
+  }, o));
+}
+
+// „135 min = ? h ? min“
+function zerlegen(N, g, k, F, o) {
+  const a = Math.floor(N / F), b = N - a * F;
+  return aufgabe(Object.assign({
+    frage: `${gr(N, k)} =`, felder: [g, k], loesung: [a, b],
+    weg: [`1 ${et(1, g)} = ${zahl(F)} ${k}`, `${gr(F, k)} passen ${a}-mal in ${gr(N, k)}: ${zahl(a)} · ${zahl(F)} ${k} = ${gr(a * F, k)}`,
+          `Rest: ${gr(N, k)} − ${gr(a * F, k)} = ${gr(b, k)}`, `Also: ${gr(N, k)} = ${zp(N, g, k, F)}`],
+    hinweis: x => {
+      const [p, q] = x;
+      if (F % 10 !== 0 && p === Math.floor(N / 100) && q === N % 100) return `Achtung: 1 ${et(1, g)} = ${zahl(F)} ${k}, nicht 100 ${k}.`;
+      if (q >= F) return `Der Rest muss kleiner als ${gr(F, k)} sein – da passt noch 1 ${et(1, g)} hinein.`;
+      return null;
+    },
+  }, o));
+}
+
+// ---------- Rechnen mit Zeit ----------
+
+const ZEIT_PAARE = [
+  [0, "h", "min", 60], [0, "min", "s", 60], [0, "Tage", "h", 24], [0, "Wochen", "Tage", 7], [0, "Jahre", "Monate", 12],
+  [1, "h", "s", 3600, "1 h = 60 min und 1 min = 60 s, also 1 h = 60 · 60 s = 3600 s"],
+  [1, "Tage", "min", 1440, "1 Tag = 24 h und 1 h = 60 min, also 1 Tag = 24 · 60 min = 1440 min"],
+  [2, "Wochen", "h", 168, "1 Woche = 7 Tage und 1 Tag = 24 h, also 1 Woche = 7 · 24 h = 168 h"],
+];
+const BRUCHTEILE = [
+  ["½ h", 30, "min", ["1 h = 60 min", "½ h ist die Hälfte: 60 min : 2 = 30 min"]],
+  ["¼ h", 15, "min", ["1 h = 60 min", "¼ h ist ein Viertel: 60 min : 4 = 15 min"]],
+  ["¾ h", 45, "min", ["1 h = 60 min", "¼ h = 60 min : 4 = 15 min", "¾ h = 3 · 15 min = 45 min"]],
+  ["1 ½ h", 90, "min", ["1 h = 60 min, ½ h = 30 min", "1 ½ h = 60 min + 30 min = 90 min"]],
+  ["2 ¼ h", 135, "min", ["1 h = 60 min, ¼ h = 15 min", "2 h = 120 min", "2 ¼ h = 120 min + 15 min = 135 min"]],
+  ["1 ¾ h", 105, "min", ["1 h = 60 min, ¾ h = 45 min", "1 ¾ h = 60 min + 45 min = 105 min"]],
+  ["½ min", 30, "s", ["1 min = 60 s", "½ min = 60 s : 2 = 30 s"]],
+  ["½ Tag", 12, "h", ["1 Tag = 24 h", "½ Tag = 24 h : 2 = 12 h"]],
+  ["1 ½ Tage", 36, "h", ["1 Tag = 24 h, ½ Tag = 12 h", "1 ½ Tage = 24 h + 12 h = 36 h"]],
+  ["1,5 h", 90, "min", ["1,5 h ist dasselbe wie 1 ½ h", "1 h = 60 min, 0,5 h = 30 min", "1,5 h = 60 min + 30 min = 90 min"]],
+  ["2,5 h", 150, "min", ["2,5 h ist dasselbe wie 2 ½ h", "2 h = 120 min, 0,5 h = 30 min", "2,5 h = 120 min + 30 min = 150 min"]],
+];
+
+function zeitEinheiten(st) {
+  if (st === 2 && zufall(0.4)) {
+    if (zufall(0.3)) {
+      const [m, h] = eins([[90, 1.5], [150, 2.5], [30, 0.5], [210, 3.5]]);
+      return aufgabe({ frage: `${m} min =`, felder: ["h"], loesung: [h],
+        weg: ["1 h = 60 min, also 30 min = ½ h = 0,5 h", m > 30 ? `${m} min = ${m - 30} min + 30 min = ${zahl(h - 0.5)} h + 0,5 h = ${zahl(h)} h` : "30 min = 0,5 h"] });
+    }
+    const [f, l, e, weg] = eins(BRUCHTEILE);
+    return aufgabe({ frage: `${f} =`, felder: [e], loesung: [l], weg,
+      hinweis: x => (e === "min" && nah(x[0], l / 60 * 100) ? "Achtung: 1 h = 60 min, nicht 100 min." : null) });
+  }
+  const [, g, k, F, kette] = eins(ZEIT_PAARE.filter(p => p[0] <= st));
+  const max = F >= 1000 ? (st === 2 ? 9 : 4) : st === 0 ? 9 : st === 1 ? 24 : 60;
+  const G = r(2, max);
+  const runter = zufall();
+  return umr({ v: runter ? G : G * F, von: runter ? g : k, nach: runter ? k : g, F, runter, kette });
+}
+
+function zeitGemischt(st) {
+  const paare = [["h", "min", 60], ["min", "s", 60]];
+  if (st > 0) paare.push(["Tage", "h", 24]);
+  const [g, k, F] = eins(paare);
+  const a = g === "Tage" ? r(1, 6) : st === 0 ? r(1, 3) : st === 1 ? r(1, 9) : r(2, 20);
+  const b = st === 0 ? 5 * r(1, 11) : r(1, F - 1);
+  return zufall() ? zusammenfassen(a, b, g, k, F) : zerlegen(a * F + b, g, k, F);
+}
+
+function spanneWeg(t1, d) {
+  const weg = [], teile = [];
+  let cur = t1;
+  const ende = t1 + d;
+  const bisVoll = (60 - t1 % 60) % 60;
+  if (bisVoll && bisVoll <= d) { weg.push(`${uhr(cur)} → ${uhr(cur + bisVoll)}: ${bisVoll} min`); teile.push(`${bisVoll} min`); cur += bisVoll; }
+  const voll = Math.floor((ende - cur) / 60);
+  if (voll > 0) { weg.push(`${uhr(cur)} → ${uhr(cur + voll * 60)}: ${voll} h`); teile.push(`${voll} h`); cur += voll * 60; }
+  if (ende > cur) { weg.push(`${uhr(cur)} → ${uhr(ende)}: ${ende - cur} min`); teile.push(`${ende - cur} min`); }
+  if (teile.length > 1) weg.push(`Zusammen: ${teile.join(" + ")} = ${dauer(d)}`);
+  return weg;
+}
+
+// Zeitspanne von t1 bis t2 (Minuten seit Mitternacht; t2 < t1 heißt: über Mitternacht)
+function spanne(t1, t2, o) {
+  const d = ((t2 - t1) % 1440 + 1440) % 1440;
+  return aufgabe(Object.assign({
+    auftrag: "Wie lange dauert es?", frage: `Von ${uhr(t1)} bis ${uhr(t2)}`, felder: ["h", "min"], loesung: [Math.floor(d / 60), d % 60],
+    weg: spanneWeg(t1, d),
+    tipp: "Rechne in Schritten: erst bis zur nächsten vollen Stunde, dann die vollen Stunden, dann die restlichen Minuten.",
+    hinweis: x => {
+      const [h, m] = x;
+      const dez = (Math.floor(t2 / 60) * 100 + t2 % 60) - (Math.floor(t1 / 60) * 100 + t1 % 60);
+      if (dez > 0 && h === Math.floor(dez / 100) && m === dez % 100) return "Vorsicht: 1 h hat 60 min, nicht 100. Rechne erst bis zur vollen Stunde.";
+      if (Math.abs(h * 60 + m - d) === 60) return "Die Minuten stimmen – zähle die vollen Stunden nochmal nach.";
+      return null;
+    },
+  }, o));
+}
+
+function zeitspanne(st) {
+  let t1, d;
+  if (st === 0) { t1 = r(7, 17) * 60 + 5 * r(0, 11); d = 5 * r(3, 40); }
+  else if (st === 1) { t1 = r(6, 19) * 60 + r(0, 59); d = r(12, 300); }
+  else if (zufall()) { t1 = r(20, 23) * 60 + r(0, 59); d = r(360, 640); }
+  else { t1 = r(6, 12) * 60 + r(0, 59); d = r(200, 600); }
+  return spanne(t1, (t1 + d) % 1440);
+}
+
+function uhrHinweis(L) {
+  return x => {
+    const diff = ((x[0] - L) % 1440 + 1440) % 1440;
+    if (diff === 60 || diff === 1380) return "Die Minuten stimmen, aber die Stunde nicht – zähle nochmal nach.";
+    if (diff === 40 || diff === 1400) return "Achtung beim Überschreiten der vollen Stunde: 1 h = 60 min, nicht 100.";
+    return null;
+  };
+}
+
+function zeitPlus(t, d, o) {
+  const weg = [];
+  let cur = t, rest = d;
+  const bisVoll = (60 - cur % 60) % 60;
+  if (bisVoll && rest >= bisVoll) { weg.push(`${uhr(cur)} + ${bisVoll} min = ${uhr(cur + bisVoll)}`); cur += bisVoll; rest -= bisVoll; }
+  const h = Math.floor(rest / 60);
+  if (h) { weg.push(`${uhr(cur)} + ${h} h = ${uhr(cur + 60 * h)}`); cur += 60 * h; rest -= 60 * h; }
+  if (rest) weg.push(`${uhr(cur)} + ${rest} min = ${uhr(cur + rest)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Welche Uhrzeit?", frage: `${uhr(t)} + ${dauer(d)}`, felder: ["Uhr"], loesung: [t + d], weg,
+    tipp: "Rechne erst bis zur nächsten vollen Stunde, dann die restliche Zeit dazu.", hinweis: uhrHinweis(t + d),
+  }, o));
+}
+
+function zeitMinus(t, d, o) {
+  const weg = [];
+  let cur = t, rest = d;
+  const zurueck = cur % 60;
+  if (zurueck && rest >= zurueck) { weg.push(`${uhr(cur)} − ${zurueck} min = ${uhr(cur - zurueck)}`); cur -= zurueck; rest -= zurueck; }
+  const h = Math.floor(rest / 60);
+  if (h) { weg.push(`${uhr(cur)} − ${h} h = ${uhr(cur - 60 * h)}`); cur -= 60 * h; rest -= 60 * h; }
+  if (rest) weg.push(`${uhr(cur)} − ${rest} min = ${uhr(cur - rest)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Welche Uhrzeit?", frage: `${uhr(t)} − ${dauer(d)}`, felder: ["Uhr"], loesung: [t - d], weg,
+    tipp: "Gehe rückwärts: erst zurück bis zur vollen Stunde, dann die restliche Zeit.", hinweis: uhrHinweis(t - d),
+  }, o));
+}
+
+function zeitpunkt(st) {
+  let t, d;
+  if (st === 0) { t = r(7, 18) * 60 + 5 * r(0, 11); d = zufall() ? 5 * r(2, 11) : 60 * r(1, 2) + 5 * r(1, 11); }
+  else if (st === 1) { t = r(6, 20) * 60 + r(0, 59); d = r(15, 240); }
+  else { t = zufall() ? r(21, 23) * 60 + r(0, 59) : r(0, 2) * 60 + r(0, 59); d = r(60, 420); }
+  const plus = st === 2 ? t >= 1260 : zufall();
+  return plus ? zeitPlus(t, d) : zeitMinus(t, d);
+}
+
+function addiere(liste, g, k, F, o) {
+  const summe = liste.reduce((s, x) => s + x, 0);
+  const G = liste.reduce((s, x) => s + Math.floor(x / F), 0), K = liste.reduce((s, x) => s + x % F, 0);
+  const weg = [];
+  const gs = liste.map(x => Math.floor(x / F)).filter(Boolean);
+  if (gs.length > 1) weg.push(`${LABEL[g] || g}: ${gs.map(x => gr(x, g)).join(" + ")} = ${gr(G, g)}`);
+  weg.push(`${LABEL[k] || k}: ${liste.map(x => gr(x % F, k)).join(" + ")} = ${gr(K, k)}`);
+  if (K >= F) weg.push(`${gr(K, k)} = ${zp(K, g, k, F)}`);
+  weg.push(`Zusammen: ${zp(summe, g, k, F)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Rechne aus", frage: liste.map(x => zp(x, g, k, F)).join(" + "), felder: [g, k], loesung: [Math.floor(summe / F), summe % F], weg,
+    tipp: `Rechne ${g} und ${k} getrennt. Denk dran: 1 ${g} = ${F} ${k}.`,
+  }, o));
+}
+
+function subtrahiere(x, y, g, k, F, o) {
+  const d = x - y;
+  const xa = Math.floor(x / F), xb = x % F, ya = Math.floor(y / F), yb = y % F;
+  const weg = [];
+  let a = xa, b = xb;
+  if (xb < yb) {
+    weg.push(`${gr(xb, k)} reichen nicht für − ${gr(yb, k)}. Tausche 1 ${g} in ${F} ${k} um: ${zp(x, g, k, F)} = ${gr(xa - 1, g)} ${gr(xb + F, k)}`);
+    a = xa - 1; b = xb + F;
+  }
+  weg.push(`${LABEL[g] || g}: ${gr(a, g)} − ${gr(ya, g)} = ${gr(a - ya, g)}`);
+  weg.push(`${LABEL[k] || k}: ${gr(b, k)} − ${gr(yb, k)} = ${gr(b - yb, k)}`);
+  weg.push(`Ergebnis: ${zp(d, g, k, F)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Rechne aus", frage: `${zp(x, g, k, F)} − ${zp(y, g, k, F)}`, felder: [g, k], loesung: [Math.floor(d / F), d % F], weg,
+    tipp: xb < yb ? `Die ${LABEL[k] || k} reichen nicht – tausche 1 ${g} in ${F} ${k} um.` : `Rechne ${g} und ${k} getrennt.`,
+    hinweis: v => {
+      if (xb < yb && v[1] === xb + 100 - yb) return `Beim Umtauschen gilt: 1 ${g} = ${F} ${k}, nicht 100.`;
+      if (xb < yb && v[0] === xa - ya && v[1] === yb - xb) return `Du hast „klein minus groß“ verkehrt herum gerechnet. Tausche zuerst 1 ${g} in ${F} ${k} um.`;
+      return null;
+    },
+  }, o));
+}
+
+function multipliziere(n, m, g, k, F, o) {
+  const p = n * m;
+  const weg = [];
+  if (m >= F) weg.push(`${zp(m, g, k, F)} = ${gr(m, k)}`);
+  weg.push(`${n} · ${gr(m, k)} = ${gr(p, k)}`);
+  if (p >= F) weg.push(`${gr(p, k)} = ${zp(p, g, k, F)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Rechne aus", frage: `${n} · ${zp(m, g, k, F)}`, felder: [g, k], loesung: [Math.floor(p / F), p % F], weg,
+    tipp: `Rechne alles in ${k} um, multipliziere und wandle dann wieder in ${g} und ${k} um.`,
+  }, o));
+}
+
+function dividiere(total, n, g, k, F, o) {
+  const q = total / n;
+  const weg = [];
+  if (total >= F) weg.push(`${zp(total, g, k, F)} = ${gr(total, k)}`);
+  weg.push(`${gr(total, k)} : ${n} = ${gr(q, k)}`);
+  if (q >= F) weg.push(`${gr(q, k)} = ${zp(q, g, k, F)}`);
+  return aufgabe(Object.assign({
+    auftrag: "Rechne aus", frage: `${zp(total, g, k, F)} : ${n}`, felder: [g, k], loesung: [Math.floor(q / F), q % F], weg,
+    tipp: `Rechne zuerst alles in ${k} um, dann teilen.`,
+  }, o));
+}
+
+function zeitRechnen(st) {
+  const arten = ["plus", "minus"];
+  if (st >= 1) arten.push("mal", "plusS");
+  if (st === 2) arten.push("geteilt", "mal");
+  const art = eins(arten);
+  if (art === "plus") {
+    let teile;
+    if (st === 0) {
+      do teile = [r(0, 3) * 60 + 5 * r(1, 11), r(0, 3) * 60 + 5 * r(1, 11)]; while (teile[0] % 60 + teile[1] % 60 >= 60);
+    } else teile = Array.from({ length: st === 2 ? 3 : 2 }, () => r(0, 3) * 60 + r(5, 59));
+    return addiere(teile, "h", "min", 60);
+  }
+  if (art === "plusS") return addiere([r(1, 4) * 60 + r(5, 59), r(1, 4) * 60 + r(5, 59)], "min", "s", 60);
+  if (art === "minus") {
+    let x, y;
+    if (st === 0) { do { x = r(2, 5) * 60 + 5 * r(1, 11); y = r(1, 2) * 60 + 5 * r(1, 11); } while (y >= x || y % 60 > x % 60); }
+    else if (st === 1) { do { x = r(2, 6) * 60 + r(0, 59); y = r(1, 3) * 60 + r(1, 59); } while (y >= x || y % 60 <= x % 60); }
+    else { do { x = r(2, 8) * 60 + eins([0, r(0, 59)]); y = r(0, 4) * 60 + r(1, 59); } while (y >= x); }
+    return subtrahiere(x, y, "h", "min", 60);
+  }
+  if (art === "mal") {
+    const n = st === 1 ? r(2, 6) : r(3, 9);
+    const m = st === 1 ? 5 * r(3, 11) : r(1, 2) * 60 + 5 * r(1, 11);
+    return multipliziere(n, m, "h", "min", 60);
+  }
+  const n = r(2, 6), q = 5 * r(4, 20);
+  return dividiere(q * n, n, "h", "min", 60);
+}
+
+// ---------- Einheiten umwandeln ----------
+
+const MISCH_PAARE = [[0, "m", "cm", 100], [0, "km", "m", 1000], [0, "cm", "mm", 10], [0, "kg", "g", 1000], [0, "t", "kg", 1000],
+  [0, "€", "ct", 100], [1, "g", "mg", 1000], [2, "m²", "dm²", 100], [2, "ha", "a", 100]];
+
+function einheitenGemischt(st) {
+  const [, g, k, F] = eins(MISCH_PAARE.filter(p => p[0] <= st));
+  const a = st === 0 ? r(1, 9) : r(1, 30);
+  let b;
+  if (st === 0) b = F === 10 ? r(1, 9) : r(F / 10, F - 1);
+  else b = F > 10 && zufall(st === 2 ? 0.5 : 0.3) ? r(1, F / 10 - 1) : r(1, F - 1);
+  return zufall() ? zusammenfassen(a, b, g, k, F) : zerlegen(a * F + b, g, k, F);
+}
+
+const KOMMA_PAARE = [["m", "cm", 100], ["km", "m", 1000], ["kg", "g", 1000], ["t", "kg", 1000], ["€", "ct", 100], ["cm", "mm", 10]];
+
+function mischZuKomma(a, b, g, k, F, o) {
+  const n = Math.round(Math.log10(F));
+  const G = rund(a + b / F);
+  const nach = String(b).padStart(n, "0");
+  return aufgabe(Object.assign({
+    frage: `${gr(a, g)} ${gr(b, k)} =`, felder: [g], loesung: [G],
+    weg: [`1 ${g} = ${zahl(F)} ${k} – nach dem Komma stehen ${n} Stelle${n > 1 ? "n" : ""} für die ${k}.`,
+          `${gr(b, k)} → ,${nach} ${g}`, `${gr(a, g)} ${gr(b, k)} = ${zahl(a)},${nach} ${g}`],
+    hinweis: x => (nah(x[0], Number(`${a}.${b}`)) && !nah(x[0], G)
+      ? `${gr(b, k)} sind ${zahl(b / F)} ${g} – nach dem Komma müssen ${n} Stellen stehen, fülle mit Nullen auf.` : null),
+  }, o));
+}
+
+function kommaZuMisch(a, b, g, k, F, o) {
+  const n = Math.round(Math.log10(F));
+  const G = rund(a + b / F);
+  const nachKomma = (zahlE(G, g).split(",")[1] || "");
+  return aufgabe(Object.assign({
+    frage: `${gr(G, g)} =`, felder: [g, k], loesung: [a, b],
+    weg: [`1 ${g} = ${zahl(F)} ${k}`, `Vor dem Komma: ${gr(a, g)}`, `Nach dem Komma: ,${String(b).padStart(n, "0")} ${g} = ${gr(b, k)}`, `${gr(G, g)} = ${gr(a, g)} ${gr(b, k)}`],
+    hinweis: x => (x[0] === a && x[1] === Number(nachKomma) && Number(nachKomma) !== b
+      ? `,${nachKomma} ${g} sind ${gr(b, k)} – denk an die ${n} Stellen nach dem Komma.` : null),
+  }, o));
+}
+
+function kommaschreibweise(st) {
+  const [g, k, F] = eins(KOMMA_PAARE);
+  const arten = st === 0 ? ["runter", "hoch"] : st === 1 ? ["runter", "hoch", "misch"] : ["runter", "hoch", "misch", "misch", "zerlege"];
+  const art = eins(arten);
+  let a = st === 0 ? r(1, 9) : r(0, 20);
+  let b;
+  if (st === 0) b = F === 10 ? r(1, 9) : (F / 10) * r(1, 9);
+  else if (st === 1) b = r(1, F - 1);
+  else b = F > 10 && zufall() ? r(1, F / 10 - 1) : r(1, F - 1);
+  if (a === 0 && art !== "runter" && art !== "hoch") a = r(1, 9);
+  const G = rund(a + b / F), K = a * F + b;
+  if (art === "runter") return umr({ v: G, von: g, nach: k, F, runter: true });
+  if (art === "hoch") return umr({ v: K, von: k, nach: g, F, runter: false });
+  if (art === "misch") return mischZuKomma(a, b, g, k, F);
+  return kommaZuMisch(a, b, g, k, F);
+}
+
+const VERGL = [["km", "m", 1000], ["m", "cm", 100], ["kg", "g", 1000], ["t", "kg", 1000], ["€", "ct", 100], ["cm", "mm", 10], ["h", "min", 60], ["m²", "dm²", 100]];
+const ZEICHEN = ["<", "=", ">"];
+
+function vergleichen(st) {
+  const [g, k, F] = eins(VERGL.filter(p => st > 0 || p[0] !== "m²"));
+  let G, K;
+  if (st === 0 || F === 60) {
+    G = r(1, 9);
+    const kand = [G * F, G * F, G * 10, G * 100, G * F + (F === 60 ? 5 * r(1, 6) : F / 10 * r(1, 3)), G * F - (F === 60 ? 5 * r(1, 6) : F / 10 * r(1, 3))].filter(x => x > 0 && x !== G * F || x === G * F);
+    K = eins(kand);
+  } else {
+    const a = r(1, 9), d = r(1, 9);
+    G = rund(a + d / 10);
+    const echt = rund(G * F);
+    const falle = Number(`${a}0${d}`);
+    const kand = [echt, echt, falle, echt + F / 10, echt - F / 10, a * F + d];
+    if (st === 2 && F >= 100) { G = rund(a + r(1, 99) / 100); kand[0] = kand[1] = rund(G * F); kand.push(Number(`${a}${Math.round((G - a) * 100)}`)); }
+    K = eins(kand.filter(x => x > 0));
+  }
+  const L = rund(G * F);
+  const links = zufall();
+  const [wl, wr] = links ? [L, K] : [K, L];
+  const richtig = wl < wr ? 0 : nah(wl, wr) ? 1 : 2;
+  const txt = links ? [gr(G, g), gr(K, k)] : [gr(K, k), gr(G, g)];
+  return aufgabe({
+    auftrag: "Vergleiche: <, = oder >", frage: `${txt[0]}  ?  ${txt[1]}`,
+    wahl: { optionen: ZEICHEN, richtig, zeichen: true },
+    weg: [`1 ${et(1, g)} = ${zahl(F)} ${k}`, `${gr(G, g)} = ${gr(L, k)}`,
+          links ? `${gr(L, k)} ${ZEICHEN[richtig]} ${gr(K, k)}` : `${gr(K, k)} ${ZEICHEN[richtig]} ${gr(L, k)}`],
+    tipp: `Rechne beide Größen in dieselbe Einheit (${k}) um.`,
+  });
+}
+
+// Auswahl für Sachaufgaben „Wer/Was ist größer?“
+function vglWahl(frage, namen, wertA, wertB, weg, gleichText, kleinerGewinnt) {
+  let richtig = nah(wertA, wertB) ? 2 : (wertA > wertB) !== !!kleinerGewinnt ? 0 : 1;
+  return aufgabe({ sach: true, frage, wahl: { optionen: [...namen, gleichText], richtig }, weg, tipp: "Rechne beide Angaben in dieselbe Einheit um." });
+}
+
+// ---------- Sachaufgaben: Rechnen mit Zeit ----------
+
+const S = { sach: true };
+
+function sHoerbuch(st) {
+  if (st === 2) {
+    const h = r(2, 6);
+    return aufgabe({ sach: true, frage: `Ein Hörbuch dauert ${h} ½ Stunden. Wie viele Minuten sind das?`, felder: ["min"], loesung: [h * 60 + 30],
+      weg: ["1 h = 60 min, ½ h = 30 min", `${h} h = ${h} · 60 min = ${h * 60} min`, `${h * 60} min + 30 min = ${h * 60 + 30} min`] });
+  }
+  const h = st === 0 ? r(2, 6) : r(7, 15);
+  return umr({ v: h, von: "h", nach: "min", F: 60, runter: true, sach: true, frage: `Ein Hörbuch dauert ${h} Stunden. Wie viele Minuten sind das?` });
+}
+function sFerien(st) {
+  if (st === 0) {
+    const w = r(2, 6);
+    return umr({ v: w, von: "Wochen", nach: "Tage", F: 7, runter: true, sach: true, frage: `Die Ferien dauern ${w} Wochen. Wie viele Tage sind das?` });
+  }
+  const w = 6, t = r(1, 6);
+  return zusammenfassen(w, t, "Wochen", "Tage", 7, { sach: true, frage: `Die Sommerferien dauern ${w} Wochen und ${gr(t, "Tage")}. Wie viele Tage sind das?` });
+}
+function sLied(st) {
+  if (st === 0) {
+    const m = r(2, 5);
+    return umr({ v: m * 60, von: "s", nach: "min", F: 60, runter: false, sach: true, frage: `Ein Lied dauert ${m * 60} Sekunden. Wie viele Minuten sind das?` });
+  }
+  const s = r(2, 5) * 60 + r(5, 55);
+  return zerlegen(s, "min", "s", 60, { sach: true, frage: `Ein Lied dauert ${s} Sekunden. Wie lange ist das in Minuten und Sekunden?` });
+}
+function sAlter(st) {
+  const j = st === 0 ? r(2, 9) : r(8, 15);
+  return umr({ v: j, von: "Jahre", nach: "Monate", F: 12, runter: true, sach: true, frage: `${name()} ist genau ${j} Jahre alt. Wie viele Monate sind das?` });
+}
+function sKlassenfahrt(st) {
+  const t = r(2, 5);
+  return umr({ v: t, von: "Tage", nach: "h", F: 24, runter: true, sach: true, frage: `Eine Klassenfahrt dauert ${t} Tage. Wie viele Stunden sind das?` });
+}
+function sAlbum() {
+  const n = r(8, 14), m = r(2, 4), s = 5 * r(2, 11);
+  const je = m * 60 + s, ges = n * je;
+  return aufgabe({ sach: true, frage: `Ein Album hat ${n} Lieder, jedes dauert ${m} min ${s} s. Wie lange dauert das ganze Album?`,
+    felder: ["min", "s"], loesung: [Math.floor(ges / 60), ges % 60],
+    weg: [`${m} min ${s} s = ${m} · 60 s + ${s} s = ${je} s`, `${n} · ${je} s = ${ges} s`, `${ges} s = ${zp(ges, "min", "s", 60)}`] });
+}
+function sFilmLaenge(st) {
+  const N = st === 0 ? 60 + 5 * r(1, 11) : r(61, 179);
+  return zerlegen(N, "h", "min", 60, { sach: true, frage: `Ein Film dauert ${N} Minuten. Wie lange ist das in Stunden und Minuten?` });
+}
+function sWanderung(st) {
+  const a = r(1, st === 0 ? 3 : 6), b = st === 0 ? 5 * r(1, 11) : r(1, 59);
+  return zusammenfassen(a, b, "h", "min", 60, { sach: true, frage: `Die Wanderung der Klasse dauerte ${gr(a, "h")} ${b} min. Wie viele Minuten sind das?` });
+}
+function sSchullauf() {
+  const N = r(2, 9) * 60 + r(1, 59);
+  return zerlegen(N, "min", "s", 60, { sach: true, frage: `${name()} ist beim Schullauf ${N} Sekunden gelaufen. Wie viele Minuten und Sekunden sind das?` });
+}
+function sZeltlager() {
+  const a = r(1, 4), b = r(1, 23);
+  return zusammenfassen(a, b, "Tage", "h", 24, { sach: true, frage: `Das Zeltlager dauerte ${gr(a, "Tage")} und ${b} Stunden. Wie viele Stunden sind das?` });
+}
+function sSchultag(st) {
+  const t1 = st === 0 ? eins([465, 480, 470, 495]) : r(450, 500);
+  const t2 = st === 0 ? r(12, 15) * 60 + 5 * r(0, 11) : r(720, 960);
+  return spanne(t1, t2, { sach: true, frage: `Die Schule beginnt um ${uhr(t1)} und endet um ${uhr(t2)}. Wie lange dauert der Schultag?` });
+}
+function sZug(st) {
+  const t1 = st === 0 ? r(7, 16) * 60 + 5 * r(0, 11) : r(360, 1080);
+  const d = st === 0 ? 5 * r(6, 40) : r(40, 330);
+  return spanne(t1, t1 + d, { sach: true, frage: `Ein Zug fährt um ${uhr(t1)} ab und kommt um ${uhr(t1 + d)} an. Wie lange dauert die Fahrt?` });
+}
+function sFussball(st) {
+  const t1 = eins([930, 1110, 1245, 780]), d = 105 + (st === 0 ? 0 : r(1, 8));
+  return spanne(t1, t1 + d, { sach: true, frage: `Ein Fußballspiel beginnt um ${uhr(t1)}. Abpfiff ist um ${uhr(t1 + d)}. Wie lange hat das Spiel mit Halbzeitpause gedauert?` });
+}
+function sBacken(st) {
+  const t1 = r(14, 17) * 60 + (st === 0 ? 5 * r(0, 11) : r(0, 59)), d = st === 0 ? 5 * r(5, 14) : r(25, 95);
+  return spanne(t1, t1 + d, { sach: true, frage: `Der Kuchen kam um ${uhr(t1)} in den Ofen und um ${uhr(t1 + d)} wieder heraus. Wie lange hat er gebacken?` });
+}
+function sSchlaf(st) {
+  const n = name(), t1 = r(20, 22) * 60 + (st === 1 ? 5 * r(0, 11) : r(0, 59)), d = r(540, 660);
+  return spanne(t1, (t1 + d) % 1440, { sach: true, frage: `${n} geht um ${uhr(t1)} ins Bett und wacht um ${uhr(t1 + d)} auf. Wie lange schläft ${n}?` });
+}
+function sBus(st) {
+  const t = r(6, 8) * 60 + (st === 0 ? 5 * r(0, 11) : r(0, 59)), d = st === 0 ? 5 * r(2, 9) : r(12, 55);
+  return zeitPlus(t, d, { sach: true, frage: `Der Bus fährt um ${uhr(t)} ab und braucht ${d} Minuten bis zur Schule. Wann kommt er an?` });
+}
+function sFilmEnde(st) {
+  const t = st === 0 ? r(15, 19) * 60 + 5 * r(0, 11) : r(840, 1230), d = st === 0 ? 60 + 5 * r(4, 11) : r(85, 160);
+  return zeitPlus(t, d, { sach: true, frage: `Der Film beginnt um ${uhr(t)} und dauert ${dauer(d)}. Wann ist er zu Ende?` });
+}
+function sKuchen(st) {
+  const t = r(14, 17) * 60 + 5 * r(0, 11), d = st === 0 ? 5 * r(5, 11) : r(35, 75);
+  return zeitPlus(t, d, { sach: true, frage: `Ein Kuchen muss ${d} Minuten backen. Er kommt um ${uhr(t)} in den Ofen. Wann ist er fertig?` });
+}
+function sSchulweg(st) {
+  const n = name(), t2 = eins([470, 480, 475, 490]), d = st === 0 ? 5 * r(2, 7) : r(12, 40);
+  return zeitMinus(t2, d, { sach: true, frage: `${n} muss um ${uhr(t2)} in der Schule sein. Der Schulweg dauert ${d} Minuten. Wann muss ${n} spätestens losgehen?` });
+}
+function sTraining() {
+  const t2 = r(17, 20) * 60 + r(0, 59), d = eins([60, 75, 90, 105, 120]);
+  return zeitMinus(t2, d, { sach: true, frage: `Das Fußballtraining endet um ${uhr(t2)} und hat ${dauer(d)} gedauert. Wann hat es begonnen?` });
+}
+function sFilmPasst() {
+  const n = name(), t = r(18, 19) * 60 + r(0, 59), d = r(95, 150), heimweg = r(10, 25);
+  const ende = t + d, heim = ende + heimweg;
+  const grenze = Math.round((heim + eins([-20, -10, 10, 20])) / 5) * 5;
+  const schafft = heim <= grenze;
+  return aufgabe({ sach: true,
+    frage: `Der Film beginnt um ${uhr(t)} und dauert ${dauer(d)}. Danach braucht ${n} ${heimweg} Minuten nach Hause. ${n} soll um ${uhr(grenze)} zu Hause sein. Schafft ${n} das?`,
+    wahl: { optionen: ["Ja", "Nein"], richtig: schafft ? 0 : 1 },
+    weg: [`Filmende: ${uhr(t)} + ${dauer(d)} = ${uhr(ende)}`, `Zu Hause: ${uhr(ende)} + ${heimweg} min = ${uhr(heim)}`,
+          `${uhr(heim)} ist ${schafft ? "vor" : "nach"} ${uhr(grenze)} – ${schafft ? "ja, das klappt" : "nein, das wird zu spät"}.`],
+    tipp: "Rechne zuerst aus, wann der Film zu Ende ist." });
+}
+function sHausaufgaben(st) {
+  const n = name();
+  const [a, b, c] = st === 0 ? [5 * r(3, 9), 5 * r(2, 8), 5 * r(2, 7)] : [r(10, 50), r(10, 45), r(10, 40)];
+  return addiere([a, b, c], "h", "min", 60, { sach: true, frage: `${n} braucht für Mathe ${a} min, für Englisch ${b} min und für Deutsch ${c} min. Wie lange dauern die Hausaufgaben zusammen?` });
+}
+function sSchulstunden() {
+  const n = name(), k = r(4, 8);
+  return multipliziere(k, 45, "h", "min", 60, { sach: true, frage: `${n} hat heute ${k} Schulstunden zu je 45 Minuten. Wie lange ist das zusammen?` });
+}
+function sTrainingWoche() {
+  const n = name(), k = r(2, 4), m = 60 + 5 * r(1, 11);
+  return multipliziere(k, m, "h", "min", 60, { sach: true, frage: `${n} hat ${k}-mal pro Woche Training, jedes Mal ${dauer(m)}. Wie lange trainiert ${n} in einer Woche?` });
+}
+function sKlavier(st) {
+  const n = name(), m = st === 1 ? 5 * r(3, 8) : r(15, 40);
+  return multipliziere(7, m, "h", "min", 60, { sach: true, frage: `${n} übt jeden Tag ${m} Minuten Klavier. Wie lange übt ${n} in einer Woche?` });
+}
+function sFilmRest() {
+  const x = r(100, 170), y = r(30, x - 20);
+  return subtrahiere(x, y, "h", "min", 60, { sach: true, frage: `Ein Film dauert ${dauer(x)}. Nach ${dauer(y)} ist Pause. Wie lange dauert der Film noch?` });
+}
+function sStaffel() {
+  const m = 60 + r(5, 55);
+  return multipliziere(4, m, "min", "s", 60, { sach: true, frage: `Bei einer Staffel laufen 4 Kinder nacheinander. Jedes braucht ${zp(m, "min", "s", 60)}. Wie lange braucht die ganze Staffel?` });
+}
+function sWanderAbschnitte() {
+  const n = r(2, 4), q = 5 * r(9, 20);
+  return dividiere(q * n, n, "h", "min", 60, { sach: true, frage: `Eine Wanderung dauert ${dauer(q * n)}. Sie ist in ${n} gleich lange Abschnitte geteilt. Wie lange dauert ein Abschnitt?` });
+}
+function sSchultagPausen() {
+  const n = name(), k = r(5, 7), p1 = 20, p2 = eins([10, 15, 20]);
+  const u = k * 45, total = u + p1 + p2;
+  return aufgabe({ sach: true, frage: `${n} hat heute ${k} Schulstunden zu je 45 Minuten und zwei Pausen von ${p1} min und ${p2} min. Wie lange ist ${n} in der Schule?`,
+    felder: ["h", "min"], loesung: [Math.floor(total / 60), total % 60],
+    weg: [`Unterricht: ${k} · 45 min = ${u} min`, `Pausen: ${p1} min + ${p2} min = ${p1 + p2} min`, `Zusammen: ${u} min + ${p1 + p2} min = ${total} min`, `${total} min = ${dauer(total)}`] });
+}
+
+// ---------- Sachaufgaben: Einheiten umwandeln ----------
+
+function sStapel() {
+  const d = r(2, 5), n = 10 * r(1, 5), mm = d * n;
+  return aufgabe({ sach: true, frage: `Ein Heft ist ${d} mm dick. Wie hoch ist ein Stapel aus ${n} Heften? Gib die Höhe in Zentimetern an.`,
+    felder: ["cm"], loesung: [mm / 10], weg: [`${n} · ${d} mm = ${mm} mm`, "1 cm = 10 mm", `${mm} mm = ${mm} : 10 cm = ${zahl(mm / 10)} cm`] });
+}
+function sRegal(st) {
+  const c = st === 0 ? r(30, 120) : r(301, 1199) / 10;
+  return umr({ v: c, von: "cm", nach: "mm", F: 10, runter: true, sach: true, frage: `Ein Regal ist ${gr(c, "cm")} breit. Wie viele Millimeter sind das?` });
+}
+function sSchulwegKm(st) {
+  const n = name(), x = st === 0 ? r(1, 3) : r(6, 35) / 10;
+  return aufgabe({ sach: true, frage: `Der Schulweg von ${n} ist ${gr(x, "km")} lang. Wie viele Meter läuft ${n} an einem Tag hin und zurück?`,
+    felder: ["m"], loesung: [rund(x * 2000)],
+    weg: ["1 km = 1000 m", `${gr(x, "km")} = ${gr(x * 1000, "m")}`, `Hin und zurück: 2 · ${gr(x * 1000, "m")} = ${gr(x * 2000, "m")}`],
+    hinweis: v => (nah(v[0], x * 1000) ? "Denk an hin UND zurück!" : null) });
+}
+function sRunden(st) {
+  const n = st === 1 ? eins([5, 10, 15]) : r(3, 12), m = n * 400, plus = st === 2 ? r(11, 25) / 10 : 0;
+  const km = rund(m / 1000 + plus);
+  const weg = [`${n} · 400 m = ${gr(m, "m")}`, "1 km = 1000 m", `${gr(m, "m")} = ${gr(m / 1000, "km")}`];
+  if (plus) weg.push(`${gr(m / 1000, "km")} + ${gr(plus, "km")} = ${gr(km, "km")}`);
+  return aufgabe({ sach: true, frage: `${name()} läuft ${n} Runden à 400 m${plus ? ` und danach noch ${gr(plus, "km")}` : ""}. Wie viele Kilometer sind das?`,
+    felder: ["km"], loesung: [km], weg });
+}
+function sWeitsprung() {
+  const [a, b] = zweiNamen();
+  let x;
+  do x = r(250, 380); while (x % 100 === 0);
+  const y = r(220, x - 3);
+  return aufgabe({ sach: true, frage: `${a} springt ${Math.floor(x / 100)} m ${x % 100} cm weit, ${b} springt ${zahl(y / 100, 2)} m. Um wie viele Zentimeter springt ${a} weiter?`,
+    felder: ["cm"], loesung: [x - y],
+    weg: [`${a}: ${Math.floor(x / 100)} m ${x % 100} cm = ${x} cm`, `${b}: ${zahl(y / 100, 2)} m = ${y} cm`, `${x} cm − ${y} cm = ${x - y} cm`] });
+}
+function sBrett() {
+  const L = eins([1.5, 1.8, 2, 2.4, 2.5, 3]), s = eins([20, 25, 30, 35, 40]);
+  const Lcm = rund(L * 100), k = Math.floor(Lcm / s), rest = Lcm - k * s;
+  return aufgabe({ sach: true, frage: `Ein Brett ist ${gr(L, "m")} lang. Wie viele ${s} cm lange Stücke kann man davon absägen?`,
+    felder: ["Stück"], loesung: [k],
+    weg: [`${gr(L, "m")} = ${Lcm} cm`, `${Lcm} cm : ${s} cm = ${k}${rest ? ` Rest ${rest} cm` : ""}`, `Man kann ${k} Stücke absägen.`] });
+}
+function sSchnecke() {
+  const c = r(3, 9), cm = c * 60;
+  return aufgabe({ sach: true, frage: `Eine Schnecke kriecht in einer Minute ${c} cm. Wie viele Meter schafft sie in einer Stunde?`,
+    felder: ["m"], loesung: [rund(cm / 100)], weg: ["1 h = 60 min", `60 · ${c} cm = ${cm} cm`, "1 m = 100 cm", `${cm} cm = ${gr(cm / 100, "m")}`] });
+}
+function sSchultasche(st) {
+  const x = st === 0 ? r(3, 7) : r(25, 75) / 10;
+  return umr({ v: x, von: "kg", nach: "g", F: 1000, runter: true, sach: true, frage: `Die Schultasche von ${name()} wiegt ${gr(x, "kg")}. Wie viel Gramm sind das?` });
+}
+function sMehl(st) {
+  const m = eins([125, 150, 200, 250, 300]), k = r(2, 6), total = m * k;
+  if (st === 0) return aufgabe({ sach: true, frage: `Für einen Kuchen braucht man ${m} g Mehl. Wie viel Gramm Mehl braucht man für ${k} Kuchen?`,
+    felder: ["g"], loesung: [total], weg: [`${k} · ${m} g = ${total} g`] });
+  return aufgabe({ sach: true, frage: `Für einen Kuchen braucht man ${m} g Mehl. Wie viel Kilogramm Mehl braucht man für ${k} Kuchen?`,
+    felder: ["kg"], loesung: [total / 1000], weg: [`${k} · ${m} g = ${total} g`, "1 kg = 1000 g", `${total} g = ${gr(total / 1000, "kg")}`] });
+}
+const APFEL = [[4, 250], [5, 200], [8, 125], [6, 150], [4, 175], [7, 150], [5, 180], [6, 170]];
+function sAepfel() {
+  const [n, g] = eins(APFEL), total = n * g;
+  return aufgabe({ sach: true, frage: `${n} Äpfel wiegen je ${g} g. Wiegen sie zusammen mehr als 1 kg?`,
+    wahl: { optionen: ["Ja", "Nein"], richtig: total > 1000 ? 0 : 1 },
+    weg: [`${n} · ${g} g = ${total} g`, "1 kg = 1000 g", `${total} g ist ${total > 1000 ? "mehr als" : total === 1000 ? "genau" : "weniger als"} 1 kg.`] });
+}
+function sAepfelKilo() {
+  const [n, g] = eins(APFEL), total = n * g;
+  return aufgabe({ sach: true, frage: `${n} Äpfel wiegen je ${g} g. Wie viel Kilogramm wiegen sie zusammen?`,
+    felder: ["kg"], loesung: [total / 1000], weg: [`${n} · ${g} g = ${total} g`, "1 kg = 1000 g", `${total} g = ${gr(total / 1000, "kg")}`] });
+}
+function sTabletten() {
+  const mg = eins([250, 500, 200]), k = eins([4, 6, 8, 10]), total = mg * k;
+  return aufgabe({ sach: true, frage: `Eine Tablette enthält ${mg} mg Vitamin C. Wie viel Gramm Vitamin C sind in ${k} Tabletten?`,
+    felder: ["g"], loesung: [total / 1000], weg: [`${k} · ${mg} mg = ${total} mg`, "1 g = 1000 mg", `${total} mg = ${gr(total / 1000, "g")}`] });
+}
+function sLkw() {
+  let t, kiste, anzahl;
+  do { t = r(8, 15); kiste = 50 * r(8, 18); anzahl = r(4, 9); } while (kiste * anzahl >= t * 1000);
+  const rest = t * 1000 - kiste * anzahl;
+  return aufgabe({ sach: true, frage: `Ein Lastwagen darf ${t} t laden. Es sind schon ${anzahl} Kisten zu je ${kiste} kg geladen. Wie viele Kilogramm darf er noch laden?`,
+    felder: ["kg"], loesung: [rest],
+    weg: [`${t} t = ${gr(t * 1000, "kg")}`, `${anzahl} · ${kiste} kg = ${gr(anzahl * kiste, "kg")}`, `${gr(t * 1000, "kg")} − ${gr(anzahl * kiste, "kg")} = ${gr(rest, "kg")}`] });
+}
+function sPaket() {
+  const max = eins([5, 10]), b = 50 * r(6, 12), nb = r(2, 4), d = r(5, 15) / 10;
+  const used = nb * b + rund(d * 1000), frei = max * 1000 - used;
+  return aufgabe({ sach: true, frage: `Ein Paket darf höchstens ${max} kg wiegen. Darin sind schon ${nb} Bücher zu je ${b} g und eine Dose mit ${gr(d, "kg")}. Wie viel Gramm dürfen noch hinein?`,
+    felder: ["g"], loesung: [frei],
+    weg: [`${max} kg = ${max * 1000} g`, `Bücher: ${nb} · ${b} g = ${nb * b} g`, `Dose: ${gr(d, "kg")} = ${rund(d * 1000)} g`, `${max * 1000} g − ${nb * b} g − ${rund(d * 1000)} g = ${frei} g`] });
+}
+function sSparen() {
+  const e = r(5, 40);
+  return umr({ v: e, von: "€", nach: "ct", F: 100, runter: true, sach: true, frage: `${name()} hat ${e} € gespart. Wie viele Cent sind das?` });
+}
+function sBroetchen(st) {
+  const n = name(), p = 5 * r(7, 13), k = r(3, 8), total = p * k;
+  if (st === 0) return aufgabe({ sach: true, frage: `Ein Brötchen kostet ${p} ct. ${n} kauft ${k} Brötchen. Wie viel Cent kostet das?`,
+    felder: ["ct"], loesung: [total], weg: [`${k} · ${p} ct = ${total} ct`] });
+  return aufgabe({ sach: true, frage: `Ein Brötchen kostet ${p} ct. ${n} kauft ${k} Brötchen. Wie viel Euro kostet das?`,
+    felder: ["€"], loesung: [total / 100], weg: [`${k} · ${p} ct = ${total} ct`, "1 € = 100 ct", `${total} ct = ${gr(total / 100, "€")}`] });
+}
+function sTaschengeld() {
+  const n = name(), p = eins([2.5, 3, 3.5, 4, 4.5, 5]), w = r(4, 12), ct = rund(p * 100), total = ct * w;
+  return aufgabe({ sach: true, frage: `${n} bekommt jede Woche ${gr(p, "€")} Taschengeld. Wie viel Euro hat ${n} nach ${w} Wochen, wenn ${n} nichts ausgibt?`,
+    felder: ["€"], loesung: [total / 100], weg: [`${gr(p, "€")} = ${ct} ct`, `${w} · ${ct} ct = ${total} ct`, `${total} ct = ${gr(total / 100, "€")}`] });
+}
+function sKino(st) {
+  const n = name(), ct = st === 2 ? r(550, 990) : eins([650, 700, 750, 850, 900, 1150, 1250]);
+  const schein = ct < 1000 && zufall() ? 10 : 20, rest = schein * 100 - ct;
+  return aufgabe({ sach: true, frage: `Eine Kinokarte kostet ${gr(ct / 100, "€")}. ${n} bezahlt mit einem ${schein}-€-Schein. Wie viel Rückgeld bekommt ${n}?`,
+    felder: ["€"], loesung: [rest / 100],
+    weg: [`${schein} € = ${schein * 100} ct, ${gr(ct / 100, "€")} = ${ct} ct`, `${schein * 100} ct − ${ct} ct = ${rest} ct`, `${rest} ct = ${gr(rest / 100, "€")}`] });
+}
+function sSparschwein() {
+  const a = r(2, 8), b = r(2, 9), c = r(2, 9);
+  const ct = b * 50 + c * 10, total = a * 200 + ct;
+  return aufgabe({ sach: true, frage: `Im Sparschwein sind ${a} Zwei-Euro-Münzen, ${b} 50-Cent-Münzen und ${c} 10-Cent-Münzen. Wie viel Geld ist das in Euro?`,
+    felder: ["€"], loesung: [total / 100],
+    weg: [`${a} · 2 € = ${2 * a} €`, `${b} · 50 ct = ${b * 50} ct`, `${c} · 10 ct = ${c * 10} ct`, `${b * 50} ct + ${c * 10} ct = ${ct} ct = ${gr(ct / 100, "€")}`, `Zusammen: ${2 * a} € + ${gr(ct / 100, "€")} = ${gr(total / 100, "€")}`] });
+}
+function sHefte() {
+  const n = name(), k = r(2, 4), p = r(85, 249), h = eins([1000, 1500, 2000]);
+  const kosten = k * p, rest = h - kosten;
+  return aufgabe({ sach: true, frage: `${n} hat ${gr(h / 100, "€")} und kauft ${k} Hefte zu je ${gr(p / 100, "€")}. Wie viel Geld bleibt übrig?`,
+    felder: ["€"], loesung: [rest / 100],
+    weg: [`${gr(p / 100, "€")} = ${p} ct`, `${k} · ${p} ct = ${kosten} ct = ${gr(kosten / 100, "€")}`, `${gr(h / 100, "€")} − ${gr(kosten / 100, "€")} = ${gr(rest / 100, "€")}`] });
+}
+function sZimmer() {
+  const f = r(9, 24);
+  return umr({ v: f, von: "m²", nach: "dm²", F: 100, runter: true, sach: true, frage: `Ein Kinderzimmer ist ${f} m² groß. Wie viele dm² sind das?` });
+}
+function sGarten(st) {
+  let l, b;
+  if (st === 0) { do { l = 10 * r(2, 5); b = 5 * r(2, 8); } while ((l * b) % 100); }
+  else { l = r(12, 40); b = r(8, 30); }
+  const f = l * b;
+  return aufgabe({ sach: true, frage: `Ein Garten ist ${l} m lang und ${b} m breit. Wie groß ist er in Ar (a)?`,
+    felder: ["a"], loesung: [f / 100], weg: [`Fläche: ${l} m · ${b} m = ${f} m²`, "1 a = 100 m²", `${f} m² = ${gr(f / 100, "a")}`] });
+}
+function sBauernhof(st) {
+  const x = st === 0 ? 100 * r(2, 9) : r(150, 950);
+  return umr({ v: x, von: "a", nach: "ha", F: 100, runter: false, sach: true, frage: `Ein Bauernhof hat ${x} a Wiese. Wie viel Hektar (ha) sind das?` });
+}
+function sFussballfeld() {
+  const [l, b] = eins([[105, 68], [100, 70], [100, 64], [110, 70]]), f = l * b;
+  return aufgabe({ sach: true, frage: `Ein Fußballfeld ist ${l} m lang und ${b} m breit. Wie viel Ar (a) sind das?`,
+    felder: ["a"], loesung: [f / 100], weg: [`${l} m · ${b} m = ${gr(f, "m²")}`, "1 a = 100 m²", `${gr(f, "m²")} = ${gr(f / 100, "a")}`] });
+}
+function sWald(st) {
+  const k = st === 2 ? r(12, 95) / 10 : r(2, 9);
+  return umr({ v: k, von: "km²", nach: "ha", F: 100, runter: true, sach: true, frage: `Ein Wald ist ${gr(k, "km²")} groß. Wie viel Hektar sind das?` });
+}
+function sBriefmarke() {
+  const l = r(2, 4), b = r(2, 3), f = l * b;
+  return aufgabe({ sach: true, frage: `Eine Briefmarke ist ${l} cm lang und ${b} cm breit. Wie viele mm² ist sie groß?`,
+    felder: ["mm²"], loesung: [f * 100], weg: [`${l} cm · ${b} cm = ${f} cm²`, "1 cm² = 100 mm²", `${f} cm² = ${f * 100} mm²`] });
+}
+function sTeppich() {
+  const l = r(3, 5), b = r(3, 4), p = eins([2, 3, 4]), f = l * b, k = Math.ceil(f / p), rest = f % p;
+  return aufgabe({ sach: true, frage: `Ein Kinderzimmer ist ${l} m lang und ${b} m breit. Ein Paket Teppichfliesen reicht für ${p} m². Wie viele Pakete braucht man mindestens?`,
+    felder: ["Pakete"], loesung: [k],
+    weg: [`Fläche: ${l} m · ${b} m = ${f} m²`, `${f} m² : ${p} m² = ${Math.floor(f / p)}${rest ? ` Rest ${rest} m²` : ""}`,
+          rest ? `Für den Rest braucht man noch ein Paket: ${k} Pakete.` : `Man braucht ${k} Pakete.`] });
+}
+function sSprungCm(st) {
+  const a = r(2, 4), b = st === 0 ? r(10, 99) : r(1, 99);
+  return zusammenfassen(a, b, "m", "cm", 100, { sach: true, frage: `${name()} springt ${a} m ${b} cm weit. Wie viele Zentimeter sind das?` });
+}
+function sKoffer(st) {
+  const a = r(8, 22), b = st === 0 ? 100 * r(1, 9) : r(5, 995);
+  return zusammenfassen(a, b, "kg", "g", 1000, { sach: true, frage: `Ein Koffer wiegt ${a} kg ${b} g. Wie viel Gramm sind das?` });
+}
+function sSpardose(st) {
+  const a = r(3, 25), b = st === 0 ? r(10, 99) : r(1, 99);
+  return zusammenfassen(a, b, "€", "ct", 100, { sach: true, frage: `In der Spardose sind ${a} € und ${b} ct. Wie viele Cent sind das zusammen?` });
+}
+function sStrecke() {
+  const N = r(1, 9) * 1000 + r(1, 999);
+  return zerlegen(N, "km", "m", 1000, { sach: true, frage: `Die Radtour ist ${gr(N, "m")} lang. Wie viele Kilometer und Meter sind das?` });
+}
+function sKoerpergroesse() {
+  const x = r(128, 162);
+  return umr({ v: x / 100, von: "m", nach: "cm", F: 100, runter: true, sach: true, frage: `${name()} ist ${zahl(x / 100, 2)} m groß. Wie viele Zentimeter sind das?` });
+}
+function sMelone(st) {
+  const G = st === 0 ? r(12, 45) / 10 : r(105, 395) / 100;
+  return umr({ v: G, von: "kg", nach: "g", F: 1000, runter: true, sach: true, frage: `Eine Melone wiegt ${gr(G, "kg")}. Wie viel Gramm sind das?` });
+}
+function sBuchpreis() {
+  const p = r(599, 1999) / 100;
+  return umr({ v: p, von: "€", nach: "ct", F: 100, runter: true, sach: true, frage: `Ein Buch kostet ${gr(p, "€")}. Wie viele Cent sind das?` });
+}
+function sSportplatz() {
+  const m = r(350, 2900);
+  return umr({ v: m, von: "m", nach: "km", F: 1000, runter: false, sach: true, frage: `Der Weg zum Sportplatz ist ${m} m lang. Wie viele Kilometer sind das? Schreibe mit Komma.` });
+}
+function sEuroKomma() {
+  const n = name(), a = r(2, 9), b = r(1, 9);
+  return mischZuKomma(a, b, "€", "ct", 100, { sach: true, frage: `${n} hat ${a} € und ${b} ct. Wie viel Euro sind das? Schreibe mit Komma.` });
+}
+function sWerGroesser() {
+  const [A, B] = zweiNamen(), xa = r(130, 160), xb = xa + eins([-12, -5, -2, 0, 2, 5, 12]);
+  const zeichen = xa > xb ? ">" : xa < xb ? "<" : "=";
+  return vglWahl(`${A} ist ${zahl(xa / 100, 2)} m groß, ${B} ist ${xb} cm groß. Wer ist größer?`, [A, B], xa, xb,
+    [`${zahl(xa / 100, 2)} m = ${xa} cm`, `${xa} cm ${zeichen} ${xb} cm`], "beide gleich groß");
+}
+function sPakete() {
+  const a = r(1, 4), d = r(1, 9), kg = rund(a + d / 10), g = rund(kg * 1000);
+  const b = eins([g, Number(`${a}0${d}0`), g - 50 * r(1, 4), g + 50 * r(1, 4), Number(`${a}${d}0`)]);
+  const zeichen = g > b ? ">" : g < b ? "<" : "=";
+  return vglWahl(`Paket A wiegt ${gr(kg, "kg")}, Paket B wiegt ${b} g. Welches Paket ist schwerer?`, ["Paket A", "Paket B"], g, b,
+    [`${gr(kg, "kg")} = ${g} g`, `${g} g ${zeichen} ${b} g`], "gleich schwer");
+}
+function sLaden() {
+  const a = r(99, 299), b = a + eins([-9, -4, 0, 4, 9]);
+  const zeichen = a > b ? ">" : a < b ? "<" : "=";
+  return vglWahl(`Im Laden A kostet ein Saft ${gr(a / 100, "€")}, im Laden B ${b} ct. Wo ist der Saft billiger?`, ["Laden A", "Laden B"], a, b,
+    [`${gr(a / 100, "€")} = ${a} ct`, `${a} ct ${zeichen} ${b} ct`], "gleich teuer", true);
+}
+function sGaerten() {
+  const a = r(3, 9), b = a * 100 + eins([-60, -20, 0, 20, 60]);
+  const zeichen = a * 100 > b ? ">" : a * 100 < b ? "<" : "=";
+  return vglWahl(`Garten A ist ${a} a groß, Garten B ist ${b} m² groß. Welcher Garten ist größer?`, ["Garten A", "Garten B"], a * 100, b,
+    [`1 a = 100 m²`, `${a} a = ${a * 100} m²`, `${a * 100} m² ${zeichen} ${b} m²`], "gleich groß");
+}
+
+// ---------- Themen und Abschnitte ----------
+// [ab Stufe, Funktion]: 0 = ab leicht, 1 = ab mittel, 2 = nur schwer
+
+const THEMEN = [
+  { name: "Rechnen mit Zeit", abschnitte: [
+    { name: "Zeiteinheiten umrechnen", rechnen: zeitEinheiten, sach: [[0, sHoerbuch], [0, sFerien], [0, sLied], [0, sAlter], [0, sKlassenfahrt], [2, sAlbum]] },
+    { name: "Gemischte Angaben", rechnen: zeitGemischt, sach: [[0, sFilmLaenge], [0, sWanderung], [1, sSchullauf], [1, sZeltlager]] },
+    { name: "Zeitspannen", rechnen: zeitspanne, sach: [[0, sSchultag], [0, sZug], [0, sFussball], [0, sBacken], [1, sSchlaf]] },
+    { name: "Zeitpunkte berechnen", rechnen: zeitpunkt, sach: [[0, sBus], [0, sFilmEnde], [0, sKuchen], [0, sSchulweg], [1, sTraining], [2, sFilmPasst]] },
+    { name: "Mit Zeit rechnen", rechnen: zeitRechnen, sach: [[0, sHausaufgaben], [0, sSchulstunden], [1, sTrainingWoche], [1, sKlavier], [1, sFilmRest], [1, sStaffel], [2, sWanderAbschnitte], [2, sSchultagPausen]] },
+  ] },
+  { name: "Einheiten umwandeln", abschnitte: [
+    { name: "Längen", rechnen: st => umrechnen("laenge", st), sach: [[0, sStapel], [0, sRegal], [0, sSchulwegKm], [1, sRunden], [1, sWeitsprung], [2, sBrett], [2, sSchnecke]] },
+    { name: "Gewichte", rechnen: st => umrechnen("gewicht", st), sach: [[0, sSchultasche], [0, sMehl], [0, sAepfel], [1, sAepfelKilo], [1, sTabletten], [1, sLkw], [2, sPaket]] },
+    { name: "Geld", rechnen: st => umrechnen("geld", st), sach: [[0, sSparen], [0, sBroetchen], [1, sTaschengeld], [1, sKino], [1, sSparschwein], [2, sHefte]] },
+    { name: "Flächen", rechnen: st => umrechnen("flaeche", st), sach: [[0, sZimmer], [0, sGarten], [0, sBauernhof], [1, sFussballfeld], [1, sWald], [1, sBriefmarke], [2, sTeppich]] },
+    { name: "Gemischte Angaben", rechnen: einheitenGemischt, sach: [[0, sSprungCm], [0, sKoffer], [0, sSpardose], [1, sStrecke]] },
+    { name: "Kommaschreibweise", rechnen: kommaschreibweise, sach: [[0, sKoerpergroesse], [0, sMelone], [0, sBuchpreis], [1, sSportplatz], [2, sEuroKomma]] },
+    { name: "Vergleichen", rechnen: vergleichen, sach: [[0, sWerGroesser], [0, sPakete], [1, sLaden], [1, sGaerten]] },
+  ] },
+];
+for (const t of THEMEN) for (const a of t.abschnitte) { a.thema = t.name; a.key = t.name + "|" + a.name; }
+const ABSCHNITTE = THEMEN.flatMap(t => t.abschnitte);
+
+function heftAufgabe(x) {
+  return aufgabe({ sach: true, frage: x.f, felder: x.e || [], loesung: x.l || [], wahl: x.o ? { optionen: x.o, richtig: x.r } : null, weg: x.w || [], quelle: x.q });
+}
+
+// erzeugt eine Aufgabe; a.neu() liefert dieselbe Art mit neuen Zahlen
+function erzeuge(ab, st, sach) {
+  let macher;
+  if (sach) {
+    const heft = HEFT.filter(x => x.key === ab.key && (x.st < 0 || x.st === st));
+    if (heft.length && zufall()) { const x = eins(heft); macher = () => heftAufgabe(x); }
+    else { const f = eins(ab.sach.filter(([s]) => s <= st))[1]; macher = () => f(st); }
+  } else macher = () => ab.rechnen(st);
+  const mach = () => {
+    const a = macher();
+    a.ab = ab;
+    a.sach = sach;
+    a.neu = mach;
+    if (a.felder[0] === "Uhr") a.loesung = a.loesung.map(t => ((t % 1440) + 1440) % 1440);
+    if (!a.tipp) a.tipp = a.weg[0] || "";
+    return a;
+  };
+  return mach();
+}
+
+// ---------- Antworten prüfen ----------
+
+function leseZahl(roh) {
+  let s = roh.replace(/[\s  ]/g, "").replace(/[a-zäöüß²€]+\.?$/i, "").replace(/^[−–]/, "-");
+  if (!s) return null;
+  if (/^-?(\d+|\d*,\d+)$/.test(s)) return [Number(s.replace(",", "."))];
+  if (/^\d+,$/.test(s)) return [Number(s.slice(0, -1))];
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) return [Number(s), Number(s.replace(/\./g, ""))];
+  if (/^-?\d*\.\d+$/.test(s)) return [Number(s)];
+  if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) return [Number(s.replace(/\./g, "").replace(",", "."))];
+  return "ungueltig";
+}
+
+function leseUhr(roh) {
+  const s = roh.toLowerCase().replace(/uhr/g, "").trim();
+  if (!s) return null;
+  const m = s.match(/^(\d{1,2})\s*[:.,h ]\s*(\d{1,2})$/) || s.match(/^(\d{1,2})(\d{2})$/);
+  let h, mi;
+  if (m) { h = +m[1]; mi = +m[2]; } else if (/^\d{1,2}$/.test(s)) { h = +s; mi = 0; } else return "ungueltig";
+  if (h > 24) return "ungueltig";
+  if (mi >= 60) return { zuViel: true };
+  return [(h * 60 + mi) % 1440];
+}
+
+const PAAR_F = { "h|min": 60, "min|s": 60, "Tage|h": 24, "Wochen|Tage": 7, "km|m": 1000, "m|cm": 100, "cm|mm": 10, "kg|g": 1000, "t|kg": 1000, "g|mg": 1000, "€|ct": 100, "m²|dm²": 100, "ha|a": 100 };
+
+function pruefe(a, texte) {
+  const istUhr = a.felder[0] === "Uhr";
+  const werte = [];
+  for (const t of texte) {
+    const w = istUhr ? leseUhr(t) : leseZahl(t);
+    if (w === "ungueltig") return { fehler: istUhr ? "Schreib die Uhrzeit so: 9:45" : `„${t.trim()}“ ist keine Zahl.` };
+    if (w && w.zuViel) return { ok: false, hinweis: "Eine Uhrzeit hat höchstens 59 Minuten – nach 9:59 Uhr kommt 10:00 Uhr." };
+    werte.push(w);
+  }
+  if (werte.every(w => w === null)) return { fehler: "Gib zuerst deine Antwort ein." };
+  const zahlen = werte.map(w => w === null ? [0] : w);
+  const ok = zahlen.every((w, i) => w.some(x => nah(x, a.loesung[i])));
+  if (ok) return { ok: true };
+  const erste = zahlen.map(w => w.find(x => true));
+  let hinweis = a.hinweis ? a.hinweis(erste) : null;
+  if (!hinweis) {
+    for (let i = 1; i < a.felder.length; i++) {
+      const F = PAAR_F[a.felder[i - 1] + "|" + a.felder[i]];
+      if (F && erste[i] >= F) { hinweis = `${gr(F, a.felder[i])} sind 1 ${et(1, a.felder[i - 1])} – rechne das noch um.`; break; }
+    }
+  }
+  return { ok: false, hinweis };
+}
+
+function loesungText(a) {
+  if (a.wahl) return a.wahl.optionen[a.wahl.richtig];
+  if (a.felder[0] === "Uhr") return uhr(a.loesung[0]);
+  const teile = a.felder.map((e, i) => [a.loesung[i], e]);
+  const ohne0 = teile.filter(([v]) => !nah(v, 0));
+  return (ohne0.length ? ohne0 : teile.slice(-1)).map(([v, e]) => gr(v, e)).join(" ");
+}
+
+function eingabeText(a, texte) {
+  if (a.felder[0] === "Uhr") return texte[0].trim() ? texte[0].trim().replace(/\s*uhr$/i, "") + " Uhr" : "";
+  return a.felder.map((e, i) => texte[i].trim() ? `${texte[i].trim()} ${e}` : "").filter(Boolean).join(" ");
+}
+
+function aufgabenText(a) {
+  return a.sach ? a.frage : a.frage.replace(/\s*=$/, " = ?");
+}
+
+// ---------- Speicher ----------
+
+function leererStand() {
+  return { stat: {}, tests: [], einstellungen: { auswahl: [], mischung: "gemischt", stufe: "leicht", art: "ueben", anzahl: 10 } };
+}
+
+function ladeStand() {
+  try {
+    const roh = JSON.parse(localStorage.getItem(SPEICHER));
+    if (roh && roh.einstellungen) return { stat: roh.stat || {}, tests: roh.tests || [], einstellungen: { ...leererStand().einstellungen, ...roh.einstellungen } };
+  } catch (e) { /* kaputter Stand -> neu anfangen */ }
+  return leererStand();
+}
+
+let stand = ladeStand();
+
+function speichere() {
+  try { localStorage.setItem(SPEICHER, JSON.stringify(stand)); } catch (e) { /* z. B. privater Modus */ }
+}
+
+function merke(key, ok) {
+  const s = (stand.stat[key] || []).concat(ok ? 1 : 0).slice(-20);
+  stand.stat[key] = s;
+  speichere();
+}
+
+function sterne(key) {
+  const s = stand.stat[key] || [];
+  if (s.length < 5) return null;
+  const q = s.reduce((x, y) => x + y, 0) / s.length;
+  return { n: q >= 0.9 ? 4 : q >= 0.75 ? 3 : q >= 0.5 ? 2 : q >= 0.25 ? 1 : 0, richtig: s.reduce((x, y) => x + y, 0), gesamt: s.length };
+}
+
+// ---------- Startseite ----------
+
+const OFFENE_THEMEN = new Set(THEMEN.map(t => t.name));
+
+function zeichneStart() {
+  const e = stand.einstellungen;
+  const liste = $("kapitelliste");
+  liste.innerHTML = "";
+  for (const t of THEMEN) {
+    const block = document.createElement("div");
+    block.className = "kapitel";
+    const alle = t.abschnitte.every(a => e.auswahl.includes(a.key));
+    const einige = t.abschnitte.some(a => e.auswahl.includes(a.key));
+    const offen = OFFENE_THEMEN.has(t.name);
+    const kopf = document.createElement("div");
+    kopf.className = "zeile";
+    kopf.innerHTML = `<input type="checkbox"><button type="button" class="klapp"><span class="pfeil"></span><span class="name"></span></button>`;
+    const kb = kopf.querySelector("input");
+    kb.checked = alle;
+    kb.indeterminate = einige && !alle;
+    kb.setAttribute("aria-label", t.name + " auswählen");
+    const klapp = kopf.querySelector(".klapp");
+    klapp.setAttribute("aria-expanded", String(offen));
+    kopf.querySelector(".pfeil").textContent = offen ? "▾" : "▸";
+    kopf.querySelector(".name").textContent = t.name;
+    klapp.addEventListener("click", () => { if (offen) OFFENE_THEMEN.delete(t.name); else OFFENE_THEMEN.add(t.name); zeichneStart(); });
+    kb.addEventListener("change", () => { for (const a of t.abschnitte) setzeAuswahl(a.key, kb.checked); zeichneStart(); });
+    block.appendChild(kopf);
+
+    const unter = document.createElement("div");
+    unter.className = "abschnitte";
+    unter.hidden = !offen;
+    for (const a of t.abschnitte) {
+      const z = document.createElement("label");
+      z.className = "zeile";
+      z.innerHTML = `<input type="checkbox"><span class="name"></span><span class="sterne"></span>`;
+      const cb = z.querySelector("input");
+      cb.checked = e.auswahl.includes(a.key);
+      cb.addEventListener("change", () => { setzeAuswahl(a.key, cb.checked); zeichneStart(); });
+      z.querySelector(".name").textContent = a.name;
+      const s = sterne(a.key), sp = z.querySelector(".sterne");
+      if (s) { sp.textContent = "★".repeat(s.n) + "☆".repeat(4 - s.n); sp.title = `${s.richtig} von ${s.gesamt} der letzten Aufgaben richtig`; }
+      else { sp.textContent = "noch neu"; sp.classList.add("neu"); }
+      unter.appendChild(z);
+    }
+    block.appendChild(unter);
+    liste.appendChild(block);
+  }
+
+  for (const [id, feld] of [["mischung", "mischung"], ["stufe", "stufe"], ["art", "art"]]) {
+    for (const b of $(id).querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.wert === e[feld]));
+  }
+  $("mischungHilfe").textContent = {
+    rechnen: "Nur Rechenaufgaben wie „3 h 15 min = ? min“.",
+    gemischt: "Jede zweite Aufgabe ist eine Sachaufgabe aus dem Alltag.",
+    sach: "Nur Sachaufgaben (Textaufgaben) – erst lesen, dann rechnen.",
+  }[e.mischung];
+  $("stufeHilfe").textContent = {
+    leicht: "Nachbareinheiten und runde Zahlen.",
+    mittel: "Auch über zwei Stufen, krumme Zahlen und gemischte Angaben.",
+    schwer: "Kommazahlen, Null-Fallen, über Mitternacht und Aufgaben mit mehreren Schritten.",
+  }[e.stufe];
+  $("artHilfe").textContent = e.art === "probe"
+    ? "Wie eine Klassenarbeit: Kein Tipp, und du siehst erst am Ende, was richtig war – mit Rechenweg."
+    : "Nach jeder Aufgabe siehst du sofort den Rechenweg. Falsche Aufgaben kommen mit neuen Zahlen nochmal.";
+  $("anzahl").value = String(e.anzahl);
+
+  zeichneVerlauf();
+  const n = ABSCHNITTE.filter(a => e.auswahl.includes(a.key)).length;
+  const los = $("los");
+  los.disabled = !n;
+  los.textContent = !n ? "Wähle mindestens einen Abschnitt" : e.art === "probe" ? `Probetest starten (${e.anzahl} Aufgaben)` : `Los geht's (${e.anzahl} Aufgaben)`;
+}
+
+function zeichneVerlauf() {
+  const tests = stand.tests.slice(-5).reverse();
+  $("verlaufBox").hidden = !tests.length;
+  $("verlauf").innerHTML = "";
+  for (const t of tests) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="datum"></span><span class="themen"></span><span class="pkt"></span>`;
+    li.querySelector(".datum").textContent = t.datum;
+    li.querySelector(".themen").textContent = `${t.stufe} · ${t.themen}`;
+    li.querySelector(".pkt").textContent = `${t.richtig}/${t.gesamt} (${Math.round(t.richtig / t.gesamt * 100)} %)`;
+    $("verlauf").appendChild(li);
+  }
+}
+
+function setzeAuswahl(key, an) {
+  const a = stand.einstellungen.auswahl.filter(x => x !== key);
+  if (an) a.push(key);
+  stand.einstellungen.auswahl = a;
+  speichere();
+}
+
+for (const id of ["mischung", "stufe", "art"]) {
+  $(id).addEventListener("click", ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    stand.einstellungen[id] = b.dataset.wert;
+    speichere();
+    zeichneStart();
+  });
+}
+$("anzahl").addEventListener("change", ev => { stand.einstellungen.anzahl = Number(ev.target.value); speichere(); zeichneStart(); });
+
+function baueRunde() {
+  const e = stand.einstellungen;
+  const abschnitte = ABSCHNITTE.filter(a => e.auswahl.includes(a.key));
+  const st = STUFEN.indexOf(e.stufe);
+  const n = e.anzahl;
+  const sachFolge = mische(Array.from({ length: n }, (_, i) => e.mischung === "sach" || (e.mischung === "gemischt" && i % 2 === 1)));
+  const gesehen = new Set();
+  const liste = [];
+  let reihe = [];
+  for (let i = 0; i < n; i++) {
+    if (!reihe.length) reihe = mische(abschnitte);
+    const ab = reihe.pop();
+    let a;
+    for (let v = 0; v < 20; v++) { a = erzeuge(ab, st, sachFolge[i]); if (!gesehen.has(a.frage)) break; }
+    gesehen.add(a.frage);
+    a.slot = i;
+    liste.push(a);
+  }
+  return liste;
+}
+
+$("los").addEventListener("click", () => starteRunde(baueRunde(), stand.einstellungen.art === "probe"));
+
+// ---------- Abfrage ----------
+
+let runde = null;
+
+function zeige(bereich) {
+  for (const id of ["start", "abfrage", "ende"]) $(id).hidden = id !== bereich;
+  window.scrollTo(0, 0);
+}
+
+function starteRunde(liste, probe) {
+  if (!liste.length) return;
+  runde = { probe, schlange: liste.slice(), gesamt: liste.length, fertig: 0, erster: new Map(), aktuell: null, ergebnis: null, stufe: stand.einstellungen.stufe };
+  zeige("abfrage");
+  naechste();
+}
+
+function naechste() {
+  if (!runde.schlange.length) return zeigeEnde();
+  const a = runde.aktuell = runde.schlange.shift();
+  runde.ergebnis = null;
+
+  $("auftrag").textContent = (a.sach ? "Sachaufgabe" : a.auftrag) + " · " + a.ab.name;
+  const frage = $("frage");
+  frage.textContent = a.frage;
+  frage.classList.toggle("gross", !a.sach);
+  $("wdh").hidden = !a.wdh;
+  $("formHinweis").hidden = true;
+  $("rueckmeldung").hidden = true;
+  $("tippBox").hidden = true;
+  $("tippKnopf").hidden = runde.probe || !a.tipp;
+  $("weissNicht").hidden = false;
+
+  const form = $("formular"), wahl = $("wahl");
+  form.hidden = !!a.wahl;
+  wahl.hidden = !a.wahl;
+  if (a.wahl) {
+    wahl.innerHTML = "";
+    wahl.classList.toggle("zeichen", !!a.wahl.zeichen);
+    a.wahl.optionen.forEach((text, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = text;
+      if (a.wahl.zeichen) b.setAttribute("aria-label", ["kleiner als", "gleich", "größer als"][i]);
+      b.addEventListener("click", () => waehle(i));
+      wahl.appendChild(b);
+    });
+  } else {
+    const box = $("felder");
+    box.innerHTML = "";
+    if (a.sach) {
+      const v = document.createElement("span");
+      v.className = "vorwort";
+      v.textContent = "Antwort:";
+      box.appendChild(v);
+    }
+    a.felder.forEach((e, i) => {
+      const l = document.createElement("label");
+      l.className = "feld";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.inputMode = "decimal";
+      inp.autocomplete = "off";
+      inp.setAttribute("enterkeyhint", i < a.felder.length - 1 ? "next" : "done");
+      inp.setAttribute("aria-label", e === "Uhr" ? "Uhrzeit" : "Anzahl " + e);
+      if (e === "Uhr") { inp.placeholder = "hh:mm"; inp.classList.add("uhrfeld"); }
+      inp.addEventListener("keydown", ev => {
+        if (ev.key === "Enter" && i < a.felder.length - 1) { ev.preventDefault(); box.querySelectorAll("input")[i + 1].focus(); }
+      });
+      const sp = document.createElement("span");
+      sp.className = "einheit";
+      sp.textContent = e;
+      l.append(inp, sp);
+      box.appendChild(l);
+    });
+    $("pruefen").disabled = false;
+    $("pruefen").textContent = runde.probe ? "Weiter" : "Prüfen";
+    box.querySelector("input").focus();
+  }
+  zeichneFortschritt();
+}
+
+function zeichneFortschritt() {
+  $("fortschrittsbalken").style.width = Math.round(runde.fertig / runde.gesamt * 100) + "%";
+  $("zaehler").textContent = `${runde.fertig} / ${runde.gesamt}`;
+}
+
+function antworte() {
+  if (runde.ergebnis) return;
+  const a = runde.aktuell;
+  const texte = [...$("felder").querySelectorAll("input")].map(i => i.value);
+  const p = pruefe(a, texte);
+  if (p.fehler) {
+    $("formHinweis").textContent = p.fehler;
+    $("formHinweis").hidden = false;
+    return;
+  }
+  abschliessen(p.ok, eingabeText(a, texte), p.hinweis);
+}
+
+function waehle(i) {
+  if (runde.ergebnis) return;
+  const a = runde.aktuell;
+  const knoepfe = [...$("wahl").children];
+  knoepfe.forEach(b => { b.disabled = true; });
+  if (!runde.probe) knoepfe.forEach((b, j) => {
+    if (j === a.wahl.richtig) b.classList.add("ist-richtig");
+    else if (j === i) b.classList.add("ist-falsch");
+  });
+  abschliessen(i === a.wahl.richtig, a.wahl.optionen[i], null);
+}
+
+function abschliessen(ok, eingabe, hinweis) {
+  const a = runde.aktuell;
+  runde.ergebnis = { ok, eingabe, hinweis };
+  for (const inp of $("felder").querySelectorAll("input")) inp.disabled = true;
+  $("pruefen").disabled = true;
+  $("formHinweis").hidden = true;
+  if (!runde.erster.has(a.slot)) {
+    runde.erster.set(a.slot, { ok, a, eingabe });
+    merke(a.ab.key, ok);
+  }
+  if (runde.probe) {
+    runde.fertig++;
+    setTimeout(naechste, 250);
+    return;
+  }
+  $("tippKnopf").hidden = true;
+  $("weissNicht").hidden = true;
+  const rm = $("rueckmeldung");
+  rm.className = "rueckmeldung " + (ok ? "richtig" : "falsch");
+  $("rmTitel").textContent = ok ? eins(["Richtig!", "Super!", "Klasse!", "Genau!", "Stark!", "Perfekt!"]) : eingabe ? "Leider nicht." : "Hier ist die Lösung:";
+  $("rmLoesung").textContent = (ok ? "" : "Richtig ist: ") + loesungText(a);
+  $("rmHinweis").hidden = ok || !hinweis;
+  $("rmHinweis").textContent = hinweis || "";
+  const ol = $("rmWegListe");
+  ol.innerHTML = "";
+  for (const s of a.weg) { const li = document.createElement("li"); li.textContent = s; ol.appendChild(li); }
+  $("rmWeg").hidden = !a.weg.length;
+  $("rmWeg").open = !ok;
+  rm.hidden = false;
+  $("weiter").focus();
+}
+
+$("formular").addEventListener("submit", ev => { ev.preventDefault(); antworte(); });
+$("weissNicht").addEventListener("click", () => {
+  if (runde.ergebnis) return;
+  if (runde.aktuell.wahl) [...$("wahl").children].forEach((b, j) => { b.disabled = true; if (!runde.probe && j === runde.aktuell.wahl.richtig) b.classList.add("ist-richtig"); });
+  abschliessen(false, "", null);
+});
+$("tippKnopf").addEventListener("click", () => {
+  $("tippBox").textContent = runde.aktuell.tipp;
+  $("tippBox").hidden = false;
+});
+$("weiter").addEventListener("click", () => {
+  const a = runde.aktuell;
+  if (runde.ergebnis.ok) runde.fertig++;
+  else {
+    // falsch: dieselbe Art mit neuen Zahlen kommt in dieser Runde nochmal
+    const b = a.neu();
+    b.slot = a.slot;
+    b.wdh = true;
+    runde.schlange.splice(Math.min(2, runde.schlange.length), 0, b);
+  }
+  naechste();
+});
+$("beenden").addEventListener("click", () => {
+  const frage = runde.probe ? "Probetest abbrechen? Das Ergebnis wird nicht gespeichert." : "Runde beenden?";
+  if (!runde.erster.size || confirm(frage)) {
+    if (runde.probe) { zeichneStart(); zeige("start"); } else zeigeEnde();
+  }
+});
+
+// ---------- Ende ----------
+
+function zeigeEnde() {
+  const erg = [...runde.erster.values()].sort((x, y) => x.a.slot - y.a.slot);
+  const richtig = erg.filter(x => x.ok).length, gesamt = erg.length;
+  const quote = gesamt ? richtig / gesamt : 0;
+  $("endeBild").textContent = !gesamt ? "👋" : quote === 1 ? "🏆" : quote >= 0.8 ? "🎉" : quote >= 0.5 ? "👍" : "💪";
+  $("endeZahl").textContent = !gesamt ? "Nichts beantwortet"
+    : runde.probe ? `${richtig} von ${gesamt} Punkten (${Math.round(quote * 100)} %)`
+    : `${richtig} von ${gesamt} beim ersten Versuch richtig`;
+  $("endeText").textContent = !gesamt ? "" : quote === 1 ? "Alles richtig – großartig!"
+    : quote >= 0.8 ? "Sehr gut gemacht!" : quote >= 0.5 ? "Gut! Den Rest schaffst du auch noch."
+    : "Dranbleiben – mit jeder Runde wird es leichter.";
+
+  const ul = $("endeListe");
+  ul.innerHTML = "";
+  runde.falsche = erg.filter(x => !x.ok).map(x => x.a);
+  if (runde.probe) {
+    if (gesamt) {
+      const themen = [...new Set(erg.map(x => x.a.ab.name))];
+      stand.tests.push({ datum: new Date().toLocaleDateString("de-DE"), stufe: runde.stufe, themen: themen.join(", "), richtig, gesamt });
+      stand.tests = stand.tests.slice(-20);
+      speichere();
+    }
+    for (const x of erg) ul.appendChild(eintrag(x.a, x.ok, x.eingabe));
+    $("endeListeTitel").textContent = "Auflösung";
+  } else {
+    for (const a of runde.falsche) ul.appendChild(eintrag(a, null, ""));
+    $("endeListeTitel").textContent = "Das üben wir nochmal";
+  }
+  $("endeListeBox").hidden = !ul.children.length;
+  $("nurFehler").hidden = !runde.falsche.length;
+  zeige("ende");
+  $("zumStart").focus();
+}
+
+function eintrag(a, ok, eingabe) {
+  const li = document.createElement("li");
+  const f = document.createElement("div");
+  f.className = "f" + (ok === true ? " ok" : ok === false ? " nok" : "");
+  f.textContent = aufgabenText(a);
+  li.appendChild(f);
+  if (ok === false) {
+    const d = document.createElement("div");
+    d.className = "d";
+    d.textContent = eingabe || "keine Antwort";
+    li.appendChild(d);
+  }
+  const rr = document.createElement("div");
+  rr.className = "r";
+  rr.textContent = loesungText(a);
+  li.appendChild(rr);
+  if (a.weg.length && ok !== true) {
+    const e = document.createElement("div");
+    e.className = "e";
+    e.textContent = a.weg.join("  ·  ");
+    li.appendChild(e);
+  }
+  return li;
+}
+
+// „Fehler nochmal üben“: dieselben Arten mit neuen Zahlen, immer als Übungsrunde
+$("nurFehler").addEventListener("click", () => {
+  const liste = mische(runde.falsche).map((a, i) => { const b = a.neu(); b.slot = i; return b; });
+  starteRunde(liste, false);
+});
+$("zumStart").addEventListener("click", () => { zeichneStart(); zeige("start"); });
+
+// ---------- Umrechnungstabelle (Info-Dialog ohne Eingaben) ----------
+
+const dlg = $("tabelle");
+$("tabelleStart").addEventListener("click", () => dlg.showModal());
+$("tabelleAbfrage").addEventListener("click", () => dlg.showModal());
+$("tabelleZu").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", ev => { if (ev.target === dlg) dlg.close(); });
+
+// ---------- Fortschritt sichern / laden ----------
+
+$("sichern").addEventListener("click", () => {
+  const d = new Date();
+  const datum = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const inhalt = JSON.stringify({ app: APP, version: 1, gesichert: datum, stand }, null, 1);
+  const url = URL.createObjectURL(new Blob([inhalt], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `mathe-fortschritt-${datum}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("laden").addEventListener("click", () => $("datei").click());
+$("datei").addEventListener("change", async ev => {
+  const datei = ev.target.files[0];
+  ev.target.value = "";
+  if (!datei) return;
+  try {
+    const d = JSON.parse(await datei.text());
+    if (d.app !== APP || !d.stand || !d.stand.einstellungen) throw new Error();
+    if (!confirm(`Fortschritt vom ${d.gesichert || "?"} laden? Der jetzige Stand wird ersetzt.`)) return;
+    stand = { stat: d.stand.stat || {}, tests: d.stand.tests || [], einstellungen: { ...leererStand().einstellungen, ...d.stand.einstellungen } };
+    speichere();
+    zeichneStart();
+  } catch (e) {
+    alert("Diese Datei ist keine Fortschritts-Sicherung vom Mathe-Trainer.");
+  }
+});
+
+$("zuruecksetzen").addEventListener("click", () => {
+  if (!confirm("Wirklich den ganzen Fortschritt löschen? Sterne und Probetest-Ergebnisse fangen wieder bei null an.")) return;
+  stand = { ...leererStand(), einstellungen: stand.einstellungen };
+  speichere();
+  zeichneStart();
+});
+
+// ---------- Start ----------
+
+stand.einstellungen.auswahl = stand.einstellungen.auswahl.filter(k => ABSCHNITTE.some(a => a.key === k));
+if (!stand.einstellungen.auswahl.length) stand.einstellungen.auswahl = ABSCHNITTE.map(a => a.key);
+zeichneStart();
+</script>
+</body>
+</html>
