@@ -194,15 +194,6 @@
         <p class="erklaerung" id="mischungHilfe"></p>
       </div>
       <div class="einstellung">
-        <h3>Schwierigkeit</h3>
-        <div class="umschalter" id="stufe">
-          <button type="button" data-wert="leicht">Leicht</button>
-          <button type="button" data-wert="mittel">Mittel</button>
-          <button type="button" data-wert="schwer">Schwer</button>
-        </div>
-        <p class="erklaerung" id="stufeHilfe"></p>
-      </div>
-      <div class="einstellung">
         <h3>Art</h3>
         <div class="umschalter" id="art">
           <button type="button" data-wert="ueben">Üben</button>
@@ -1297,7 +1288,7 @@ function aufgabenText(a) {
 // ---------- Speicher ----------
 
 function leererStand() {
-  return { stat: {}, tests: [], einstellungen: { auswahl: [], mischung: "gemischt", stufe: "leicht", art: "ueben", anzahl: 10 } };
+  return { stat: {}, tests: [], einstellungen: { auswahl: [], mischung: "gemischt", art: "ueben", anzahl: 10 } };
 }
 
 function ladeStand() {
@@ -1376,7 +1367,7 @@ function zeichneStart() {
     liste.appendChild(block);
   }
 
-  for (const [id, feld] of [["mischung", "mischung"], ["stufe", "stufe"], ["art", "art"]]) {
+  for (const [id, feld] of [["mischung", "mischung"], ["art", "art"]]) {
     for (const b of $(id).querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.wert === e[feld]));
   }
   $("mischungHilfe").textContent = {
@@ -1384,11 +1375,6 @@ function zeichneStart() {
     gemischt: "Jede zweite Aufgabe ist eine Sachaufgabe aus dem Alltag.",
     sach: "Nur Sachaufgaben (Textaufgaben) – erst lesen, dann rechnen.",
   }[e.mischung];
-  $("stufeHilfe").textContent = {
-    leicht: "Nachbareinheiten und runde Zahlen.",
-    mittel: "Auch über zwei Stufen, krumme Zahlen und gemischte Angaben.",
-    schwer: "Kommazahlen, Null-Fallen, über Mitternacht und Aufgaben mit mehreren Schritten.",
-  }[e.stufe];
   $("artHilfe").textContent = e.art === "probe"
     ? "Wie eine Klassenarbeit: Kein Tipp, und du siehst erst am Ende, was richtig war – mit Rechenweg."
     : "Nach jeder Aufgabe siehst du sofort den Rechenweg. Falsche Aufgaben kommen mit neuen Zahlen nochmal.";
@@ -1409,7 +1395,7 @@ function zeichneVerlauf() {
     const li = document.createElement("li");
     li.innerHTML = `<span class="datum"></span><span class="themen"></span><span class="pkt"></span>`;
     li.querySelector(".datum").textContent = t.datum;
-    li.querySelector(".themen").textContent = `${t.stufe} · ${t.themen}`;
+    li.querySelector(".themen").textContent = t.themen;
     li.querySelector(".pkt").textContent = `${t.richtig}/${t.gesamt} (${Math.round(t.richtig / t.gesamt * 100)} %)`;
     $("verlauf").appendChild(li);
   }
@@ -1422,7 +1408,7 @@ function setzeAuswahl(key, an) {
   speichere();
 }
 
-for (const id of ["mischung", "stufe", "art"]) {
+for (const id of ["mischung", "art"]) {
   $(id).addEventListener("click", ev => {
     const b = ev.target.closest("button");
     if (!b) return;
@@ -1436,9 +1422,10 @@ $("anzahl").addEventListener("change", ev => { stand.einstellungen.anzahl = Numb
 function baueRunde() {
   const e = stand.einstellungen;
   const abschnitte = ABSCHNITTE.filter(a => e.auswahl.includes(a.key));
-  const st = STUFEN.indexOf(e.stufe);
   const n = e.anzahl;
   const sachFolge = mische(Array.from({ length: n }, (_, i) => e.mischung === "sach" || (e.mischung === "gemischt" && i % 2 === 1)));
+  // Schwierigkeit: leicht, mittel und schwer gleichmäßig gemischt
+  const stufen = mische(Array.from({ length: n }, (_, i) => i % 3));
   const gesehen = new Set();
   const liste = [];
   let reihe = [];
@@ -1446,7 +1433,7 @@ function baueRunde() {
     if (!reihe.length) reihe = mische(abschnitte);
     const ab = reihe.pop();
     let a;
-    for (let v = 0; v < 20; v++) { a = erzeuge(ab, st, sachFolge[i]); if (!gesehen.has(a.frage)) break; }
+    for (let v = 0; v < 20; v++) { a = erzeuge(ab, stufen[i], sachFolge[i]); if (!gesehen.has(a.frage)) break; }
     gesehen.add(a.frage);
     a.slot = i;
     liste.push(a);
@@ -1467,7 +1454,7 @@ function zeige(bereich) {
 
 function starteRunde(liste, probe) {
   if (!liste.length) return;
-  runde = { probe, schlange: liste.slice(), gesamt: liste.length, fertig: 0, erster: new Map(), aktuell: null, ergebnis: null, stufe: stand.einstellungen.stufe };
+  runde = { probe, schlange: liste.slice(), gesamt: liste.length, fertig: 0, erster: new Map(), aktuell: null, ergebnis: null };
   zeige("abfrage");
   naechste();
 }
@@ -1648,7 +1635,7 @@ function zeigeEnde() {
   if (runde.probe) {
     if (gesamt) {
       const themen = [...new Set(erg.map(x => x.a.ab.name))];
-      stand.tests.push({ datum: new Date().toLocaleDateString("de-DE"), stufe: runde.stufe, themen: themen.join(", "), richtig, gesamt });
+      stand.tests.push({ datum: new Date().toLocaleDateString("de-DE"), themen: themen.join(", "), richtig, gesamt });
       stand.tests = stand.tests.slice(-20);
       speichere();
     }
