@@ -297,8 +297,6 @@
     <p>1 g = 1000 mg · 1 kg = 1000 g · 1 t = 1000 kg</p>
     <h3>Geld</h3>
     <p>1 € = 100 ct</p>
-    <h3>Flächen (Umrechnungszahl 100)</h3>
-    <p>1 cm² = 100 mm² · 1 dm² = 100 cm² · 1 m² = 100 dm² · 1 a = 100 m²</p>
     <div class="merke">
       <b>Merke:</b> Von der größeren zur kleineren Einheit wird die Zahl größer → <b>mal</b> Umrechnungszahl.
       Von der kleineren zur größeren Einheit wird die Zahl kleiner → <b>geteilt durch</b> Umrechnungszahl.
@@ -372,7 +370,6 @@ const GR = {
   laenge:  { kette: ["mm", "cm", "dm", "m", "km"], f: { mm: 1, cm: 10, dm: 100, m: 1e3, km: 1e6 } },
   gewicht: { kette: ["mg", "g", "kg", "t"], f: { mg: 1, g: 1e3, kg: 1e6, t: 1e9 } },
   geld:    { kette: ["ct", "€"], f: { ct: 1, "€": 100 } },
-  flaeche: { kette: ["mm²", "cm²", "dm²", "m²", "a"], f: { "mm²": 1, "cm²": 1e2, "dm²": 1e4, "m²": 1e6, a: 1e8 } },
 };
 
 function kettenText(g, i, j) {
@@ -428,7 +425,7 @@ function grossWert(st, F) {
 
 function umrechnen(gk, st) {
   const g = GR[gk], k = g.kette;
-  const maxA = st === 0 ? 1 : st === 1 ? 2 : (gk === "flaeche" ? 2 : 3);
+  const maxA = st === 0 ? 1 : st === 1 ? 2 : 3;
   const i = r(0, k.length - 2), j = Math.min(k.length - 1, i + r(1, maxA));
   const F = g.f[k[j]] / g.f[k[i]];
   let G = grossWert(st, F);
@@ -699,7 +696,7 @@ function zeitRechnen(st) {
 // ---------- Einheiten umwandeln ----------
 
 const MISCH_PAARE = [[0, "m", "cm", 100], [0, "km", "m", 1000], [0, "cm", "mm", 10], [0, "kg", "g", 1000], [0, "t", "kg", 1000],
-  [0, "€", "ct", 100], [1, "g", "mg", 1000], [2, "m²", "dm²", 100]];
+  [0, "€", "ct", 100], [1, "g", "mg", 1000]];
 
 function einheitenGemischt(st) {
   const [, g, k, F] = eins(MISCH_PAARE.filter(p => p[0] <= st));
@@ -754,11 +751,11 @@ function kommaschreibweise(st) {
   return kommaZuMisch(a, b, g, k, F);
 }
 
-const VERGL = [["km", "m", 1000], ["m", "cm", 100], ["kg", "g", 1000], ["t", "kg", 1000], ["€", "ct", 100], ["cm", "mm", 10], ["h", "min", 60], ["m²", "dm²", 100]];
+const VERGL = [["km", "m", 1000], ["m", "cm", 100], ["kg", "g", 1000], ["t", "kg", 1000], ["€", "ct", 100], ["cm", "mm", 10], ["h", "min", 60]];
 const ZEICHEN = ["<", "=", ">"];
 
 function vergleichen(st) {
-  const [g, k, F] = eins(VERGL.filter(p => st > 0 || p[0] !== "m²"));
+  const [g, k, F] = eins(VERGL);
   let G, K;
   if (st === 0 || F === 60) {
     G = r(1, 9);
@@ -1071,35 +1068,6 @@ function sHefte() {
     felder: ["€"], loesung: [rest / 100],
     weg: [`${gr(p / 100, "€")} = ${p} ct`, `${k} · ${p} ct = ${kosten} ct = ${gr(kosten / 100, "€")}`, `${gr(h / 100, "€")} − ${gr(kosten / 100, "€")} = ${gr(rest / 100, "€")}`] });
 }
-function sZimmer() {
-  const f = r(9, 24);
-  return umr({ v: f, von: "m²", nach: "dm²", F: 100, runter: true, sach: true, frage: `Ein Kinderzimmer ist ${f} m² groß. Wie viele dm² sind das?` });
-}
-function sGarten(st) {
-  let l, b;
-  if (st === 0) { do { l = 10 * r(2, 5); b = 5 * r(2, 8); } while ((l * b) % 100); }
-  else { l = r(12, 40); b = r(8, 30); }
-  const f = l * b;
-  return aufgabe({ sach: true, frage: `Ein Garten ist ${l} m lang und ${b} m breit. Wie groß ist er in Ar (a)?`,
-    felder: ["a"], loesung: [f / 100], weg: [`Fläche: ${l} m · ${b} m = ${f} m²`, "1 a = 100 m²", `${f} m² = ${gr(f / 100, "a")}`] });
-}
-function sFussballfeld() {
-  const [l, b] = eins([[105, 68], [100, 70], [100, 64], [110, 70]]), f = l * b;
-  return aufgabe({ sach: true, frage: `Ein Fußballfeld ist ${l} m lang und ${b} m breit. Wie viel Ar (a) sind das?`,
-    felder: ["a"], loesung: [f / 100], weg: [`${l} m · ${b} m = ${gr(f, "m²")}`, "1 a = 100 m²", `${gr(f, "m²")} = ${gr(f / 100, "a")}`] });
-}
-function sBriefmarke() {
-  const l = r(2, 4), b = r(2, 3), f = l * b;
-  return aufgabe({ sach: true, frage: `Eine Briefmarke ist ${l} cm lang und ${b} cm breit. Wie viele mm² ist sie groß?`,
-    felder: ["mm²"], loesung: [f * 100], weg: [`${l} cm · ${b} cm = ${f} cm²`, "1 cm² = 100 mm²", `${f} cm² = ${f * 100} mm²`] });
-}
-function sTeppich() {
-  const l = r(3, 5), b = r(3, 4), p = eins([2, 3, 4]), f = l * b, k = Math.ceil(f / p), rest = f % p;
-  return aufgabe({ sach: true, frage: `Ein Kinderzimmer ist ${l} m lang und ${b} m breit. Ein Paket Teppichfliesen reicht für ${p} m². Wie viele Pakete braucht man mindestens?`,
-    felder: ["Pakete"], loesung: [k],
-    weg: [`Fläche: ${l} m · ${b} m = ${f} m²`, `${f} m² : ${p} m² = ${Math.floor(f / p)}${rest ? ` Rest ${rest} m²` : ""}`,
-          rest ? `Für den Rest braucht man noch ein Paket: ${k} Pakete.` : `Man braucht ${k} Pakete.`] });
-}
 function sSprungCm(st) {
   const a = r(2, 4), b = st === 0 ? r(10, 99) : r(1, 99);
   return zusammenfassen(a, b, "m", "cm", 100, { sach: true, frage: `${name()} springt ${a} m ${b} cm weit. Wie viele Zentimeter sind das?` });
@@ -1155,12 +1123,6 @@ function sLaden() {
   return vglWahl(`Im Laden A kostet ein Saft ${gr(a / 100, "€")}, im Laden B ${b} ct. Wo ist der Saft billiger?`, ["Laden A", "Laden B"], a, b,
     [`${gr(a / 100, "€")} = ${a} ct`, `${a} ct ${zeichen} ${b} ct`], "gleich teuer", true);
 }
-function sGaerten() {
-  const a = r(3, 9), b = a * 100 + eins([-60, -20, 0, 20, 60]);
-  const zeichen = a * 100 > b ? ">" : a * 100 < b ? "<" : "=";
-  return vglWahl(`Garten A ist ${a} a groß, Garten B ist ${b} m² groß. Welcher Garten ist größer?`, ["Garten A", "Garten B"], a * 100, b,
-    [`1 a = 100 m²`, `${a} a = ${a * 100} m²`, `${a * 100} m² ${zeichen} ${b} m²`], "gleich groß");
-}
 
 // ---------- Themen und Abschnitte ----------
 // [ab Stufe, Funktion]: 0 = ab leicht, 1 = ab mittel, 2 = nur schwer
@@ -1177,10 +1139,9 @@ const THEMEN = [
     { name: "Längen", rechnen: st => umrechnen("laenge", st), sach: [[0, sStapel], [0, sRegal], [0, sSchulwegKm], [1, sRunden], [1, sWeitsprung], [2, sBrett], [2, sSchnecke]] },
     { name: "Gewichte", rechnen: st => umrechnen("gewicht", st), sach: [[0, sSchultasche], [0, sMehl], [0, sAepfel], [1, sAepfelKilo], [1, sTabletten], [1, sLkw], [2, sPaket]] },
     { name: "Geld", rechnen: st => umrechnen("geld", st), sach: [[0, sSparen], [0, sBroetchen], [1, sTaschengeld], [1, sKino], [1, sSparschwein], [2, sHefte]] },
-    { name: "Flächen", rechnen: st => umrechnen("flaeche", st), sach: [[0, sZimmer], [0, sGarten], [0, sBriefmarke], [1, sFussballfeld], [2, sTeppich]] },
     { name: "Gemischte Angaben", rechnen: einheitenGemischt, sach: [[0, sSprungCm], [0, sKoffer], [0, sSpardose], [1, sStrecke]] },
     { name: "Kommaschreibweise", rechnen: kommaschreibweise, sach: [[0, sKoerpergroesse], [0, sMelone], [0, sBuchpreis], [1, sSportplatz], [2, sEuroKomma]] },
-    { name: "Vergleichen", rechnen: vergleichen, sach: [[0, sWerGroesser], [0, sPakete], [1, sLaden], [1, sGaerten]] },
+    { name: "Vergleichen", rechnen: vergleichen, sach: [[0, sWerGroesser], [0, sPakete], [1, sLaden]] },
   ] },
 ];
 for (const t of THEMEN) for (const a of t.abschnitte) { a.thema = t.name; a.key = t.name + "|" + a.name; }
@@ -1234,7 +1195,7 @@ function leseUhr(roh) {
   return [(h * 60 + mi) % 1440];
 }
 
-const PAAR_F = { "h|min": 60, "min|s": 60, "Tage|h": 24, "Wochen|Tage": 7, "km|m": 1000, "m|cm": 100, "cm|mm": 10, "kg|g": 1000, "t|kg": 1000, "g|mg": 1000, "€|ct": 100, "m²|dm²": 100 };
+const PAAR_F = { "h|min": 60, "min|s": 60, "Tage|h": 24, "Wochen|Tage": 7, "km|m": 1000, "m|cm": 100, "cm|mm": 10, "kg|g": 1000, "t|kg": 1000, "g|mg": 1000, "€|ct": 100 };
 
 function pruefe(a, texte) {
   const istUhr = a.felder[0] === "Uhr";
