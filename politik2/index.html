@@ -249,6 +249,10 @@
         <button type="button" data-wert="kapitel">nach Kapiteln</button>
         <button type="button" data-wert="seiten">nach Buchseiten</button>
       </div>
+      <div class="schnell" id="alleKeine">
+        <button type="button" class="klein" data-wert="alle">☑ Alle auswählen</button>
+        <button type="button" class="klein" data-wert="keine">☐ Alle abwählen</button>
+      </div>
       <div id="kapitelliste" class="liste"></div>
       <div id="seitenliste" class="liste" hidden>
         <div class="seitenwahl">
@@ -617,6 +621,7 @@ function zeichneStart() {
   const liste = $("kapitelliste");
   liste.innerHTML = "";
   liste.hidden = nachSeiten();
+  $("alleKeine").hidden = nachSeiten();
   $("seitenliste").hidden = !nachSeiten();
   if (nachSeiten()) zeichneSeiten();
   else for (const t of KAPITELLISTE) {
@@ -806,6 +811,14 @@ function setzeAuswahl(key, an) {
   stand.einstellungen.auswahl = a;
   speichere();
 }
+
+$("alleKeine").addEventListener("click", ev => {
+  const b = ev.target.closest("button");
+  if (!b) return;
+  stand.einstellungen.auswahl = b.dataset.wert === "alle" ? KAPITELLISTE.flatMap(t => t.abschnitte.map(a => a.key)) : [];
+  speichere();
+  zeichneStart();
+});
 
 function umschalter(id, feld) {
   $(id).addEventListener("click", ev => {
